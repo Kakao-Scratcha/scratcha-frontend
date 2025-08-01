@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ThemeProvider from './conponents/ThemeProvider';
 import AuthProvider from './conponents/AuthProvider';
 import ProtectedRoute from './conponents/ProtectedRoute';
+import PublicRoute from './conponents/PublicRoute';
 import Layout from './conponents/Layout';
 import MainPage from './conponents/pages/MainPage';
 import Dashboard from './conponents/Dashboard';
@@ -41,8 +42,8 @@ function App() {
               <Route path="billing" element={<DashboardBilling />} />
               <Route path="app" element={<DashboardApp />} />
             </Route>
-            <Route path="signin" element={<Signin />} />
-            <Route path="signup" element={<Signup />} />
+            <Route path="signin" element={<PublicRoute><Signin /></PublicRoute>} />
+            <Route path="signup" element={<PublicRoute><Signup /></PublicRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

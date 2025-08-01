@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function MainPage() {
     return (
-        <div className="min-h-screen font-[Noto_Sans_KR] bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+        <div className="min-h-screen  bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
             {/* 히어로 섹션 */}
             <section className="relative overflow-hidden">
                 <div className="max-w-7xl mx-auto px-4 py-20">

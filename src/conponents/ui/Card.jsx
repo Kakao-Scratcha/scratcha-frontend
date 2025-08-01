@@ -9,7 +9,7 @@ export default function Card({
 }) {
     return (
         <div 
-            className={`rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 ${padding} ${className} font-[Noto_Sans_KR]`}
+            className={`rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 ${padding} ${className} `}
         >
             {(title || subtitle) && (
                 <div className="mb-4">

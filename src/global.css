@@ -6,8 +6,7 @@
 /* 폰트 정의 - Noto Sans KR */
 @font-face {
   font-family: "Noto Sans KR";
-  src: url("../public/fonts/Noto_Sans_KR/static/NotoSansKR-Thin.ttf")
-    format("truetype");
+  src: url("/fonts/Noto_Sans_KR/static/NotoSansKR-Thin.ttf") format("truetype");
   font-weight: 100;
   font-style: normal;
   font-display: swap;
@@ -15,7 +14,7 @@
 
 @font-face {
   font-family: "Noto Sans KR";
-  src: url("../public/fonts/Noto_Sans_KR/static/NotoSansKR-ExtraLight.ttf")
+  src: url("/fonts/Noto_Sans_KR/static/NotoSansKR-ExtraLight.ttf")
     format("truetype");
   font-weight: 200;
   font-style: normal;
@@ -24,8 +23,7 @@
 
 @font-face {
   font-family: "Noto Sans KR";
-  src: url("../public/fonts/Noto_Sans_KR/static/NotoSansKR-Light.ttf")
-    format("truetype");
+  src: url("/fonts/Noto_Sans_KR/static/NotoSansKR-Light.ttf") format("truetype");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -33,7 +31,7 @@
 
 @font-face {
   font-family: "Noto Sans KR";
-  src: url("../public/fonts/Noto_Sans_KR/static/NotoSansKR-Regular.ttf")
+  src: url("/fonts/Noto_Sans_KR/static/NotoSansKR-Regular.ttf")
     format("truetype");
   font-weight: 400;
   font-style: normal;
@@ -42,7 +40,7 @@
 
 @font-face {
   font-family: "Noto Sans KR";
-  src: url("../public/fonts/Noto_Sans_KR/static/NotoSansKR-Medium.ttf")
+  src: url("/fonts/Noto_Sans_KR/static/NotoSansKR-Medium.ttf")
     format("truetype");
   font-weight: 500;
   font-style: normal;
@@ -51,7 +49,7 @@
 
 @font-face {
   font-family: "Noto Sans KR";
-  src: url("../public/fonts/Noto_Sans_KR/static/NotoSansKR-SemiBold.ttf")
+  src: url("/fonts/Noto_Sans_KR/static/NotoSansKR-SemiBold.ttf")
     format("truetype");
   font-weight: 600;
   font-style: normal;
@@ -60,8 +58,7 @@
 
 @font-face {
   font-family: "Noto Sans KR";
-  src: url("../public/fonts/Noto_Sans_KR/static/NotoSansKR-Bold.ttf")
-    format("truetype");
+  src: url("/fonts/Noto_Sans_KR/static/NotoSansKR-Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -69,7 +66,7 @@
 
 @font-face {
   font-family: "Noto Sans KR";
-  src: url("../public/fonts/Noto_Sans_KR/static/NotoSansKR-ExtraBold.ttf")
+  src: url("/fonts/Noto_Sans_KR/static/NotoSansKR-ExtraBold.ttf")
     format("truetype");
   font-weight: 800;
   font-style: normal;
@@ -78,8 +75,7 @@
 
 @font-face {
   font-family: "Noto Sans KR";
-  src: url("../public/fonts/Noto_Sans_KR/static/NotoSansKR-Black.ttf")
-    format("truetype");
+  src: url("/fonts/Noto_Sans_KR/static/NotoSansKR-Black.ttf") format("truetype");
   font-weight: 900;
   font-style: normal;
   font-display: swap;
@@ -87,19 +83,29 @@
 
 /* 기본 설정 */
 :root {
-  font-family: "Noto Sans KR";
+  font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* 색상 변수 추가 */
+  --color-primary: #3b82f6;
+  --color-primary-dark: #1d4ed8;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  /* 성능 최적화 */
+  will-change: scroll-position;
 }
 
 /* 스크롤바 스타일링 */
@@ -115,6 +121,7 @@ body {
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
+  transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -138,4 +145,39 @@ body {
 
 .dark * {
   scrollbar-color: #374151 transparent;
+}
+
+/* 포커스 스타일 개선 */
+*:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* 다크모드 포커스 */
+.dark *:focus {
+  outline-color: #60a5fa;
+}
+
+/* 선택 텍스트 스타일 */
+::selection {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.dark ::selection {
+  background-color: #60a5fa;
+  color: white;
+}
+
+/* 스크린 리더 전용 텍스트 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

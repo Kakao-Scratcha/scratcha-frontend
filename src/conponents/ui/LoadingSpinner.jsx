@@ -11,7 +11,7 @@ export default function LoadingSpinner({
                 <div 
                     className={`animate-spin rounded-full ${size} border-b-2 mx-auto mb-2 border-blue-600 dark:border-blue-400`}
                 ></div>
-                <p className="opacity-60 font-[Noto_Sans_KR] text-gray-600 dark:text-gray-400">
+                <p className="opacity-60  text-gray-600 dark:text-gray-400">
                     {message}
                 </p>
             </div>

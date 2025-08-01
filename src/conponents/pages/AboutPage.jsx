@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function AboutPage() {
     return (
-        <div className="min-h-screen font-[Noto_Sans_KR] bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+        <div className="min-h-screen  bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
             <div className="max-w-7xl mx-auto px-4 py-20">
                 <div className="text-center mb-16">
                     <h1 className="text-4xl font-bold mb-8 text-gray-900 dark:text-white">

@@ -33,7 +33,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
             ></div>
 
             {/* 모달 컨텐츠 */}
-            <div className="relative rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto font-[Noto_Sans_KR] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <div className="relative rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto  bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                 {/* 헤더 */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">

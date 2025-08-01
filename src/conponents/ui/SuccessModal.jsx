@@ -14,7 +14,7 @@ export default function SuccessModal({
             onClose={onClose}
             title={title}
         >
-            <div className="text-center font-[Noto_Sans_KR]">
+            <div className="text-center ">
                 {/* 성공 아이콘 */}
                 <div className="mx-auto mb-4 w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
                     <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">

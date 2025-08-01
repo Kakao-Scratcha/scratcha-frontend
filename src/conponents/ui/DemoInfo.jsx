@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function DemoInfo({ isCompleted }) {
     return (
-        <div className="p-8 rounded-2xl border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 font-[Noto_Sans_KR]">
+        <div className="p-8 rounded-2xl border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 ">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">스크래치 캡차란?</h2>
 
             <div className="space-y-6">

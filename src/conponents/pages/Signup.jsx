@@ -22,7 +22,7 @@ export default function Signup() {
     } = useSignupForm();
 
     return (
-        <div className="min-h-screen flex flex-col justify-center items-center py-8 font-[Noto_Sans_KR] bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+        <div className="min-h-screen flex flex-col justify-center items-center py-8  bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
             <div className="rounded-2xl shadow-lg w-full max-w-md p-8 border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 {/* 페이지 타이틀 (Scratcha 로고 포함) */}
                 <div className="text-center mb-8">

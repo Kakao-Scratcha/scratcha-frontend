@@ -4,7 +4,7 @@ import SocialLinks from './SocialLinks';
 
 export default function Footer() {
     return (
-        <footer className="w-full pt-12 pb-8 mt-12 font-[Noto_Sans_KR] bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+        <footer className="w-full pt-12 pb-8 mt-12  bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
             <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row md:justify-between gap-12">
                 {/* 좌측: 이메일, 소셜 */}
                 <div className="flex flex-col gap-4 min-w-[180px] text-left">

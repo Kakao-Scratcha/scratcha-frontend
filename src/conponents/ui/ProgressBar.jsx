@@ -26,7 +26,7 @@ export default function ProgressBar({
     };
 
     return (
-        <div className={`w-full ${className} font-[Noto_Sans_KR]`}>
+        <div className={`w-full ${className} `}>
             {showLabel && (
                 <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-900 dark:text-white">사용량</span>

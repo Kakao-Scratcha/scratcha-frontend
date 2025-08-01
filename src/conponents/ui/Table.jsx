@@ -7,7 +7,7 @@ export default function Table({
 }) {
     return (
         <div className={`overflow-x-auto ${className}`}>
-            <table className={`w-full ${striped ? 'striped' : ''} font-[Noto_Sans_KR]`}>
+            <table className={`w-full ${striped ? 'striped' : ''} `}>
                 {children}
             </table>
         </div>

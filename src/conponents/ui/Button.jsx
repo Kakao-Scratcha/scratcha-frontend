@@ -9,7 +9,7 @@ export default function Button({
     onClick,
     type = "button"
 }) {
-    const baseClasses = "font-medium rounded-lg transition focus:outline-none focus:ring-2 focus:ring-offset-2 font-[Noto_Sans_KR]";
+    const baseClasses = "font-medium rounded-lg transition focus:outline-none focus:ring-2 focus:ring-offset-2 ";
 
     const getVariantClasses = (variant) => {
         switch (variant) {
