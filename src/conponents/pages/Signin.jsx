@@ -16,7 +16,7 @@ export default function Signin() {
     const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
-        id: '',
+        email: '',  // id → email로 변경
         password: ''
     });
 
@@ -28,24 +28,24 @@ export default function Signin() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('🚀 로그인 폼 제출:', formData);
         setIsLoading(true);
 
         if (isDevMode) {
+            console.log('🔧 개발 모드 로그인 시도');
             // 개발 모드: 더미 데이터로 로그인
             setTimeout(() => {
                 setIsLoading(false);
 
                 // admin 계정 검증
-                if (formData.id === 'admin' && formData.password === '12345678') {
+                if (formData.email === 'admin@example.com' && formData.password === '12345678') {
+                    console.log('👑 Admin 계정 로그인 성공');
                     // admin 계정으로 로그인 성공
                     const adminUser = createDummyUser(1, 'dummyname', true);
                     const dummyToken = createDummyToken(true);
 
                     // 전역 상태에 admin 사용자 정보 저장
                     updateUser(adminUser);
-
-                    // localStorage에 토큰 저장 (개발 모드용)
-                    localStorage.setItem('authToken', dummyToken);
 
                     // authStore 상태 직접 업데이트
                     useAuthStore.setState({
@@ -59,26 +59,25 @@ export default function Signin() {
 
                     setIsSuccessModalOpen(true);
                 } else {
+                    console.log('👤 일반 계정 로그인 시도');
                     // 더미 데이터에 정의된 사용자인지 확인
                     const validUsers = {
-                        'dev': { id: 2, name: '개발자', isAdmin: false },
-                        'test': { id: 3, name: '테스터', isAdmin: false },
-                        'user': { id: 4, name: '사용자', isAdmin: false }
+                        'dev@example.com': { id: 2, name: '개발자', isAdmin: false },
+                        'test@example.com': { id: 3, name: '테스터', isAdmin: false },
+                        'user@example.com': { id: 4, name: '사용자', isAdmin: false }
                     };
 
-                    const userKey = formData.id.toLowerCase();
+                    const userKey = formData.email.toLowerCase();
                     const validUser = validUsers[userKey];
 
                     if (validUser && formData.password === '12345678') {
+                        console.log('✅ 일반 계정 로그인 성공:', userKey);
                         // 유효한 사용자 계정으로 로그인 성공
                         const dummyUser = createDummyUser(validUser.id, validUser.name, validUser.isAdmin);
                         const dummyToken = createDummyToken(validUser.isAdmin);
 
                         // 전역 상태에 더미 사용자 정보 저장
                         updateUser(dummyUser);
-
-                        // localStorage에 토큰 저장 (개발 모드용)
-                        localStorage.setItem('authToken', dummyToken);
 
                         // authStore 상태 직접 업데이트
                         useAuthStore.setState({
@@ -92,21 +91,27 @@ export default function Signin() {
 
                         setIsSuccessModalOpen(true);
                     } else {
+                        console.log('❌ 유효하지 않은 계정:', userKey);
                         // 유효하지 않은 계정
                         setIsErrorModalOpen(true);
                     }
                 }
             }, 1000);
         } else {
+            console.log('🌐 일반 모드 로그인 시도 (백엔드 API 호출)');
             // 일반 모드: 실제 API 호출
             try {
                 const result = await login(formData);
+                console.log('📊 로그인 결과:', result);
                 if (result.success) {
+                    console.log('✅ 일반 모드 로그인 성공');
                     setIsSuccessModalOpen(true);
                 } else {
+                    console.log('❌ 일반 모드 로그인 실패');
                     setIsErrorModalOpen(true);
                 }
-            } catch {
+            } catch (error) {
+                console.error('💥 로그인 중 예외 발생:', error);
                 setIsErrorModalOpen(true);
             } finally {
                 setIsLoading(false);
@@ -157,10 +162,10 @@ export default function Signin() {
                 <div className="mb-4 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <h3 className="text-sm font-semibold text-blue-800 mb-2">개발용 계정 정보:</h3>
                     <div className="text-xs text-blue-700 space-y-1">
-                        <div><strong>Admin 계정:</strong> ID: admin, PW: 12345678, Name: dummyname</div>
+                        <div><strong>Admin 계정:</strong> Email: admin@example.com, PW: 12345678, Name: dummyname</div>
                         <div><strong>권한:</strong> admin, user 역할 + 모든 권한</div>
-                        <div><strong>일반 계정:</strong> ID: dev/test/user, PW: 12345678</div>
-                        <div><strong>유효한 계정:</strong> admin, dev, test, user</div>
+                        <div><strong>일반 계정:</strong> Email: dev@example.com/test@example.com/user@example.com, PW: 12345678</div>
+                        <div><strong>유효한 계정:</strong> admin@example.com, dev@example.com, test@example.com, user@example.com</div>
                     </div>
                 </div>
             )}
@@ -183,12 +188,12 @@ export default function Signin() {
 
                 <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
                     <FormInput
-                        id="id"
-                        type="text"
-                        label="아이디"
-                        placeholder="아이디를 입력하세요"
-                        value={formData.id}
-                        onChange={(e) => handleInputChange('id', e.target.value)}
+                        id="email"  // id → email로 변경
+                        type="email"  // text → email로 변경
+                        label="이메일"  // 아이디 → 이메일로 변경
+                        placeholder="이메일을 입력하세요"  // placeholder 변경
+                        value={formData.email}  // id → email로 변경
+                        onChange={(e) => handleInputChange('email', e.target.value)}  // id → email로 변경
                         required
                     />
                     <FormInput

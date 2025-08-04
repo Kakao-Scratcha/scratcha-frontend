@@ -62,10 +62,51 @@ export default function Signup() {
 
                 {/* 회원가입 폼 */}
                 <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                    <FormField id="id" label="아이디" type="text" placeholder="아이디를 입력하세요" required={true} value={formData.id} onChange={(e) => handleInputChange('id', e.target.value)} error={errors.id} isValid={validationStatus.id} />
-                    <FormField id="password" label="비밀번호" type="password" placeholder="비밀번호를 입력하세요" required={true} value={formData.password} onChange={(e) => handleInputChange('password', e.target.value)} error={errors.password} isValid={validationStatus.password} />
-                    <FormField id="passwordConfirm" label="비밀번호 확인" type="password" placeholder="비밀번호를 다시 입력하세요" required={true} value={formData.passwordConfirm} password={formData.password} onChange={(e) => handleInputChange('passwordConfirm', e.target.value)} error={errors.passwordConfirm} isValid={validationStatus.passwordConfirm} />
-                    <FormField id="email" label="이메일" type="email" placeholder="이메일을 입력하세요" required={true} value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} error={errors.email} isValid={validationStatus.email} />
+                    <FormField
+                        id="email"
+                        label="이메일 (아이디)"
+                        type="email"
+                        placeholder="이메일을 입력하세요"
+                        required={true}
+                        value={formData.email}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        error={errors.email}
+                        isValid={validationStatus.email}
+                    />
+                    <FormField
+                        id="userName"
+                        label="이름"
+                        type="text"
+                        placeholder="이름을 입력하세요"
+                        required={true}
+                        value={formData.userName}
+                        onChange={(e) => handleInputChange('userName', e.target.value)}
+                        error={errors.userName}
+                        isValid={validationStatus.userName}
+                    />
+                    <FormField
+                        id="password"
+                        label="비밀번호"
+                        type="password"
+                        placeholder="비밀번호를 입력하세요"
+                        required={true}
+                        value={formData.password}
+                        onChange={(e) => handleInputChange('password', e.target.value)}
+                        error={errors.password}
+                        isValid={validationStatus.password}
+                    />
+                    <FormField
+                        id="passwordConfirm"
+                        label="비밀번호 확인"
+                        type="password"
+                        placeholder="비밀번호를 다시 입력하세요"
+                        required={true}
+                        value={formData.passwordConfirm}
+                        password={formData.password}
+                        onChange={(e) => handleInputChange('passwordConfirm', e.target.value)}
+                        error={errors.passwordConfirm}
+                        isValid={validationStatus.passwordConfirm}
+                    />
                     <SignupButton loading={isLoading} onClick={handleSignup} className="mt-6" />
                 </form>
 

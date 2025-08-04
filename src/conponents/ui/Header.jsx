@@ -18,12 +18,12 @@ export default function Header() {
 
     const {
         isAuthenticated,
-        logout,
         getUserDisplayName,
         getUserInitial,
         getSessionInfo,
         isAdmin,
-        canManageApps
+        canManageApps,
+        logout
     } = useAuth();
 
     // 외부 클릭 시 드롭다운 닫기
@@ -171,7 +171,7 @@ export default function Header() {
                                         >
                                             {isLoggingOut ? (
                                                 <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8 0 004.644 9m0 0H9m11 11v-5h-.581m-15.356 0A8.001 8 0 0019.356 9m0 0H14m-2-2V4.644M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.644 9m0 0H9m11 11v-5h-.581m-15.356 0A8.001 8.001 0 0019.356 9m0 0H14m-2-2V4.644M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                 </svg>
                                             ) : (
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

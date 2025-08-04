@@ -2,10 +2,10 @@ import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function UserInfo() {
-    const { getUserDisplayName, isAdmin } = useAuth();
+    const { getUserDisplayName, isAdmin, user } = useAuth();
 
     const userName = getUserDisplayName();
-    const userEmail = 'user@scratcha.com';
+    const userDisplayName = user?.username || '사용자';
     const userPlan = 'Pro';
     const isUserAdmin = isAdmin();
 
@@ -20,7 +20,7 @@ export default function UserInfo() {
                 )}
             </div>
             <div className="text-gray-600 dark:text-gray-400 text-sm">
-                {userPlan} · {userEmail}
+                {userPlan} · {userDisplayName}
             </div>
         </div>
     );

@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
 import { useDashboardStore } from '../../stores/dashboardStore';
+import { useAuth } from '../../hooks/useAuth';
+import { authAPI } from '../../services/api';
 
 export default function DashboardSettings() {
     const {
@@ -11,13 +13,38 @@ export default function DashboardSettings() {
         updateAppSettings
     } = useDashboardStore();
 
-    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const { user, updateUser, getProfile, logout } = useAuth();
+
+    // const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [isNameModalOpen, setIsNameModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [passwordForm, setPasswordForm] = useState({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // 비밀번호 변경 폼 (주석처리)
+    // const [passwordForm, setPasswordForm] = useState({
+    //     currentPassword: '',
+    //     newPassword: '',
+    //     confirmPassword: ''
+    // });
+
+    // 이름 변경 폼
+    const [nameForm, setNameForm] = useState({
+        currentName: user?.username || '',
+        newName: ''
     });
+
+    // 사용자 정보가 변경될 때마다 이름 폼 업데이트
+    useEffect(() => {
+        console.log('🔍 사용자 정보 확인:', user);
+        if (user?.username) {
+            console.log('✅ 사용자 이름 업데이트:', user.username);
+            setNameForm(prev => ({
+                ...prev,
+                currentName: user.username
+            }));
+        }
+    }, [user?.username]);
 
     // 임시 설정 상태 관리
     const [tempSettings, setTempSettings] = useState({});
@@ -84,22 +111,110 @@ export default function DashboardSettings() {
         }
     };
 
-    // 비밀번호 변경 처리
-    const handlePasswordChange = (e) => {
+    // 이름 변경 처리
+    const handleNameChange = async (e) => {
         e.preventDefault();
-        console.log('비밀번호 변경:', passwordForm);
-        setIsPasswordModalOpen(false);
-        setPasswordForm({
-            currentPassword: '',
-            newPassword: '',
-            confirmPassword: ''
-        });
+        console.log('이름 변경:', nameForm);
+
+        // 유효성 검사
+        if (!nameForm.newName.trim()) {
+            alert('새 이름을 입력해주세요.');
+            return;
+        }
+
+        if (nameForm.newName.trim().length < 2) {
+            alert('이름은 2자 이상 입력해주세요.');
+            return;
+        }
+
+        if (nameForm.newName.trim().length > 20) {
+            alert('이름은 20자 이하로 입력해주세요.');
+            return;
+        }
+
+        setIsUpdating(true);
+        try {
+            console.log('🔄 이름 변경 API 호출 중...');
+            const response = await authAPI.updateUsername(nameForm.newName.trim());
+            console.log('✅ 이름 변경 성공:', response.data);
+
+            // 로컬 상태 업데이트
+            updateUser({ username: nameForm.newName.trim() });
+
+            // 유저 정보 다시 불러오기
+            console.log('🔄 유저 정보 다시 불러오기...');
+            await getProfile();
+
+            setIsNameModalOpen(false);
+            setNameForm({
+                currentName: nameForm.newName.trim(),
+                newName: ''
+            });
+
+            alert('이름이 성공적으로 변경되었습니다!');
+        } catch (error) {
+            console.error('❌ 이름 변경 실패:', error);
+
+            let errorMessage = '이름 변경에 실패했습니다.';
+            if (error.response?.status === 409) {
+                errorMessage = '이미 사용 중인 이름입니다.';
+            } else if (error.response?.status === 422) {
+                errorMessage = '이름 형식이 올바르지 않습니다.';
+            }
+
+            alert(errorMessage);
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
+    // 비밀번호 변경 처리 (주석처리)
+    // const handlePasswordChange = (e) => {
+    //     e.preventDefault();
+    //     console.log('비밀번호 변경:', passwordForm);
+    //     setIsPasswordModalOpen(false);
+    //     setPasswordForm({
+    //         currentPassword: '',
+    //         newPassword: '',
+    //         confirmPassword: ''
+    //     });
+    // };
+
     // 회원 탈퇴 처리
-    const handleAccountDelete = () => {
-        console.log('회원 탈퇴');
-        setIsDeleteModalOpen(false);
+    const handleAccountDelete = async () => {
+        console.log('🗑️ 회원 탈퇴 시도');
+
+        setIsDeleting(true);
+        try {
+            console.log('🔄 회원 탈퇴 API 호출 중...');
+            const response = await authAPI.deleteAccount();
+            console.log('✅ 회원 탈퇴 성공:', response.data);
+
+            // 프론트엔드에서만 로그아웃 처리 (백엔드 API 없음)
+            console.log('🔒 회원 탈퇴 후 프론트엔드 로그아웃 처리');
+            await logout();
+
+            // 모달 닫기
+            setIsDeleteModalOpen(false);
+
+            // 성공 메시지
+            alert('회원 탈퇴가 완료되었습니다. 로그인 페이지로 이동합니다.');
+            console.log('✅ 회원 탈퇴 완료');
+
+        } catch (error) {
+            console.error('❌ 회원 탈퇴 실패:', error);
+
+            let errorMessage = '회원 탈퇴에 실패했습니다.';
+            if (error.response?.status === 401) {
+                errorMessage = '인증이 만료되었습니다. 다시 로그인해주세요.';
+            } else if (error.response?.status === 403) {
+                errorMessage = '권한이 없습니다.';
+            }
+
+            alert(errorMessage);
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     // 설정 상태 텍스트 생성 (원본 설정 기준)
@@ -268,8 +383,25 @@ export default function DashboardSettings() {
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">회원 설정</h3>
 
                     <div className="space-y-4">
-                        {/* 비밀번호 변경 */}
+                        {/* 이름 변경 */}
                         <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div>
+                                <h4 className="font-medium text-gray-900 dark:text-white">이름 변경</h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">현재 이름: {user?.username || '설정되지 않음'}</p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setNameForm(prev => ({ ...prev, currentName: user?.username || '' }));
+                                    setIsNameModalOpen(true);
+                                }}
+                                className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-700 dark:hover:bg-blue-600 transition"
+                            >
+                                변경하기
+                            </button>
+                        </div>
+
+                        {/* 비밀번호 변경 (주석처리) */}
+                        {/* <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                             <div>
                                 <h4 className="font-medium text-gray-900 dark:text-white">비밀번호 변경</h4>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">계정 보안을 위해 정기적으로 비밀번호를 변경하세요</p>
@@ -280,7 +412,7 @@ export default function DashboardSettings() {
                             >
                                 변경하기
                             </button>
-                        </div>
+                        </div> */}
 
                         {/* 회원 탈퇴 */}
                         <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -299,8 +431,63 @@ export default function DashboardSettings() {
                 </div>
             </div>
 
-            {/* 비밀번호 변경 모달 */}
+            {/* 이름 변경 모달 */}
             <Modal
+                isOpen={isNameModalOpen}
+                onClose={() => setIsNameModalOpen(false)}
+                title="이름 변경"
+            >
+                <form onSubmit={handleNameChange} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            현재 이름
+                        </label>
+                        <input
+                            type="text"
+                            value={nameForm.currentName}
+                            disabled
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            변경할 이름
+                        </label>
+                        <input
+                            type="text"
+                            value={nameForm.newName}
+                            onChange={(e) => setNameForm(prev => ({ ...prev, newName: e.target.value }))}
+                            placeholder="새 이름을 입력하세요 (2-20자)"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                            required
+                        />
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            이름은 2자 이상 20자 이하로 입력해주세요
+                        </p>
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                        <button
+                            type="button"
+                            onClick={() => setIsNameModalOpen(false)}
+                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                        >
+                            취소
+                        </button>
+                        <button
+                            type="submit"
+                            className="flex-1 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-700 dark:hover:bg-blue-600 transition"
+                            disabled={isUpdating}
+                        >
+                            {isUpdating ? '변경 중...' : '변경하기'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* 비밀번호 변경 모달 (주석처리) */}
+            {/* <Modal
                 isOpen={isPasswordModalOpen}
                 onClose={() => setIsPasswordModalOpen(false)}
                 title="비밀번호 변경"
@@ -361,7 +548,7 @@ export default function DashboardSettings() {
                         </button>
                     </div>
                 </form>
-            </Modal>
+            </Modal> */}
 
             {/* 회원 탈퇴 확인 모달 */}
             <Modal
@@ -396,8 +583,9 @@ export default function DashboardSettings() {
                         <button
                             onClick={handleAccountDelete}
                             className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition"
+                            disabled={isDeleting}
                         >
-                            탈퇴하기
+                            {isDeleting ? '탈퇴 중...' : '탈퇴하기'}
                         </button>
                     </div>
                 </div>

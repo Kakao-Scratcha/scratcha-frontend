@@ -24,10 +24,25 @@ export const useAuth = () => {
         getAuthInfo,
     } = useAuthStore();
 
+    // persist 상태 복원 후 초기화 (한 번만 실행)
     useEffect(() => {
-        // 앱 시작 시 인증 상태 초기화
-        initialize();
-    }, [initialize]);
+        let isInitialized = false;
+
+        const initAuth = () => {
+            if (isInitialized) return;
+            isInitialized = true;
+
+            // persist 상태가 복원된 후에만 초기화 실행
+            const timer = setTimeout(() => {
+                console.log('🚀 useAuth 초기화 시작');
+                initialize();
+            }, 200); // persist 복원 대기 시간 증가
+
+            return () => clearTimeout(timer);
+        };
+
+        return initAuth();
+    }, []); // initialize 의존성 제거
 
     // 활동 시간 자동 업데이트 (5분마다)
     useEffect(() => {
@@ -54,7 +69,7 @@ export const useAuth = () => {
         return () => clearInterval(interval);
     }, [isAuthenticated, checkSessionExpiry]);
 
-    // 토큰 자동 갱신 (토큰 만료 10분 전)
+    // 토큰 자동 갱신 (토큰 만료 10분 전) - 백엔드 미구현으로 비활성화
     const autoRefreshToken = useCallback(async () => {
         if (!isAuthenticated || !token) return;
 
@@ -65,20 +80,22 @@ export const useAuth = () => {
             const currentTime = Date.now();
             const timeUntilExpiry = expirationTime - currentTime;
 
-            // 만료 10분 전에 갱신
+            // 만료 10분 전에 갱신 (백엔드 미구현으로 주석 처리)
             if (timeUntilExpiry < 10 * 60 * 1000 && timeUntilExpiry > 0) {
-                await refreshToken();
+                console.log('⚠️ 토큰 만료 임박 (백엔드 갱신 API 미구현)');
+                // await refreshToken(); // 백엔드 미구현으로 비활성화
             }
-        } catch {
-            // 토큰 자동 갱신 실패
+        } catch (error) {
+            console.log('⚠️ 토큰 자동 갱신 실패 (백엔드 미구현):', error.message);
         }
-    }, [isAuthenticated, token, refreshToken]);
+    }, [isAuthenticated, token]);
 
     useEffect(() => {
         if (!isAuthenticated) return;
 
-        const interval = setInterval(autoRefreshToken, 5 * 60 * 1000); // 5분마다 체크
-        return () => clearInterval(interval);
+        // 백엔드 미구현으로 토큰 자동 갱신 비활성화
+        // const interval = setInterval(autoRefreshToken, 5 * 60 * 1000); // 5분마다 체크
+        // return () => clearInterval(interval);
     }, [isAuthenticated, autoRefreshToken]);
 
     return {

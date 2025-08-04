@@ -1,25 +1,26 @@
 import { useState } from 'react';
+import { authAPI } from '../services/api';
 
 export function useSignupForm() {
     const [formData, setFormData] = useState({
-        id: '',
+        email: '',
         password: '',
         passwordConfirm: '',
-        email: ''
+        userName: ''
     });
 
     const [errors, setErrors] = useState({
-        id: '',
+        email: '',
         password: '',
         passwordConfirm: '',
-        email: ''
+        userName: ''
     });
 
     const [validationStatus, setValidationStatus] = useState({
-        id: false,
+        email: false,
         password: false,
         passwordConfirm: false,
-        email: false
+        userName: false
     });
 
     const [isLoading, setIsLoading] = useState(false);
@@ -28,11 +29,11 @@ export function useSignupForm() {
 
     const validateField = (field, value) => {
         switch (field) {
-            case 'id': {
-                const idRegex = /^[a-zA-Z0-9]{4,12}$/;
+            case 'email': {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 return {
-                    isValid: idRegex.test(value),
-                    error: idRegex.test(value) ? '' : '아이디는 영문 대소문자와 숫자 4-12자로 입력해주세요.'
+                    isValid: emailRegex.test(value),
+                    error: emailRegex.test(value) ? '' : '올바른 이메일 형식을 입력해주세요.'
                 };
             }
             case 'password': {
@@ -48,11 +49,11 @@ export function useSignupForm() {
                     error: value === formData.password ? '' : '비밀번호가 일치하지 않습니다.'
                 };
             }
-            case 'email': {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            case 'userName': {
+                const nameRegex = /^[가-힣a-zA-Z0-9]{2,20}$/;
                 return {
-                    isValid: emailRegex.test(value),
-                    error: emailRegex.test(value) ? '' : '올바른 이메일 형식을 입력해주세요.'
+                    isValid: nameRegex.test(value),
+                    error: nameRegex.test(value) ? '' : '이름은 한글, 영문, 숫자 2-20자로 입력해주세요.'
                 };
             }
             default:
@@ -68,7 +69,7 @@ export function useSignupForm() {
     };
 
     const validateForm = () => {
-        const fields = ['id', 'password', 'passwordConfirm', 'email'];
+        const fields = ['email', 'password', 'passwordConfirm', 'userName'];
         const newErrors = {};
         const newValidationStatus = {};
 
@@ -90,16 +91,44 @@ export function useSignupForm() {
         }
         setIsLoading(true);
         try {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            const isSuccess = Math.random() > 0.5;
-            if (isSuccess) {
+            // 디버깅을 위한 로그
+            console.log('회원가입 요청 데이터:', {
+                email: formData.email,
+                password: formData.password,
+                userName: formData.userName
+            });
+
+            // 백엔드 API 호출
+            const response = await authAPI.signup({
+                email: formData.email,
+                password: formData.password,
+                userName: formData.userName
+            });
+
+            console.log('회원가입 응답:', response);
+
+            if (response.status === 201) {
                 setSuccessModal({ isOpen: true, message: '회원가입이 완료되었습니다!' });
-                setFormData({ id: '', password: '', passwordConfirm: '', email: '' });
+                setFormData({ email: '', password: '', passwordConfirm: '', userName: '' });
             } else {
                 setErrorModal({ isOpen: true, message: '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.' });
             }
-        } catch {
-            setErrorModal({ isOpen: true, message: '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.' });
+        } catch (error) {
+            console.error('회원가입 오류:', error);
+            console.error('오류 응답:', error.response);
+            let errorMessage = '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.';
+
+            if (error.response?.data?.detail) {
+                errorMessage = error.response.data.detail;
+            } else if (error.response?.status === 409) {
+                errorMessage = '이미 존재하는 이메일입니다.';
+            } else if (error.response?.status === 422) {
+                errorMessage = '입력 정보를 확인해주세요.';
+            } else if (error.response?.status === 404) {
+                errorMessage = 'API 엔드포인트를 찾을 수 없습니다.';
+            }
+
+            setErrorModal({ isOpen: true, message: errorMessage });
         } finally {
             setIsLoading(false);
         }

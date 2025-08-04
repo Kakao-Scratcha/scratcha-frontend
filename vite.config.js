@@ -27,6 +27,14 @@ export default defineConfig({
     // HMR 설정
     hmr: {
       overlay: false
+    },
+    // API 프록시 설정 - CORS 문제 해결
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+        secure: false,
+      }
     }
   },
 })
