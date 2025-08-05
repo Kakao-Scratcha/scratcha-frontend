@@ -263,36 +263,41 @@ export const useAuthStore = create(
 
             clearError: () => set({ error: null }),
 
-            // 초기화 - persist된 상태 복원 후 호출
-            initialize: () => {
+            // JWT 토큰 만료 시간 확인
+            validateTokenExpiry: (token) => {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const currentTime = Date.now() / 1000;
+                    return payload.exp > currentTime;
+                } catch (error) {
+                    console.log('⚠️ 토큰 파싱 실패:', error.message);
+                    return false;
+                }
+            },
+
+            // 초기화 - persist된 상태 복원 후 호출 (개선된 버전)
+            initialize: async () => {
                 const state = get();
-                console.log('🔄 인증 상태 초기화:', {
+                console.log('🔄 인증 상태 초기화 시작:', {
                     hasToken: !!state.token,
                     isAuthenticated: state.isAuthenticated,
                     hasUser: !!state.user,
                     tokenType: state.token ? (state.token.startsWith('dev_token_') ? 'dev' : 'prod') : 'none'
                 });
 
-                // 상태 불일치 감지 및 수정
-                if (state.isAuthenticated && !state.token) {
-                    console.log('⚠️ 상태 불일치 감지: 인증됨 but 토큰 없음 - 로그아웃 처리');
-                    set({
-                        user: null,
-                        token: null,
-                        isAuthenticated: false,
-                        isLoading: false,
-                        error: null,
-                        lastActivity: null,
-                    });
+                // 이미 사용자 정보가 있으면 스킵 (중복 호출 방지)
+                if (state.user && state.isAuthenticated) {
+                    console.log('✅ 이미 인증된 사용자 정보 존재 - 초기화 스킵');
                     return;
                 }
 
-                if (state.token && !state.isAuthenticated) {
-                    console.log('🔍 토큰은 있지만 인증 상태가 아님 - 복원 시도');
+                // 1. 토큰 유효성 먼저 검증
+                if (state.token) {
+                    console.log('🔍 토큰 유효성 검증 시작');
 
-                    // 개발 모드 토큰인지 확인
+                    // 개발 모드 토큰 검증
                     if (state.token.startsWith('dev_token_')) {
-                        console.log('🔧 개발 모드 토큰 복원');
+                        console.log('🔧 개발 모드 토큰 검증');
                         const isAdmin = state.token.includes('admin');
                         const dummyUser = createDummyUser(
                             isAdmin ? 1 : 2,
@@ -307,21 +312,38 @@ export const useAuthStore = create(
                             error: null,
                             lastActivity: new Date().toISOString(),
                         });
-                        console.log('✅ 개발 모드 사용자 복원 완료');
-                    } else {
-                        console.log('🌐 일반 모드 토큰 - 프로필 정보 가져오기');
-                        // 일반 모드: 실제 API 호출
-                        set({ isAuthenticated: true });
-                        get().getProfile();
+                        console.log('✅ 개발 모드 인증 완료');
+                        return;
                     }
-                } else if (state.token && state.isAuthenticated && state.user) {
-                    console.log('✅ 이미 완전한 인증 상태');
-                } else if (!state.token && !state.isAuthenticated) {
-                    console.log('❌ 인증 상태 없음');
 
-                    // 개발 모드에서 유효하지 않은 토큰 정리
-                    if (import.meta.env.DEV && state.token && !state.token.startsWith('dev_token_')) {
-                        console.log('🧹 개발 모드에서 유효하지 않은 토큰 정리');
+                    // 일반 모드: 토큰 유효성 먼저 검증
+                    try {
+                        console.log('🌐 일반 모드 토큰 유효성 검증');
+                        set({ isLoading: true, isAuthenticated: false }); // 로딩 상태 설정, 인증 상태 초기화
+
+                        // JWT 토큰 만료 시간 사전 검증
+                        if (!get().validateTokenExpiry(state.token)) {
+                            throw new Error('토큰이 만료되었습니다.');
+                        }
+
+                        // 백엔드 API 미구현으로 로컬 검증만 수행
+                        console.log('🔍 로컬 JWT 만료시간 검증 완료');
+
+                        // 토큰이 유효하면 사용자 정보 가져오기 (한 번만 호출)
+                        const profileResponse = await authAPI.getProfile();
+                        console.log('✅ 프로필 정보 가져오기 성공:', profileResponse.data);
+
+                        set({
+                            user: profileResponse.data,
+                            isAuthenticated: true,
+                            isLoading: false,
+                            lastActivity: new Date().toISOString(),
+                        });
+
+                        console.log('✅ 토큰 유효성 검증 완료 (로컬 검증)');
+                    } catch (error) {
+                        console.log('❌ 토큰 유효성 검증 실패:', error.message);
+                        // 토큰이 유효하지 않으면 로그아웃
                         set({
                             user: null,
                             token: null,
@@ -332,7 +354,15 @@ export const useAuthStore = create(
                         });
                     }
                 } else {
-                    console.log('⚠️ 예상치 못한 상태:', state);
+                    console.log('❌ 토큰 없음 - 인증 상태 없음');
+                    set({
+                        user: null,
+                        token: null,
+                        isAuthenticated: false,
+                        isLoading: false,
+                        error: null,
+                        lastActivity: null,
+                    });
                 }
             },
 

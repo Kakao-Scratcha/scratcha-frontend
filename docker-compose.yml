@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   frontend:
@@ -10,4 +10,4 @@ services:
     restart: unless-stopped
     # 개발 모드에서 볼륨 마운트 (필요시)
     # volumes:
-    #   - ./src:/app/src:ro 
+    #   - ./src:/app/src:ro

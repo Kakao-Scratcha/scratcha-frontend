@@ -13,7 +13,7 @@ export default function DashboardSettings() {
         updateAppSettings
     } = useDashboardStore();
 
-    const { user, updateUser, getProfile, logout } = useAuth();
+    const { user, updateUser, logout } = useAuth();
 
     // const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [isNameModalOpen, setIsNameModalOpen] = useState(false);
@@ -116,38 +116,36 @@ export default function DashboardSettings() {
         e.preventDefault();
         console.log('이름 변경:', nameForm);
 
+        // 회원가입과 동일한 정규식 적용
+        const nameRegex = /^[가-힣a-zA-Z0-9]{1,30}$/;
+        const trimmedName = nameForm.newName.trim();
+
         // 유효성 검사
-        if (!nameForm.newName.trim()) {
+        if (!trimmedName) {
             alert('새 이름을 입력해주세요.');
             return;
         }
 
-        if (nameForm.newName.trim().length < 2) {
-            alert('이름은 2자 이상 입력해주세요.');
-            return;
-        }
-
-        if (nameForm.newName.trim().length > 20) {
-            alert('이름은 20자 이하로 입력해주세요.');
+        if (!nameRegex.test(trimmedName)) {
+            alert('이름은 한글, 영문, 숫자만 1-30자로 입력해주세요. (공백 및 특수문자 불가)');
             return;
         }
 
         setIsUpdating(true);
         try {
             console.log('🔄 이름 변경 API 호출 중...');
-            const response = await authAPI.updateUsername(nameForm.newName.trim());
+            const response = await authAPI.updateUsername(trimmedName);
             console.log('✅ 이름 변경 성공:', response.data);
 
             // 로컬 상태 업데이트
-            updateUser({ username: nameForm.newName.trim() });
+            updateUser({ username: trimmedName });
 
-            // 유저 정보 다시 불러오기
-            console.log('🔄 유저 정보 다시 불러오기...');
-            await getProfile();
+            // 유저 정보 다시 불러오기 제거 (무한 호출 방지)
+            console.log('✅ 이름 변경 완료 - 로컬 상태 업데이트됨');
 
             setIsNameModalOpen(false);
             setNameForm({
-                currentName: nameForm.newName.trim(),
+                currentName: trimmedName,
                 newName: ''
             });
 
@@ -159,7 +157,7 @@ export default function DashboardSettings() {
             if (error.response?.status === 409) {
                 errorMessage = '이미 사용 중인 이름입니다.';
             } else if (error.response?.status === 422) {
-                errorMessage = '이름 형식이 올바르지 않습니다.';
+                errorMessage = '입력 정보를 확인해주세요.';
             }
 
             alert(errorMessage);

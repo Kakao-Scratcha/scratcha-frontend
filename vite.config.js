@@ -8,27 +8,47 @@ export default defineConfig({
     tailwindcss(),
   ],
   build: {
-    assetsInlineLimit: 0, // 폰트 파일을 인라인하지 않도록 설정
+    assetsInlineLimit: 0,
     rollupOptions: {
       output: {
         // 청크 파일명 설정
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+        // 수동 청크 분할
+        manualChunks: {
+          // React 관련 라이브러리
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // UI 라이브러리
+          'ui-vendor': ['recharts', 'zustand'],
+          // 대시보드 관련 컴포넌트
+          'dashboard': [
+            './src/conponents/pages/DashboardOverview.jsx',
+            './src/conponents/pages/DashboardSettings.jsx',
+            './src/conponents/pages/DashboardUsage.jsx',
+            './src/conponents/pages/DashboardBilling.jsx',
+            './src/conponents/pages/DashboardApp.jsx'
+          ],
+          // 인증 관련 컴포넌트
+          'auth': [
+            './src/conponents/pages/Signin.jsx',
+            './src/conponents/pages/Signup.jsx'
+          ]
+        }
       }
-    }
+    },
+    // 청크 크기 경고 임계값 증가
+    chunkSizeWarningLimit: 1000
   },
-  assetsInclude: ['**/*.ttf'], // ttf 파일을 정적 자산으로 처리
+  assetsInclude: ['**/*.ttf'],
   server: {
-    // 개발 서버에서 public 폴더의 파일들을 루트에서 제공
+    port: 3000,
     fs: {
       allow: ['..']
     },
-    // HMR 설정
     hmr: {
       overlay: false
     },
-    // API 프록시 설정 - CORS 문제 해결
     proxy: {
       '/api': {
         target: 'http://localhost:8001',
@@ -37,4 +57,8 @@ export default defineConfig({
       }
     }
   },
+  // 개발 서버 최적화
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', 'zustand', 'recharts']
+  }
 })

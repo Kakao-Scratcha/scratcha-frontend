@@ -44,21 +44,6 @@ const NotFound = () => {
                     >
                         홈으로 돌아가기
                     </Link>
-
-                    <div className="mt-6">
-                        <Link
-                            to="/about"
-                            className="inline-block px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:underline mr-4 text-blue-600 dark:text-blue-400"
-                        >
-                            소개
-                        </Link>
-                        <Link
-                            to="/contact"
-                            className="inline-block px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:underline text-blue-600 dark:text-blue-400"
-                        >
-                            문의하기
-                        </Link>
-                    </div>
                 </div>
             </div>
 

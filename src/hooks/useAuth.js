@@ -1,5 +1,9 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useAuthStore } from '../stores/authStore';
+
+// 전역 초기화 상태 관리 (모든 useAuth 인스턴스가 공유)
+let globalInitializationPromise = null;
+let globalInitializationCompleted = false;
 
 export const useAuth = () => {
     const {
@@ -24,25 +28,53 @@ export const useAuth = () => {
         getAuthInfo,
     } = useAuthStore();
 
-    // persist 상태 복원 후 초기화 (한 번만 실행)
+    // persist 상태 복원 후 초기화 (전역 상태로 관리)
+    const isInitializedRef = useRef(false);
+
     useEffect(() => {
-        let isInitialized = false;
+        // 이미 전역적으로 초기화가 완료되었으면 스킵
+        if (globalInitializationCompleted) {
+            console.log('✅ 전역 초기화 완료 상태 - 스킵');
+            return;
+        }
 
-        const initAuth = () => {
-            if (isInitialized) return;
-            isInitialized = true;
+        // 이미 초기화가 진행 중인지 확인
+        if (globalInitializationPromise) {
+            console.log('⏳ 전역 초기화 진행 중 - 대기');
+            return;
+        }
 
-            // persist 상태가 복원된 후에만 초기화 실행
-            const timer = setTimeout(() => {
-                console.log('🚀 useAuth 초기화 시작');
-                initialize();
-            }, 200); // persist 복원 대기 시간 증가
+        // 이미 이 컴포넌트에서 초기화했는지 확인
+        if (isInitializedRef.current) {
+            console.log('✅ 로컬 초기화 완료 - 스킵');
+            return;
+        }
 
-            return () => clearTimeout(timer);
+        isInitializedRef.current = true;
+
+        // persist 상태가 복원된 후에만 초기화 실행
+        const timer = setTimeout(async () => {
+            console.log('🚀 useAuth 전역 초기화 시작');
+
+            // 전역 초기화 진행 중임을 표시
+            globalInitializationPromise = initialize();
+
+            try {
+                await globalInitializationPromise;
+                console.log('✅ useAuth 전역 초기화 완료');
+                globalInitializationCompleted = true;
+            } catch (error) {
+                console.error('❌ useAuth 전역 초기화 실패:', error);
+            } finally {
+                // 초기화 완료 후 참조 정리
+                globalInitializationPromise = null;
+            }
+        }, 100);
+
+        return () => {
+            clearTimeout(timer);
         };
-
-        return initAuth();
-    }, []); // initialize 의존성 제거
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 활동 시간 자동 업데이트 (5분마다)
     useEffect(() => {
@@ -53,7 +85,7 @@ export const useAuth = () => {
         }, 5 * 60 * 1000); // 5분
 
         return () => clearInterval(interval);
-    }, [isAuthenticated, updateActivity]);
+    }, [isAuthenticated, updateActivity]); // updateActivity 의존성 추가
 
     // 세션 만료 체크 (1시간마다)
     useEffect(() => {
@@ -67,7 +99,7 @@ export const useAuth = () => {
         }, 60 * 60 * 1000); // 1시간
 
         return () => clearInterval(interval);
-    }, [isAuthenticated, checkSessionExpiry]);
+    }, [isAuthenticated, checkSessionExpiry]); // checkSessionExpiry 의존성 추가
 
     // 토큰 자동 갱신 (토큰 만료 10분 전) - 백엔드 미구현으로 비활성화
     const autoRefreshToken = useCallback(async () => {
@@ -88,7 +120,7 @@ export const useAuth = () => {
         } catch (error) {
             console.log('⚠️ 토큰 자동 갱신 실패 (백엔드 미구현):', error.message);
         }
-    }, [isAuthenticated, token]);
+    }, [isAuthenticated, token, refreshToken]);
 
     useEffect(() => {
         if (!isAuthenticated) return;
@@ -136,7 +168,6 @@ export const useAuth = () => {
             if (!user) return '사용자';
             return user.name || user.email || '사용자';
         },
-
         getUserInitial: () => {
             if (!user) return 'U';
             return (user.name || user.email || 'U').charAt(0).toUpperCase();
@@ -157,4 +188,4 @@ export const useAuth = () => {
             };
         },
     };
-}; 
+};

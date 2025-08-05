@@ -17,8 +17,6 @@ import DashboardSettings from './conponents/pages/DashboardSettings';
 import DashboardUsage from './conponents/pages/DashboardUsage';
 import DashboardBilling from './conponents/pages/DashboardBilling';
 import DashboardApp from './conponents/pages/DashboardApp';
-import AboutPage from './conponents/pages/AboutPage';
-import ContactPage from './conponents/pages/ContactPage';
 import NotFound from './conponents/pages/NotFound';
 
 function App() {
@@ -32,8 +30,6 @@ function App() {
               <Route path="overview" element={<Overview />} />
               <Route path="pricing" element={<Pricing />} />
               <Route path="demo" element={<Demo />} />
-              <Route path="about" element={<AboutPage />} />
-              <Route path="contact" element={<ContactPage />} />
             </Route>
             <Route path="dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
               <Route index element={<DashboardOverview />} />

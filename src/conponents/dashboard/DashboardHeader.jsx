@@ -17,10 +17,7 @@ export default function DashboardHeader() {
         isAuthenticated,
         logout,
         getUserDisplayName,
-        getUserInitial,
-        getSessionInfo,
-        isAdmin,
-        canManageApps
+        getUserInitial
     } = useAuth();
 
     // 외부 클릭 시 드롭다운 닫기
@@ -48,12 +45,10 @@ export default function DashboardHeader() {
         }
     };
 
-    const handleDashboardClick = () => {
+    const handleMainPageClick = () => {
         setIsUserDropdownOpen(false);
-        navigate('/dashboard');
+        navigate('/');
     };
-
-    const sessionInfo = getSessionInfo();
 
     return (
         <header className="w-full sticky z-40 transition-all duration-200 top-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">
@@ -84,14 +79,11 @@ export default function DashboardHeader() {
                         <div className="relative" ref={userDropdownRef}>
                             <button
                                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                                className="flex items-center gap-2 px-4 py-2 rounded font-semibold border transition bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 border-blue-600 dark:border-blue-500 h-10"
+                                className="flex items-center gap-1 px-2 py-1 rounded font-semibold border transition bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 border-blue-600 dark:border-blue-500 h-10"
                             >
                                 <div className="w-6 h-6 bg-blue-500 dark:bg-blue-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
                                     {getUserInitial()}
                                 </div>
-                                <span className="hidden md:inline-block text-sm">
-                                    {getUserDisplayName()}
-                                </span>
                                 <svg
                                     className={`w-4 h-4 transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`}
                                     fill="none"
@@ -112,45 +104,39 @@ export default function DashboardHeader() {
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-gray-900 dark:text-white">
-                                                    {getUserDisplayName()}
+                                                    {getUserDisplayName().split('@')[0]}
                                                 </p>
                                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    {sessionInfo?.isActive ? '활성' : '비활성'} 세션
+                                                    {getUserDisplayName()}
                                                 </p>
-                                                {isAdmin() && (
-                                                    <span className="inline-block px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full mt-1">
-                                                        관리자
-                                                    </span>
-                                                )}
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="p-2">
                                         <button
-                                            onClick={handleDashboardClick}
-                                            className="w-full flex items-center gap-3 px-3 py-2 rounded text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-900 dark:text-white"
+                                            onClick={handleMainPageClick}
+                                            className="w-full flex items-center gap-3 px-3 py-2 rounded text-left transition text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                             </svg>
-                                            대시보드
+                                            메인화면
                                         </button>
+                                        {/* 대시보드 버튼은 대시보드 페이지에서 숨김 */}
 
-                                        {canManageApps() && (
-                                            <button
-                                                onClick={() => {
-                                                    setIsUserDropdownOpen(false);
-                                                    navigate('/dashboard/app');
-                                                }}
-                                                className="w-full flex items-center gap-3 px-3 py-2 rounded text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-900 dark:text-white"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                                APP 관리
-                                            </button>
-                                        )}
+                                        <button
+                                            onClick={() => {
+                                                setIsUserDropdownOpen(false);
+                                                navigate('/dashboard/app');
+                                            }}
+                                            className="w-full flex items-center gap-3 px-3 py-2 rounded text-left transition text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            APP 관리
+                                        </button>
 
                                         <button
                                             onClick={handleLogout}

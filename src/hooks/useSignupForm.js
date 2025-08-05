@@ -30,17 +30,19 @@ export function useSignupForm() {
     const validateField = (field, value) => {
         switch (field) {
             case 'email': {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                // 완전한 RFC 5322 표준 준수 + 최대 256자
+                const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$|^"[^"]*"@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
                 return {
-                    isValid: emailRegex.test(value),
-                    error: emailRegex.test(value) ? '' : '올바른 이메일 형식을 입력해주세요.'
+                    isValid: emailRegex.test(value) && value.length <= 256,
+                    error: emailRegex.test(value) && value.length <= 256 ? '' : '올바른 이메일 형식을 입력해주세요. (최대 256자)'
                 };
             }
             case 'password': {
-                const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{8,20}$/;
+                // 모든 문자 허용: 8-64자
+                const passwordRegex = /^.{8,64}$/;
                 return {
                     isValid: passwordRegex.test(value),
-                    error: passwordRegex.test(value) ? '' : '비밀번호는 영문 대소문자, 숫자, 특수문자 8-20자로 입력해주세요.'
+                    error: passwordRegex.test(value) ? '' : '비밀번호는 8-64자로 입력해주세요.'
                 };
             }
             case 'passwordConfirm': {
@@ -50,10 +52,11 @@ export function useSignupForm() {
                 };
             }
             case 'userName': {
-                const nameRegex = /^[가-힣a-zA-Z0-9]{2,20}$/;
+                // 1-30자, 한글/영문/숫자만, 공백제거, 특수문자 불가
+                const nameRegex = /^[가-힣a-zA-Z0-9]{1,30}$/;
                 return {
-                    isValid: nameRegex.test(value),
-                    error: nameRegex.test(value) ? '' : '이름은 한글, 영문, 숫자 2-20자로 입력해주세요.'
+                    isValid: nameRegex.test(value.trim()),
+                    error: nameRegex.test(value.trim()) ? '' : '이름은 한글, 영문, 숫자만 1-30자로 입력해주세요. (공백 및 특수문자 불가)'
                 };
             }
             default:

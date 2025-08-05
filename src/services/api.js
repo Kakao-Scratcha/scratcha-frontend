@@ -32,6 +32,12 @@ export const authAPI = {
     // 토큰 갱신
     refreshToken: () => apiClient.post('/api/dashboard/auth/refresh'),
 
+    // 토큰 유효성 검증
+    validateToken: () => {
+        console.log('🔍 토큰 유효성 검증 API 호출');
+        return apiClient.get('/api/dashboard/auth/validate-token');
+    },
+
     // 사용자 정보 조회
     getProfile: () => {
         console.log('📞 getProfile API 호출');

@@ -1,31 +1,23 @@
-# 빌드 스테이지
-FROM node:18-alpine AS builder
+# frontend/Dockerfile 수정
+FROM node:20-alpine
 
 WORKDIR /app
 
-# 패키지 파일 복사
 COPY package*.json ./
+RUN npm install
 
-# 의존성 설치 (빌드에 필요한 devDependencies 포함)
-RUN npm ci
-
-# 소스 코드 복사
 COPY . .
 
-# 프로덕션 빌드
+# 빌드 시점에 환경 변수 설정 - 클라우드 외부 IP로 변경
+ARG VITE_API_URL=http://210.109.81.41:8001
+ENV VITE_API_URL=$VITE_API_URL
+
 RUN npm run build
 
-# 프로덕션 스테이지
 FROM nginx:alpine
-
-# nginx 설정 복사
+COPY --from=0 /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# 빌드된 파일들을 nginx로 복사
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# 포트 노출
 EXPOSE 80
 
-# nginx 시작
 CMD ["nginx", "-g", "daemon off;"] 

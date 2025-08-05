@@ -1,18 +1,8 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
-// API 기본 설정
-const API_BASE_URL = import.meta.env.DEV
-    ? '' // 개발 환경에서는 프록시 사용
-    : (import.meta.env.VITE_API_URL || 'http://localhost:8001');
-
-// Swagger 문서 경로
-export const SWAGGER_URL = import.meta.env.DEV
-    ? '/docs'
-    : `${API_BASE_URL}/docs`;
-export const REDOC_URL = import.meta.env.DEV
-    ? '/redoc'
-    : `${API_BASE_URL}/redoc`;
+// API 기본 설정 - Docker 환경에서는 항상 환경 변수 사용
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://210.109.81.41:8001';
 
 // axios 인스턴스 생성
 const apiClient = axios.create({

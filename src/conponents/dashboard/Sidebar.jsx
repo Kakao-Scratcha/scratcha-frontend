@@ -8,7 +8,7 @@ export default function Sidebar() {
     const location = useLocation();
 
     return (
-        <aside className="w-64  border-r border-gray-200 dark:border-gray-700 flex flex-col px-6 py-8 mt-10">
+        <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col px-6 py-8 mt-10">
             {/* 유저 정보 */}
             <UserInfo />
 
