@@ -110,6 +110,7 @@ export function useSignupForm() {
 
             console.log('회원가입 응답:', response);
 
+            // 백엔드 스펙에 맞게 201 상태 코드 체크
             if (response.status === 201) {
                 setSuccessModal({ isOpen: true, message: '회원가입이 완료되었습니다!' });
                 setFormData({ email: '', password: '', passwordConfirm: '', userName: '' });
@@ -121,8 +122,15 @@ export function useSignupForm() {
             console.error('오류 응답:', error.response);
             let errorMessage = '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.';
 
+            // 백엔드 스펙에 맞는 오류 처리
             if (error.response?.data?.detail) {
-                errorMessage = error.response.data.detail;
+                // 422 Validation Error 처리
+                if (Array.isArray(error.response.data.detail)) {
+                    const validationErrors = error.response.data.detail.map(err => err.msg).join(', ');
+                    errorMessage = `입력 정보 오류: ${validationErrors}`;
+                } else {
+                    errorMessage = error.response.data.detail;
+                }
             } else if (error.response?.status === 409) {
                 errorMessage = '이미 존재하는 이메일입니다.';
             } else if (error.response?.status === 422) {

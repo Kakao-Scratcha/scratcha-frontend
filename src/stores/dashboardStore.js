@@ -21,9 +21,9 @@ export const useDashboardStore = create((set) => ({
     usageData: generateUsageData('전체'),
     stats: generateStats('전체'),
     isLoading: false,
-    apps: generateApps(),
+    apps: [], // 더미 데이터 제거 - 빈 배열로 시작
     selectedAppId: null,
-    apiKeys: generateApiKeys(),
+    apiKeys: [], // 더미 데이터 제거 - 빈 배열로 시작
     usageLogs: generateUsageLogs(1, 1, '전체'),
 
     // 액션
@@ -129,9 +129,9 @@ export const useDashboardStore = create((set) => ({
                 });
             });
 
-            // ID 순으로 정렬하고 최대 100개만 표시
+            // 시간순으로 정렬 (최신순)하고 최대 100개만 표시
             const sortedLogs = allLogs
-                .sort((a, b) => a.id - b.id)
+                .sort((a, b) => new Date(b.callTime) - new Date(a.callTime))
                 .slice(0, 100);
 
             set({ usageLogs: sortedLogs });
@@ -142,39 +142,104 @@ export const useDashboardStore = create((set) => ({
         }
     },
 
-    // 현재 요금제 정보
+    // 현재 요금제 정보 (메인페이지 Pricing과 동일)
     currentPlan: {
-        name: 'Professional',
-        limit: 100000,
+        name: 'Starter',
+        limit: 50000,
         used: 24500,
-        price: '₩29,900/월',
-        description: '월 100,000회 캡차 검증',
-        overageRate: 0.3 // 초과분 요금 (1회당 0.3원)
+        price: '₩29,900',
+        description: '월 50,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
+        overageRate: 2.0, // 초과분 요금 (1,000 토큰당 ₩2.0)
+        features: [
+            '기본 API & 통계',
+            '광고 제거',
+            '이메일 지원'
+        ]
     },
 
-    // 요금제 변경
+    // 통합 요금제 사용량 데이터 (모든 대시보드 페이지에서 공통 사용)
+    planUsageData: {
+        // 이번 달 실시간 사용량
+        current: {
+            tokens: {
+                used: 24500, // 사용된 토큰
+                limit: 50000, // 토큰 한도
+                percentage: Math.round((24500 / 50000) * 100)
+            },
+            requests: {
+                count: 1225, // API 호출 횟수 (24500 토큰 ÷ 20 토큰/회 = 1225회)
+                avgTokensPerRequest: 20 // 1회당 평균 토큰 사용량
+            }
+        },
+        // 지난달 사용량
+        lastMonth: {
+            tokens: {
+                used: 18900, // 사용된 토큰
+                limit: 50000 // 토큰 한도 (Starter 기준)
+            },
+            requests: {
+                count: 945, // API 호출 횟수 (18900 토큰 ÷ 20 토큰/회 = 945회)
+                avgTokensPerRequest: 20 // 1회당 평균 토큰 사용량
+            },
+            billing: {
+                overageRate: 2.0, // Starter 기준 (1,000 토큰당 ₩2.0)
+                basePrice: 29900, // Starter 기준
+                overageCost: 0, // 18900 < 50000이므로 초과분 없음
+                totalCost: 29900 // 기본 요금만
+            }
+        }
+    },
+
+    // 요금제 변경 (메인페이지 Pricing과 동일)
     changePlan: (newPlan) => {
         const planConfigs = {
-            'Basic': {
-                name: 'Basic',
-                limit: 10000,
-                price: '₩9,900/월',
-                description: '월 10,000회 캡차 검증',
-                overageRate: 0.5 // 초과분 요금 (1회당 0.5원)
+            'Free': {
+                name: 'Free',
+                limit: 1000,
+                price: '₩0',
+                description: '월 1,000 토큰 무료제공',
+                overageRate: 0,
+                features: [
+                    '기본 API 통계',
+                    '광고 포함'
+                ]
             },
-            'Professional': {
-                name: 'Professional',
-                limit: 100000,
-                price: '₩29,900/월',
-                description: '월 100,000회 캡차 검증',
-                overageRate: 0.3 // 초과분 요금 (1회당 0.3원)
+            'Starter': {
+                name: 'Starter',
+                limit: 50000,
+                price: '₩29,900',
+                description: '월 50,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
+                overageRate: 2.0,
+                features: [
+                    '기본 API & 통계',
+                    '광고 제거',
+                    '이메일 지원'
+                ]
+            },
+            'Pro': {
+                name: 'Pro',
+                limit: 200000,
+                price: '₩79,900',
+                description: '월 200,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
+                overageRate: 2.0,
+                features: [
+                    'Starter의 모든 혜택',
+                    '커스텀 UI 스킨 지원',
+                    '고급 분석 리포트'
+                ]
             },
             'Enterprise': {
                 name: 'Enterprise',
-                limit: 500000,
-                price: '₩99,900/월',
-                description: '월 500,000회 캡차 검증',
-                overageRate: 0.2 // 초과분 요금 (1회당 0.2원)
+                limit: 999999999,
+                price: '맞춤 견적',
+                description: '월 무제한 또는 대규모 토큰 패키지',
+                overageRate: 0,
+                features: [
+                    'Pro의 모든 혜택',
+                    '전용 인프라/보안 강화',
+                    'SLA 보장',
+                    '24/7 모니터링'
+                ]
             }
         };
 
@@ -282,6 +347,10 @@ export const useDashboardStore = create((set) => ({
             )
         }));
     },
+
+    // 데이터 클리어 액션
+    clearApps: () => set({ apps: [] }),
+    clearApiKeys: () => set({ apiKeys: [] }),
 
     // 사용량 업데이트
     updateUsage: (newUsage) => {

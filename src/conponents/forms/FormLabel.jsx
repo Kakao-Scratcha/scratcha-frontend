@@ -9,7 +9,7 @@ export default function FormLabel({
     return (
         <label
             htmlFor={htmlFor}
-            className={`block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2 ${className}`}
+            className={`block text-xs font-medium text-gray-900 dark:text-gray-100 mb-1 ${className}`}
         >
             {children}
             {required && <span className="text-red-500 ml-1">*</span>}

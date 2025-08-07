@@ -7,85 +7,81 @@ import { useDashboardStore } from '../../stores/dashboardStore';
 export default function DashboardBilling() {
     const {
         currentPlan,
+        planUsageData,
         changePlan,
         calculateOverageCost,
         calculateTotalCost
     } = useDashboardStore();
     const [isPlanChangeModalOpen, setIsPlanChangeModalOpen] = useState(false);
-    const [selectedPlan, setSelectedPlan] = useState('Professional');
+    const [selectedPlan, setSelectedPlan] = useState('Starter');
 
-    // 요금제 옵션
+    // 요금제 옵션 (메인페이지 Pricing과 동일)
     const planOptions = [
         {
-            id: 'basic',
-            name: 'Basic',
-            price: '₩9,900',
+            id: 'free',
+            name: 'Free',
+            price: '₩0',
             period: '/월',
-            limit: 10000,
-            description: '월 10,000회 캡차 검증',
-            overageRate: 0.5,
+            limit: 1000,
+            description: '월 1,000 토큰 무료제공',
+            overageRate: 0,
             features: [
-                '기본 캡차 서비스',
-                '이메일 지원',
-                '기본 분석 리포트',
-                '초과분 요금: 1회당 ₩0.5'
+                '기본 API 통계',
+                '광고 포함'
             ]
         },
         {
-            id: 'professional',
-            name: 'Professional',
+            id: 'starter',
+            name: 'Starter',
             price: '₩29,900',
             period: '/월',
-            limit: 100000,
-            description: '월 100,000회 캡차 검증',
-            overageRate: 0.3,
+            limit: 50000,
+            description: '월 50,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
+            overageRate: 2.0,
             features: [
-                '고급 캡차 서비스',
-                '우선 지원',
-                '상세 분석 리포트',
-                'API 우선 처리',
-                '초과분 요금: 1회당 ₩0.3'
+                '기본 API & 통계',
+                '광고 제거',
+                '이메일 지원'
+            ]
+        },
+        {
+            id: 'pro',
+            name: 'Pro',
+            price: '₩79,900',
+            period: '/월',
+            limit: 200000,
+            description: '월 200,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
+            overageRate: 2.0,
+            features: [
+                'Starter의 모든 혜택',
+                '커스텀 UI 스킨 지원',
+                '고급 분석 리포트'
             ]
         },
         {
             id: 'enterprise',
             name: 'Enterprise',
-            price: '₩99,900',
-            period: '/월',
-            limit: 500000,
-            description: '월 500,000회 캡차 검증',
-            overageRate: 0.2,
+            price: '맞춤 견적',
+            period: '',
+            limit: 999999999,
+            description: '월 무제한 또는 대규모 토큰 패키지',
+            overageRate: 0,
             features: [
-                '엔터프라이즈 캡차 서비스',
-                '24/7 전담 지원',
-                '맞춤형 분석 리포트',
-                '최우선 API 처리',
-                '전용 서버 리소스',
-                '초과분 요금: 1회당 ₩0.2'
+                'Pro의 모든 혜택',
+                '전용 인프라/보안 강화',
+                'SLA 보장',
+                '24/7 모니터링'
             ]
         }
     ];
 
-    // 실시간 사용량 계산 (더미 데이터)
-    const realtimeUsage = {
-        current: 24500,
-        limit: currentPlan.limit,
-        percentage: Math.round((currentPlan.used / currentPlan.limit) * 100)
-    };
+    // 통합 사용량 데이터 사용
+    const realtimeUsage = planUsageData.current;
+    const lastMonthUsage = planUsageData.lastMonth;
 
-    // 초과분 요금 계산
-    const overageCost = calculateOverageCost(realtimeUsage.current, currentPlan.limit, currentPlan.overageRate);
-    const totalCost = calculateTotalCost(realtimeUsage.current, currentPlan.limit, currentPlan.price, currentPlan.overageRate);
-
-    // 지난달 사용량 (더미 데이터) - 고정값
-    const lastMonthUsage = {
-        used: 18900,
-        limit: 100000, // Professional 기준 고정
-        overageRate: 0.3, // Professional 기준 고정
-        basePrice: 29900, // Professional 기준 고정
-        overageCost: 0, // 18900 < 100000이므로 초과분 없음
-        totalCost: 29900 // 기본 요금만
-    };
+    // 초과분 요금 계산 (토큰 기준)
+    const overageCost = calculateOverageCost(realtimeUsage.tokens.used, currentPlan.limit, currentPlan.overageRate);
+    const totalCost = calculateTotalCost(realtimeUsage.tokens.used, currentPlan.limit, currentPlan.price, currentPlan.overageRate);
 
     // 요금제 변경 처리
     const handlePlanChange = () => {
@@ -125,14 +121,20 @@ export default function DashboardBilling() {
                                 {/* 사용량 진행률 */}
                                 <div className="mb-4">
                                     <ProgressBar
-                                        percentage={realtimeUsage.percentage}
+                                        percentage={realtimeUsage.tokens.percentage}
                                         showLabel={true}
                                         showPercentage={true}
                                     />
                                     <div className="flex items-center justify-between text-xs mt-1">
                                         <span className="text-gray-600 dark:text-gray-400">
-                                            {realtimeUsage.limit - realtimeUsage.current}회 남음
+                                            토큰: {realtimeUsage.tokens.used.toLocaleString()} / {realtimeUsage.tokens.limit.toLocaleString()}
                                         </span>
+                                        <span className="text-gray-600 dark:text-gray-400">
+                                            API 호출: {realtimeUsage.requests.count.toLocaleString()}회
+                                        </span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                                        평균 {realtimeUsage.requests.avgTokensPerRequest} 토큰/회
                                     </div>
                                 </div>
                             </div>
@@ -142,30 +144,33 @@ export default function DashboardBilling() {
                         <div>
                             <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">포함 기능</h4>
                             <ul className="space-y-2">
-                                <li className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
-                                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    고급 캡차 서비스
-                                </li>
-                                <li className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
-                                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    우선 지원
-                                </li>
-                                <li className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
-                                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    상세 분석 리포트
-                                </li>
-                                <li className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
-                                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    API 우선 처리
-                                </li>
+                                {currentPlan.features?.map((feature, index) => (
+                                    <li key={index} className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
+                                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        {feature}
+                                    </li>
+                                )) || [
+                                        <li key="default-1" className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
+                                            <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            기본 API & 통계
+                                        </li>,
+                                        <li key="default-2" className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
+                                            <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            광고 제거
+                                        </li>,
+                                        <li key="default-3" className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
+                                            <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            이메일 지원
+                                        </li>
+                                    ]}
                             </ul>
                         </div>
                     </div>
@@ -202,7 +207,7 @@ export default function DashboardBilling() {
                                 </div>
                                 {overageCost > 0 && (
                                     <div className="text-xs text-gray-600 dark:text-gray-400 bg-red-50 p-2 rounded">
-                                        초과 사용량: {realtimeUsage.current - realtimeUsage.limit}회 × ₩{currentPlan.overageRate}/회
+                                        초과 토큰: {(realtimeUsage.tokens.used - realtimeUsage.tokens.limit).toLocaleString()} 토큰 × ₩{currentPlan.overageRate}/1,000토큰
                                     </div>
                                 )}
                                 <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
@@ -231,29 +236,33 @@ export default function DashboardBilling() {
                             </div>
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-600 dark:text-gray-400">사용량</span>
-                                    <span className="text-gray-900 dark:text-gray-100 font-medium">{lastMonthUsage.used.toLocaleString()}회</span>
+                                    <span className="text-gray-600 dark:text-gray-400">토큰 사용량</span>
+                                    <span className="text-gray-900 dark:text-gray-100 font-medium">{lastMonthUsage.tokens.used.toLocaleString()} 토큰</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-600 dark:text-gray-400">API 호출 횟수</span>
+                                    <span className="text-gray-900 dark:text-gray-100 font-medium">{lastMonthUsage.requests.count.toLocaleString()}회</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600 dark:text-gray-400">기본 요금</span>
-                                    <span className="text-gray-900 dark:text-gray-100 font-medium">₩{lastMonthUsage.basePrice.toLocaleString()}</span>
+                                    <span className="text-gray-900 dark:text-gray-100 font-medium">₩{lastMonthUsage.billing.basePrice.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600 dark:text-gray-400">초과 요금</span>
-                                    <span className={`font-medium ${lastMonthUsage.overageCost > 0 ? 'text-red-600' : 'text-gray-900 dark:text-gray-100'}`}>
-                                        {lastMonthUsage.overageCost > 0 ? `₩${lastMonthUsage.overageCost.toLocaleString()}` : '₩0'}
+                                    <span className={`font-medium ${lastMonthUsage.billing.overageCost > 0 ? 'text-red-600' : 'text-gray-900 dark:text-gray-100'}`}>
+                                        {lastMonthUsage.billing.overageCost > 0 ? `₩${lastMonthUsage.billing.overageCost.toLocaleString()}` : '₩0'}
                                     </span>
                                 </div>
-                                {lastMonthUsage.overageCost > 0 && (
+                                {lastMonthUsage.billing.overageCost > 0 && (
                                     <div className="text-xs text-gray-600 dark:text-gray-400 bg-red-50 p-2 rounded">
-                                        초과 사용량: {lastMonthUsage.used - lastMonthUsage.limit}회 × ₩{lastMonthUsage.overageRate}/회
+                                        초과 토큰: {(lastMonthUsage.tokens.used - lastMonthUsage.tokens.limit).toLocaleString()} 토큰 × ₩{lastMonthUsage.billing.overageRate}/1,000토큰
                                     </div>
                                 )}
                                 <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
                                     <div className="flex justify-between">
                                         <span className="font-semibold text-gray-900 dark:text-gray-100">총 청구액</span>
-                                        <span className={`font-bold text-lg ${lastMonthUsage.overageCost > 0 ? 'text-red-600' : 'text-gray-900 dark:text-gray-100'}`}>
-                                            ₩{lastMonthUsage.totalCost.toLocaleString()}
+                                        <span className={`font-bold text-lg ${lastMonthUsage.billing.overageCost > 0 ? 'text-red-600' : 'text-gray-900 dark:text-gray-100'}`}>
+                                            ₩{lastMonthUsage.billing.totalCost.toLocaleString()}
                                         </span>
                                     </div>
                                 </div>

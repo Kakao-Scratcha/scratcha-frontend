@@ -48,6 +48,7 @@ export default function DashboardHeader() {
     const handleMainPageClick = () => {
         setIsUserDropdownOpen(false);
         navigate('/');
+        window.scrollTo({ top: 0, behavior: 'auto' });
     };
 
     return (
@@ -55,7 +56,7 @@ export default function DashboardHeader() {
             <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 relative">
                 {/* 좌측: 로고 */}
                 <div className="flex items-center">
-                    <Logo showText={true} />
+                    <Logo />
                 </div>
 
                 {/* 중앙: 타이틀 */}

@@ -211,7 +211,7 @@ export const DUMMY_ACTIVITIES = [
         id: 1,
         title: 'API 호출 성공',
         time: '2분 전',
-        count: '1,234회',
+        count: '62회 (1,234 토큰)',
         type: 'success',
         icon: 'check-circle'
     },
@@ -225,7 +225,7 @@ export const DUMMY_ACTIVITIES = [
     },
     {
         id: 3,
-        title: '사용량 한도 경고',
+        title: '토큰 사용량 경고',
         time: '10분 전',
         count: '90% 도달',
         type: 'warning',
@@ -243,19 +243,19 @@ export const DUMMY_ACTIVITIES = [
         id: 5,
         title: '인증 실패',
         time: '20분 전',
-        count: '3회',
+        count: '3회 (60 토큰)',
         type: 'error',
         icon: 'x-circle'
     }
 ];
 
-// ===== 사용 로그 더미 데이터 =====
+// ===== 사용 로그 더미 데이터 (최신순 정렬) =====
 export const DUMMY_USAGE_LOGS = [
     {
         id: 1,
         appName: 'My Website',
         apiKey: 'sk-prod-1234567890abcdef',
-        callTime: '2024-01-25 12:30:45',
+        callTime: '2024-01-25 14:45:32',
         result: '성공',
         responseTime: 245
     },
@@ -263,7 +263,7 @@ export const DUMMY_USAGE_LOGS = [
         id: 2,
         appName: 'Mobile App',
         apiKey: 'sk-mobile-9876543210fedcba',
-        callTime: '2024-01-25 12:29:32',
+        callTime: '2024-01-25 14:42:18',
         result: '성공',
         responseTime: 189
     },
@@ -271,15 +271,15 @@ export const DUMMY_USAGE_LOGS = [
         id: 3,
         appName: 'API Gateway',
         apiKey: 'sk-gateway-abcdef1234567890',
-        callTime: '2024-01-25 12:28:15',
-        result: '타임아웃',
-        responseTime: 5000
+        callTime: '2024-01-25 14:38:55',
+        result: '실패',
+        responseTime: 3200
     },
     {
         id: 4,
         appName: 'My Website',
         apiKey: 'sk-dev-abcdef1234567890',
-        callTime: '2024-01-25 12:27:48',
+        callTime: '2024-01-25 14:35:22',
         result: '성공',
         responseTime: 312
     },
@@ -287,11 +287,100 @@ export const DUMMY_USAGE_LOGS = [
         id: 5,
         appName: 'Mobile App',
         apiKey: 'sk-mobile-9876543210fedcba',
-        callTime: '2024-01-25 12:26:22',
-        result: '인증오류',
+        callTime: '2024-01-25 14:31:47',
+        result: '타임아웃',
+        responseTime: 5000
+    },
+    {
+        id: 6,
+        appName: 'API Gateway',
+        apiKey: 'sk-gateway-abcdef1234567890',
+        callTime: '2024-01-25 14:28:13',
+        result: '성공',
         responseTime: 156
+    },
+    {
+        id: 7,
+        appName: 'My Website',
+        apiKey: 'sk-prod-1234567890abcdef',
+        callTime: '2024-01-25 14:24:09',
+        result: '인증오류',
+        responseTime: 189
+    },
+    {
+        id: 8,
+        appName: 'Mobile App',
+        apiKey: 'sk-mobile-9876543210fedcba',
+        callTime: '2024-01-25 14:20:35',
+        result: '성공',
+        responseTime: 278
     }
 ];
+
+// ===== 애플리케이션 더미 데이터 =====
+export const DUMMY_APPLICATIONS = [
+    {
+        id: 1,
+        name: "My Website",
+        description: "내 웹사이트에서 사용하는 API",
+        api_keys: [
+            { id: 1, key: "sk-prod-1234567890abcdef", name: "Production Key", created_at: "2024-01-20T10:30:00Z", last_used: "2024-01-25T14:45:32Z" },
+            { id: 2, key: "sk-test-9876543210fedcba", name: "Test Key", created_at: "2024-01-22T15:20:00Z", last_used: "2024-01-24T09:15:00Z" }
+        ],
+        created_at: "2024-01-20T10:30:00Z",
+        updated_at: "2024-01-25T14:45:32Z",
+        status: "active"
+    },
+    {
+        id: 2,
+        name: "Mobile App",
+        description: "모바일 앱에서 사용하는 API",
+        api_keys: [
+            { id: 3, key: "sk-mobile-abcdef1234567890", name: "Mobile Key", created_at: "2024-01-18T08:45:00Z", last_used: "2024-01-25T16:20:15Z" }
+        ],
+        created_at: "2024-01-18T08:45:00Z",
+        updated_at: "2024-01-25T16:20:15Z",
+        status: "active"
+    },
+    {
+        id: 3,
+        name: "Test Application",
+        description: "테스트용 애플리케이션",
+        api_keys: [
+            { id: 4, key: "sk-test-1234567890abcdef", name: "Test Key", created_at: "2024-01-15T12:00:00Z", last_used: "2024-01-23T11:30:00Z" }
+        ],
+        created_at: "2024-01-15T12:00:00Z",
+        updated_at: "2024-01-23T11:30:00Z",
+        status: "inactive"
+    }
+];
+
+// 애플리케이션 생성 함수
+export const createApplication = (data) => {
+    const newApp = {
+        id: Math.floor(Math.random() * 1000) + 100,
+        name: data.name,
+        description: data.description || "",
+        api_keys: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        status: "active"
+    };
+    return newApp;
+};
+
+// 애플리케이션 업데이트 함수
+export const updateApplication = (id, data) => {
+    return {
+        id: parseInt(id),
+        name: data.name,
+        description: data.description || "",
+        api_keys: data.api_keys || [],
+        created_at: data.created_at,
+        updated_at: new Date().toISOString(),
+        status: data.status || "active"
+    };
+};
 
 // ===== 유틸리티 함수들 =====
 
@@ -372,49 +461,82 @@ export const generateStats = (period) => {
     };
 };
 
-// 사용 로그 생성 함수
+// 사용 로그 생성 함수 (시간순 정렬)
 export const generateUsageLogs = (appId, apiKeyId, period, startId = 1) => {
     const logs = [];
     const now = new Date();
     let count = 0;
+    let timeRange = 1440; // 기본 24시간 (분 단위)
 
-    // 기간에 따른 로그 개수 결정
+    // 기간에 따른 로그 개수와 시간 범위 결정
     switch (period) {
         case '1일':
             count = 50;
+            timeRange = 1440; // 24시간
             break;
         case '7일':
             count = 200;
+            timeRange = 10080; // 7일
             break;
         case '30일':
             count = 800;
+            timeRange = 43200; // 30일
             break;
         default:
             count = 100;
+            timeRange = 10080; // 기본 7일
             break;
     }
 
+    // 로그 시간들을 미리 생성하고 정렬
+    const logTimes = [];
     for (let i = 0; i < count; i++) {
-        const logTime = new Date(now);
-        logTime.setMinutes(now.getMinutes() - Math.floor(Math.random() * 1440)); // 최대 24시간 전
+        const minutesAgo = Math.floor(Math.random() * timeRange);
+        const logTime = new Date(now.getTime() - (minutesAgo * 60 * 1000));
+        logTimes.push(logTime);
+    }
 
-        const results = ['성공', '실패', '타임아웃', '인증오류'];
+    // 최신순으로 정렬 (내림차순)
+    logTimes.sort((a, b) => b.getTime() - a.getTime());
+
+    // 결과 확률 조정 (성공률을 높임)
+    const results = ['성공', '성공', '성공', '성공', '실패', '타임아웃', '인증오류'];
+
+    for (let i = 0; i < count; i++) {
         const result = results[Math.floor(Math.random() * results.length)];
-
         const app = DUMMY_APPS.find(app => appId === 'all' || app.id === appId) || DUMMY_APPS[0];
         const apiKey = DUMMY_API_KEYS.find(key => apiKeyId === 'all' || key.id === apiKeyId) || DUMMY_API_KEYS[0];
+
+        // 결과에 따른 응답 시간 조정
+        let responseTime;
+        switch (result) {
+            case '성공':
+                responseTime = Math.floor(Math.random() * 300) + 100; // 100-400ms
+                break;
+            case '실패':
+                responseTime = Math.floor(Math.random() * 2000) + 1000; // 1-3초
+                break;
+            case '타임아웃':
+                responseTime = Math.floor(Math.random() * 3000) + 5000; // 5-8초
+                break;
+            case '인증오류':
+                responseTime = Math.floor(Math.random() * 200) + 50; // 50-250ms
+                break;
+            default:
+                responseTime = Math.floor(Math.random() * 500) + 100;
+        }
 
         logs.push({
             id: startId + i,
             appName: app.name,
             apiKey: apiKey.key,
-            callTime: logTime.toLocaleString('ko-KR'),
+            callTime: logTimes[i].toLocaleString('ko-KR'),
             result,
-            responseTime: Math.floor(Math.random() * 500) + 100
+            responseTime
         });
     }
 
-    return logs.sort((a, b) => new Date(b.callTime) - new Date(a.callTime));
+    return logs; // 이미 시간순으로 정렬되어 있음
 };
 
 // 더미 사용자 생성 함수

@@ -6,6 +6,8 @@ import useDarkModeStore from '../../stores/darkModeStore';
 import { useDevModeStore } from '../../stores/devModeStore';
 import { useAuth } from '../../hooks/useAuth';
 
+
+
 export default function Header() {
     const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -57,6 +59,7 @@ export default function Header() {
     const handleMainPageClick = () => {
         setIsUserDropdownOpen(false);
         navigate('/');
+        window.scrollTo({ top: 0, behavior: 'auto' });
     };
 
     return (

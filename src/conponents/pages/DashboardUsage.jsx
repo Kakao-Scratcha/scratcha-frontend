@@ -225,7 +225,7 @@ export default function DashboardUsage() {
                                         : 'border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
                                         }`}
                                 >
-                                    테이블
+                                    로그
                                 </button>
                             </div>
                         </div>

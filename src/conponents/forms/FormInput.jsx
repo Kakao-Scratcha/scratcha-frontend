@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 export default function FormInput({
     id,
@@ -15,8 +15,8 @@ export default function FormInput({
 }) {
     const [showPassword, setShowPassword] = useState(false);
 
-    // 아웃라인 색상 결정
-    const getOutlineColor = () => {
+    // 아웃라인 색상 결정 (메모이제이션으로 재렌더링 방지)
+    const outlineColor = useMemo(() => {
         if (error) {
             return 'border-red-500 focus:ring-red-500'; // 에러 시 빨간색
         } else if (isValid && value && value.trim() !== '') {
@@ -24,7 +24,7 @@ export default function FormInput({
         } else {
             return 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400'; // 기본
         }
-    };
+    }, [error, isValid, value]);
 
     // 비밀번호 필드 복사 방지
     const handleCopy = (e) => {
@@ -45,7 +45,7 @@ export default function FormInput({
     return (
         <div className="flex flex-col gap-1">
             {label && (
-                <label className="text-sm text-gray-900 dark:text-white font-medium" htmlFor={id}>
+                <label className="text-xs text-gray-900 dark:text-white font-medium" htmlFor={id}>
                     {label}
                 </label>
             )}
@@ -58,14 +58,14 @@ export default function FormInput({
                     disabled={disabled}
                     onCopy={handleCopy}
                     onCut={handleCopy}
-                    className={`rounded-md px-4 py-3 bg-white dark:bg-gray-800 border-2 ${getOutlineColor()} text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-colors w-full ${isPasswordField ? 'pr-12' : ''} ${className}`}
+                    className={`rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 border-2 ${outlineColor} text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-colors w-full ${isPasswordField ? 'pr-10' : ''} ${className}`}
                     {...props}
                 />
                 {isPasswordField && (
                     <button
                         type="button"
                         onClick={togglePasswordVisibility}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                         disabled={disabled}
                     >
                         {showPassword ? (
@@ -81,9 +81,11 @@ export default function FormInput({
                     </button>
                 )}
             </div>
-            {error && (
-                <span className="text-xs text-red-500 dark:text-red-400">{error}</span>
-            )}
+            <div className="h-4 flex items-start">
+                {error && (
+                    <span className="text-xs text-red-500 dark:text-red-400">{error}</span>
+                )}
+            </div>
         </div>
     );
 } 

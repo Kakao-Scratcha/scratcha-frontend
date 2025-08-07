@@ -30,7 +30,7 @@ export default function Footer() {
                             <li><Link to="/overview" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">개요</Link></li>
                             <li><Link to="/pricing" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">요금제</Link></li>
                             <li><Link to="/demo" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">데모</Link></li>
-                            <li><a href="#" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">API 문서</a></li>
+                            <li><span className="text-gray-400 dark:text-gray-500 cursor-not-allowed">API 문서</span></li>
                         </ul>
                     </div>
                     <div>
@@ -38,10 +38,10 @@ export default function Footer() {
                             개발자
                         </div>
                         <ul className="space-y-1 text-gray-600 dark:text-gray-300">
-                            <li><a href="#" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">SDK</a></li>
-                            <li><a href="#" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">플러그인</a></li>
-                            <li><a href="#" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">통합 가이드</a></li>
-                            <li><a href="#" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">커뮤니티</a></li>
+                            <li><span className="text-gray-400 dark:text-gray-500 cursor-not-allowed">SDK</span></li>
+                            <li><span className="text-gray-400 dark:text-gray-500 cursor-not-allowed">플러그인</span></li>
+                            <li><span className="text-gray-400 dark:text-gray-500 cursor-not-allowed">통합 가이드</span></li>
+                            <li><span className="text-gray-400 dark:text-gray-500 cursor-not-allowed">커뮤니티</span></li>
                         </ul>
                     </div>
                 </div>

@@ -1,10 +1,30 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useAuthStore } from '../stores/authStore';
 
 export default function ProtectedRoute({ children }) {
     const { isAuthenticated, isLoading } = useAuth();
     const location = useLocation();
+    const { checkTokenValidity, autoLogoutIfExpired } = useAuthStore();
+
+    // 페이지 이동 시 토큰 유효성 체크
+    useEffect(() => {
+        if (isAuthenticated && !isLoading) {
+            console.log('🔍 페이지 이동 시 토큰 유효성 체크');
+            const validity = checkTokenValidity();
+
+            if (!validity.isValid) {
+                console.log('⚠️ 페이지 이동 중 토큰 무효화 감지:', validity.reason);
+                const wasLoggedOut = autoLogoutIfExpired();
+                if (wasLoggedOut) {
+                    console.log('🔄 페이지 이동 중 자동 로그아웃 완료');
+                }
+            } else {
+                console.log('✅ 페이지 이동 시 토큰 유효함');
+            }
+        }
+    }, [isAuthenticated, isLoading, location.pathname, checkTokenValidity, autoLogoutIfExpired]);
 
     // 로딩 중일 때는 로딩 표시
     if (isLoading) {

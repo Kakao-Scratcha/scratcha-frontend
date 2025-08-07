@@ -61,6 +61,21 @@ export const useAuth = () => {
 
             try {
                 await globalInitializationPromise;
+
+                // 초기화 후 토큰 유효성 체크
+                const { checkTokenValidity, autoLogoutIfExpired } = useAuthStore.getState();
+                const validity = checkTokenValidity();
+
+                if (!validity.isValid) {
+                    console.log('⚠️ 초기화 중 토큰 무효화 감지:', validity.reason);
+                    const wasLoggedOut = autoLogoutIfExpired();
+                    if (wasLoggedOut) {
+                        console.log('🔄 초기화 중 자동 로그아웃 완료');
+                    }
+                } else {
+                    console.log('✅ 초기화 시 토큰 유효함');
+                }
+
                 console.log('✅ useAuth 전역 초기화 완료');
                 globalInitializationCompleted = true;
             } catch (error) {
@@ -100,6 +115,26 @@ export const useAuth = () => {
 
         return () => clearInterval(interval);
     }, [isAuthenticated, checkSessionExpiry]); // checkSessionExpiry 의존성 추가
+
+    // 토큰 유효성 주기적 체크 (5분마다)
+    useEffect(() => {
+        if (!isAuthenticated) return;
+
+        const interval = setInterval(() => {
+            const { checkTokenValidity, autoLogoutIfExpired } = useAuthStore.getState();
+            const validity = checkTokenValidity();
+
+            if (!validity.isValid) {
+                console.log('⚠️ 주기적 체크 중 토큰 무효화 감지:', validity.reason);
+                const wasLoggedOut = autoLogoutIfExpired();
+                if (wasLoggedOut) {
+                    console.log('🔄 주기적 체크 중 자동 로그아웃 완료');
+                }
+            }
+        }, 5 * 60 * 1000); // 5분마다
+
+        return () => clearInterval(interval);
+    }, [isAuthenticated]);
 
     // 토큰 자동 갱신 (토큰 만료 10분 전) - 백엔드 미구현으로 비활성화
     const autoRefreshToken = useCallback(async () => {

@@ -264,7 +264,7 @@ export default function DashboardSettings() {
                                             </div>
                                             <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
                                                 <span>생성일: {app.createdAt}</span>
-                                                <span>오늘: {app.usage.today}회</span>
+                                                <span>오늘: {Math.round(app.usage.today / 20)}회 ({app.usage.today} 토큰)</span>
                                             </div>
                                         </div>
                                     </div>

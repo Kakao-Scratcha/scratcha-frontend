@@ -11,7 +11,7 @@ export default function SignupButton({
         <button
             onClick={onClick}
             disabled={disabled || loading}
-            className={`w-full bg-blue-600 hover:opacity-90 disabled:opacity-50 text-white font-bold py-3 rounded-lg text-lg transition ${className}`}
+            className={`w-full bg-blue-600 hover:opacity-90 disabled:opacity-50 text-white font-bold py-2 rounded-lg text-sm transition ${className}`}
         >
             {loading ? (
                 <div className="flex items-center justify-center gap-2">

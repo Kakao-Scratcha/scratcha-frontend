@@ -25,7 +25,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
             {/* 배경 오버레이 */}
             <div
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm"

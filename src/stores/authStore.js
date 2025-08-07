@@ -3,6 +3,74 @@ import { persist } from 'zustand/middleware';
 import { createDummyUser } from '../data/dummyData';
 import { authAPI } from '../services/api';
 
+// JWT 토큰 유틸리티 함수들
+const tokenUtils = {
+    // JWT 토큰에서 payload 추출
+    decodeToken: (token) => {
+        try {
+            const cleanToken = token.replace('Bearer ', '');
+            const payload = cleanToken.split('.')[1];
+            const decodedPayload = JSON.parse(atob(payload));
+            return decodedPayload;
+        } catch (error) {
+            console.error('토큰 디코딩 실패:', error);
+            return null;
+        }
+    },
+
+    // 토큰 만료 시간 확인
+    getTokenExpiry: (token) => {
+        const payload = tokenUtils.decodeToken(token);
+        if (!payload || !payload.exp) return null;
+        return new Date(payload.exp * 1000);
+    },
+
+    // 토큰 발급 시간 확인
+    getTokenIssuedAt: (token) => {
+        const payload = tokenUtils.decodeToken(token);
+        if (!payload || !payload.iat) return null;
+        return new Date(payload.iat * 1000);
+    },
+
+    // 토큰 만료까지 남은 시간 (분)
+    getTimeUntilExpiry: (token) => {
+        const expiryDate = tokenUtils.getTokenExpiry(token);
+        if (!expiryDate) return null;
+
+        const now = new Date();
+        const diffInMinutes = Math.floor((expiryDate - now) / (1000 * 60));
+
+        return diffInMinutes;
+    },
+
+    // 토큰이 만료되었는지 확인
+    isTokenExpired: (token) => {
+        const timeUntilExpiry = tokenUtils.getTimeUntilExpiry(token);
+        return timeUntilExpiry === null || timeUntilExpiry <= 0;
+    },
+
+    // 토큰 정보 전체 출력
+    getTokenInfo: (token) => {
+        const payload = tokenUtils.decodeToken(token);
+        const expiryDate = tokenUtils.getTokenExpiry(token);
+        const issuedAt = tokenUtils.getTokenIssuedAt(token);
+        const timeUntilExpiry = tokenUtils.getTimeUntilExpiry(token);
+        const isExpired = tokenUtils.isTokenExpired(token);
+
+        return {
+            payload,
+            expiryDate,
+            issuedAt,
+            timeUntilExpiry,
+            isExpired,
+            formattedExpiry: expiryDate ? expiryDate.toLocaleString('ko-KR') : '알 수 없음',
+            formattedIssuedAt: issuedAt ? issuedAt.toLocaleString('ko-KR') : '알 수 없음',
+            formattedTimeUntilExpiry: timeUntilExpiry !== null ?
+                `${Math.floor(timeUntilExpiry / 60)}시간 ${timeUntilExpiry % 60}분` : '알 수 없음'
+        };
+    }
+};
+
 export const useAuthStore = create(
     persist(
         (set, get) => ({
@@ -13,6 +81,103 @@ export const useAuthStore = create(
             isLoading: false,
             error: null,
             lastActivity: null, // 마지막 활동 시간
+
+            // 토큰 분석 함수들
+            getTokenInfo: () => {
+                const token = get().token;
+                if (!token) {
+                    console.log('🔍 토큰이 없음');
+                    return null;
+                }
+
+                try {
+                    const tokenInfo = tokenUtils.getTokenInfo(token);
+                    console.log('🔍 토큰 정보:', tokenInfo);
+                    return tokenInfo;
+                } catch (error) {
+                    console.error('❌ 토큰 정보 확인 실패:', error);
+                    return null;
+                }
+            },
+
+            // 토큰 만료 시간 확인
+            getTokenExpiry: () => {
+                const token = get().token;
+                if (!token) return null;
+                return tokenUtils.getTokenExpiry(token);
+            },
+
+            // 토큰 발급 시간 확인
+            getTokenIssuedAt: () => {
+                const token = get().token;
+                if (!token) return null;
+                return tokenUtils.getTokenIssuedAt(token);
+            },
+
+            // 토큰 만료까지 남은 시간
+            getTimeUntilExpiry: () => {
+                const token = get().token;
+                if (!token) return null;
+                return tokenUtils.getTimeUntilExpiry(token);
+            },
+
+            // 토큰 만료 여부 확인
+            isTokenExpired: () => {
+                const token = get().token;
+                if (!token) return true;
+                return tokenUtils.isTokenExpired(token);
+            },
+
+            // 토큰 유효성 체크
+            checkTokenValidity: () => {
+                const token = get().token;
+                if (!token) {
+                    console.log('🔍 토큰이 없음');
+                    return { isValid: false, reason: 'no_token' };
+                }
+
+                try {
+                    const isExpired = tokenUtils.isTokenExpired(token);
+                    const timeUntilExpiry = tokenUtils.getTimeUntilExpiry(token);
+                    const expiryDate = tokenUtils.getTokenExpiry(token);
+                    const issuedAt = tokenUtils.getTokenIssuedAt(token);
+
+                    console.log('🔍 토큰 유효성 체크:', {
+                        isExpired,
+                        timeUntilExpiry: timeUntilExpiry ? `${timeUntilExpiry}분` : '알 수 없음',
+                        expiryDate: expiryDate ? expiryDate.toLocaleString('ko-KR') : '알 수 없음',
+                        issuedAt: issuedAt ? issuedAt.toLocaleString('ko-KR') : '알 수 없음'
+                    });
+
+                    if (isExpired) {
+                        console.log('⚠️ 토큰이 만료됨');
+                        return { isValid: false, reason: 'expired' };
+                    }
+
+                    // 만료 10분 전 경고
+                    if (timeUntilExpiry && timeUntilExpiry < 10) {
+                        console.log('⚠️ 토큰 만료 임박:', `${timeUntilExpiry}분 남음`);
+                    }
+
+                    return { isValid: true, timeUntilExpiry };
+                } catch (error) {
+                    console.error('❌ 토큰 유효성 체크 실패:', error);
+                    return { isValid: false, reason: 'invalid_token' };
+                }
+            },
+
+            // 자동 로그아웃 (토큰 만료 시)
+            autoLogoutIfExpired: () => {
+                const { isValid, reason } = get().checkTokenValidity();
+
+                if (!isValid) {
+                    console.log('🔄 토큰 무효화로 자동 로그아웃:', reason);
+                    get().logout();
+                    return true; // 로그아웃됨
+                }
+
+                return false; // 로그아웃되지 않음
+            },
 
             // 액션
             login: async (credentials) => {
@@ -46,6 +211,17 @@ export const useAuthStore = create(
 
                     console.log('💾 토큰 저장 완료, 사용자 정보 가져오기 시작');
 
+                    // 로그인 후 토큰 유효성 체크
+                    const tokenInfo = get().getTokenInfo();
+                    if (tokenInfo) {
+                        console.log('🔍 로그인 후 토큰 정보:', {
+                            만료시간: tokenInfo.formattedExpiry,
+                            발급시간: tokenInfo.formattedIssuedAt,
+                            남은시간: tokenInfo.formattedTimeUntilExpiry,
+                            만료여부: tokenInfo.isExpired
+                        });
+                    }
+
                     // 사용자 프로필 정보 가져오기
                     try {
                         await get().getProfile();
@@ -59,11 +235,12 @@ export const useAuthStore = create(
                 } catch (error) {
                     console.error('❌ 로그인 실패:', error);
                     console.error('❌ 오류 응답:', error.response);
+                    const errorMessage = error.response?.data?.message || error.message || '로그인에 실패했습니다.';
                     set({
                         isLoading: false,
-                        error: error.response?.data?.message || '로그인에 실패했습니다.',
+                        error: errorMessage,
                     });
-                    return { success: false, error: error.response?.data?.message };
+                    return { success: false, error: errorMessage };
                 }
             },
 
@@ -74,42 +251,68 @@ export const useAuthStore = create(
                     console.log('✅ 회원가입 성공:', response.data);
 
                     // 백엔드 응답 구조에 맞게 처리
-                    const { accessToken, tokenType } = response.data;
+                    const { token, email, username, role } = response.data;
 
-                    // 토큰을 올바른 형식으로 저장
-                    const token = `${tokenType} ${accessToken}`;
+                    // 토큰을 올바른 형식으로 저장 (백엔드에서 token 필드로 반환)
+                    const authToken = `Bearer ${token}`;
 
                     set({
-                        token,
+                        token: authToken,
                         isAuthenticated: true,
                         isLoading: false,
                         error: null,
                         lastActivity: new Date().toISOString(),
+                        user: {
+                            email,
+                            username,
+                            role
+                        }
                     });
 
-                    console.log('💾 회원가입 토큰 저장 완료, 사용자 정보 가져오기 시작');
-
-                    // 사용자 프로필 정보 가져오기
-                    try {
-                        await get().getProfile();
-                        console.log('✅ 회원가입 후 사용자 정보 가져오기 완료');
-                    } catch (profileError) {
-                        console.error('❌ 회원가입 후 사용자 정보 가져오기 실패:', profileError);
-                        // 프로필 가져오기 실패해도 회원가입은 성공으로 처리
-                    }
+                    console.log('💾 회원가입 토큰 저장 완료');
 
                     return { success: true };
                 } catch (error) {
+                    console.error('❌ 회원가입 실패:', error);
+                    console.error('❌ 오류 응답:', error.response);
+
+                    let errorMessage = '회원가입에 실패했습니다.';
+
+                    // 백엔드 스펙에 맞는 오류 처리
+                    if (error.response?.data?.detail) {
+                        if (Array.isArray(error.response.data.detail)) {
+                            const validationErrors = error.response.data.detail.map(err => err.msg).join(', ');
+                            errorMessage = `입력 정보 오류: ${validationErrors}`;
+                        } else {
+                            errorMessage = error.response.data.detail;
+                        }
+                    } else if (error.response?.status === 409) {
+                        errorMessage = '이미 존재하는 이메일입니다.';
+                    } else if (error.response?.status === 422) {
+                        errorMessage = '입력 정보를 확인해주세요.';
+                    }
+
                     set({
                         isLoading: false,
-                        error: error.response?.data?.message || '회원가입에 실패했습니다.',
+                        error: errorMessage,
                     });
-                    return { success: false, error: error.response?.data?.message };
+                    return { success: false, error: errorMessage };
                 }
             },
 
             logout: async () => {
                 try {
+                    // 로그아웃 전 토큰 정보 확인
+                    const tokenInfo = get().getTokenInfo();
+                    if (tokenInfo) {
+                        console.log('🔍 로그아웃 전 토큰 정보:', {
+                            만료시간: tokenInfo.formattedExpiry,
+                            발급시간: tokenInfo.formattedIssuedAt,
+                            남은시간: tokenInfo.formattedTimeUntilExpiry,
+                            만료여부: tokenInfo.isExpired
+                        });
+                    }
+
                     // 개발 모드 토큰인지 확인
                     const token = get().token;
                     const isDevMode = token && token.startsWith('dev_token_');

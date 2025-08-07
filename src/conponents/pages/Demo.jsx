@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import ScratchDemo from '../ui/ScratchDemo';
 import DemoInfo from '../ui/DemoInfo';
 
@@ -67,12 +68,12 @@ export default function Demo() {
                     >
                         다시 시작
                     </button>
-                    <button
-                        onClick={() => window.open('/signup', '_blank')}
-                        className="bg-transparent border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white font-bold py-3 px-8 rounded-lg transition"
+                    <Link
+                        to="/signup"
+                        className="inline-block bg-transparent border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white font-bold py-3 px-8 rounded-lg transition"
                     >
                         지금 시작하기
-                    </button>
+                    </Link>
                 </div>
 
                 {/* Features */}

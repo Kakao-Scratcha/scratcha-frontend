@@ -4,7 +4,7 @@ export default function Overview() {
     return (
         <div className="min-h-screen bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
             {/* Hero Section */}
-            <section className="py-32">
+            <section className="py-24">
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="text-left max-w-4xl mx-auto">
                         <h1 className="text-5xl md:text-7xl font-bold mb-6 text-gray-900 dark:text-white">
@@ -23,7 +23,7 @@ export default function Overview() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto mt-16">
                         <div className="text-center">
                             <div className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                                dd.d%
+                                99.8%
                             </div>
                             <div className="text-sm text-gray-600 dark:text-gray-300">
                                 AI 봇 차단률
@@ -31,7 +31,7 @@ export default function Overview() {
                         </div>
                         <div className="text-center">
                             <div className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                                d.d 초
+                                3.2초
                             </div>
                             <div className="text-sm text-gray-600 dark:text-gray-300">
                                 평균 인증 소요시간
@@ -39,7 +39,7 @@ export default function Overview() {
                         </div>
                         <div className="text-center">
                             <div className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                                ddM+
+                                50M+
                             </div>
                             <div className="text-sm text-gray-600 dark:text-gray-300">
                                 연간 처리 요청수

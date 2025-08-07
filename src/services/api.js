@@ -84,19 +84,64 @@ export const adminUserAPI = {
 // 애플리케이션 관련 API
 export const applicationAPI = {
     // 모든 애플리케이션 조회
-    getAllApplications: () => apiClient.get('/api/dashboard/applications/'),
+    getAllApplications: () => {
+        console.log('📱 애플리케이션 목록 조회 API 호출');
+        return apiClient.get('/api/dashboard/application/all');
+    },
 
     // 애플리케이션 생성
-    createApplication: (data) => apiClient.post('/api/dashboard/applications/', data),
+    createApplication: (data) => {
+        console.log('📱 애플리케이션 생성 API 호출:', data);
+        return apiClient.post('/api/dashboard/application/', data);
+    },
 
     // 특정 애플리케이션 조회
-    getApplicationById: (appId) => apiClient.get(`/api/dashboard/applications/${appId}`),
+    getApplicationById: (appId) => {
+        console.log('📱 애플리케이션 조회 API 호출:', appId);
+        return apiClient.get(`/api/dashboard/application/${appId}`);
+    },
 
     // 애플리케이션 업데이트
-    updateApplication: (appId, data) => apiClient.put(`/api/dashboard/applications/${appId}`, data),
+    updateApplication: (appId, data) => {
+        console.log('📱 애플리케이션 업데이트 API 호출:', { appId, data });
+        return apiClient.put(`/api/dashboard/application/${appId}`, data);
+    },
 
     // 애플리케이션 삭제
-    deleteApplication: (appId) => apiClient.delete(`/api/dashboard/applications/${appId}`),
+    deleteApplication: (appId) => {
+        console.log('📱 애플리케이션 삭제 API 호출:', appId);
+        return apiClient.delete(`/api/dashboard/application/${appId}?appId=${appId}`);
+    },
+
+    // API 키 생성
+    createApiKey: (appId, data) => {
+        console.log('🔑 API 키 생성 API 호출:', { appId, data });
+        return apiClient.post(`/api/dashboard/api-key/?appId=${appId}&expiresPolicy=0`, data);
+    },
+
+    // API 키 목록 조회
+    getApiKeys: (appId) => {
+        console.log('🔑 API 키 목록 조회 API 호출:', appId);
+        return apiClient.get(`/api/dashboard/application/${appId}/api-key`);
+    },
+
+    // API 키 삭제
+    deleteApiKey: (keyId) => {
+        console.log('🔑 API 키 삭제 API 호출:', { keyId });
+        return apiClient.delete(`/api/dashboard/api-key/${keyId}?keyId=${keyId}`);
+    },
+
+    // API 키 활성화/비활성화
+    toggleApiKeyStatus: (keyId, isActive) => {
+        console.log('🔑 API 키 상태 변경 API 호출:', { keyId, isActive });
+        if (isActive) {
+            // 활성화
+            return apiClient.put(`/api/dashboard/api-key/${keyId}/activate?keyId=${keyId}`);
+        } else {
+            // 비활성화
+            return apiClient.put(`/api/dashboard/api-key/${keyId}/deactivate?keyId=${keyId}`);
+        }
+    },
 };
 
 // 캡차 관련 API

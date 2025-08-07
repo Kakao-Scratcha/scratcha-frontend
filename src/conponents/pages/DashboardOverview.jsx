@@ -5,29 +5,30 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 import ActivityIcon from '../ui/ActivityIcon';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from '../../utils/chartImports';
 import { useDashboardStore } from '../../stores/dashboardStore';
-import { getCurrentPlan, getRecentActivities } from '../../data/dummyData';
+import { getRecentActivities } from '../../data/dummyData';
 
 export default function DashboardOverview() {
     const {
         selectedPeriod,
-        usageData,
+        usageData: chartUsageData,
         stats,
         isLoading,
         setPeriod,
+        currentPlan,
+        planUsageData,
         calculateOverageCost,
         calculateTotalCost
     } = useDashboardStore();
 
     // 더미 데이터에서 가져오기
-    const currentPlan = getCurrentPlan();
     const recentActivities = getRecentActivities();
 
     // 기간 선택 옵션
     const periodOptions = ['전체', '1일', '7일', '30일'];
 
-    // 초과분 요금 계산
-    const overageCost = calculateOverageCost(currentPlan.used, currentPlan.limit, currentPlan.overageRate);
-    const totalCost = calculateTotalCost(currentPlan.used, currentPlan.limit, currentPlan.price, currentPlan.overageRate);
+    // 초과분 요금 계산 (통합 사용량 데이터 사용)
+    const overageCost = calculateOverageCost(planUsageData.current.tokens.used, currentPlan.limit, currentPlan.overageRate);
+    const totalCost = calculateTotalCost(planUsageData.current.tokens.used, currentPlan.limit, currentPlan.price, currentPlan.overageRate);
 
     // 활동 타입별 배경색
     const getActivityColor = (type) => {
@@ -58,15 +59,18 @@ export default function DashboardOverview() {
                                 <div className="mt-2 p-2 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded text-sm">
                                     <p className="text-red-700 dark:text-red-300 font-medium">초과분 요금: ₩{overageCost.toLocaleString()}</p>
                                     <p className="text-red-600 dark:text-red-400 text-xs">
-                                        초과 사용량: {currentPlan.used - currentPlan.limit}회 × ₩{currentPlan.overageRate}/회
+                                        초과 사용량: {(planUsageData.current.tokens.used - planUsageData.current.tokens.limit).toLocaleString()} 토큰 × ₩{currentPlan.overageRate}/1,000토큰
                                     </p>
                                 </div>
                             )}
                         </div>
                         <div className="text-right">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">사용량</p>
-                            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{currentPlan.used.toLocaleString()}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">/ {currentPlan.limit.toLocaleString()}회</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">토큰 사용량</p>
+                            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{planUsageData.current.tokens.used.toLocaleString()}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">/ {planUsageData.current.tokens.limit.toLocaleString()} 토큰</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                                API 호출: {planUsageData.current.requests.count.toLocaleString()}회 (평균 {planUsageData.current.requests.avgTokensPerRequest}토큰/회)
+                            </p>
                             {overageCost > 0 && (
                                 <p className="text-sm text-red-600 dark:text-red-400 font-medium mt-1">
                                     총 요금: ₩{totalCost.toLocaleString()}
@@ -76,13 +80,13 @@ export default function DashboardOverview() {
                     </div>
                     <div className="mt-4 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
-                            className={`h-2 rounded-full transition-all duration-300 ${(currentPlan.used / currentPlan.limit) * 100 >= 90
+                            className={`h-2 rounded-full transition-all duration-300 ${planUsageData.current.tokens.percentage >= 90
                                 ? 'bg-red-500'
-                                : (currentPlan.used / currentPlan.limit) * 100 >= 70
+                                : planUsageData.current.tokens.percentage >= 70
                                     ? 'bg-yellow-500'
                                     : 'bg-blue-600 dark:bg-blue-500'
                                 }`}
-                            style={{ width: `${Math.min((currentPlan.used / currentPlan.limit) * 100, 100)}%` }}
+                            style={{ width: `${Math.min(planUsageData.current.tokens.percentage, 100)}%` }}
                         ></div>
                     </div>
                 </div>
@@ -143,7 +147,7 @@ export default function DashboardOverview() {
                             <LoadingSpinner message="데이터를 불러오는 중..." className="h-full" />
                         ) : (
                             <Chart>
-                                <LineChart data={usageData}>
+                                <LineChart data={chartUsageData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgb(156 163 175)" />
                                     <XAxis
                                         dataKey="date"

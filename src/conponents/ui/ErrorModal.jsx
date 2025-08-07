@@ -8,6 +8,8 @@ export default function ErrorModal({
     message,
     onRetry
 }) {
+
+
     return (
         <Modal
             isOpen={isOpen}

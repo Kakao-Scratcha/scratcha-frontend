@@ -1,22 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-export default function Logo({ showText = true, className = "" }) {
+export default function Logo({ className = "" }) {
     return (
         <Link
             to="/"
-            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors duration-200  bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 ${className}`}
+            className={`flex items-center px-4 py-2 transition-opacity duration-200 bg-transparent hover:opacity-80 ${className}`}
         >
             <img
-                src="/scratchalogo.png"
+                src="/images/scratchalogo.svg"
                 alt="Scratcha"
-                className="h-8 w-auto"
+                className="h-12 w-auto dark:brightness-0 dark:invert"
             />
-            {showText && (
-                <span className="font-bold text-lg hidden sm:block">
-                    Scratcha
-                </span>
-            )}
         </Link>
     );
 } 
