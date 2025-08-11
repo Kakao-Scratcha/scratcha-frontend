@@ -29,15 +29,6 @@ export const authAPI = {
     // 로그아웃
     logout: () => apiClient.post('/api/dashboard/auth/logout'),
 
-    // 토큰 갱신
-    refreshToken: () => apiClient.post('/api/dashboard/auth/refresh'),
-
-    // 토큰 유효성 검증
-    validateToken: () => {
-        console.log('🔍 토큰 유효성 검증 API 호출');
-        return apiClient.get('/api/dashboard/auth/validate-token');
-    },
-
     // 사용자 정보 조회
     getProfile: () => {
         console.log('📞 getProfile API 호출');
@@ -65,70 +56,48 @@ export const authAPI = {
     deleteUser: () => apiClient.delete('/api/dashboard/users/me'),
 };
 
-// 관리자 사용자 관련 API
-export const adminUserAPI = {
-    // 모든 사용자 조회
-    getAllUsers: () => apiClient.get('/api/dashboard/users/admin/all'),
-
-    // 특정 사용자 조회
-    getUserById: (userId, includeDeleted = false) =>
-        apiClient.get(`/api/dashboard/users/admin/${userId}?include_deleted=${includeDeleted}`),
-
-    // 사용자 삭제
-    deleteUserById: (userId) => apiClient.delete(`/api/dashboard/users/admin/${userId}`),
-
-    // 사용자 복원
-    restoreUser: (userId) => apiClient.post(`/api/dashboard/users/admin/${userId}/restore`),
-};
-
 // 애플리케이션 관련 API
 export const applicationAPI = {
     // 모든 애플리케이션 조회
     getAllApplications: () => {
         console.log('📱 애플리케이션 목록 조회 API 호출');
-        return apiClient.get('/api/dashboard/application/all');
+        return apiClient.get('/api/dashboard/applications/all');
     },
 
     // 애플리케이션 생성
     createApplication: (data) => {
         console.log('📱 애플리케이션 생성 API 호출:', data);
-        return apiClient.post('/api/dashboard/application/', data);
+        return apiClient.post('/api/dashboard/applications/', data);
     },
 
     // 특정 애플리케이션 조회
     getApplicationById: (appId) => {
         console.log('📱 애플리케이션 조회 API 호출:', appId);
-        return apiClient.get(`/api/dashboard/application/${appId}`);
+        return apiClient.get(`/api/dashboard/applications/${appId}`);
     },
 
     // 애플리케이션 업데이트
     updateApplication: (appId, data) => {
         console.log('📱 애플리케이션 업데이트 API 호출:', { appId, data });
-        return apiClient.put(`/api/dashboard/application/${appId}`, data);
+        return apiClient.put(`/api/dashboard/applications/${appId}`, data);
     },
 
     // 애플리케이션 삭제
     deleteApplication: (appId) => {
         console.log('📱 애플리케이션 삭제 API 호출:', appId);
-        return apiClient.delete(`/api/dashboard/application/${appId}?appId=${appId}`);
+        return apiClient.delete(`/api/dashboard/applications/${appId}`);
     },
 
     // API 키 생성
     createApiKey: (appId, data) => {
         console.log('🔑 API 키 생성 API 호출:', { appId, data });
-        return apiClient.post(`/api/dashboard/api-key/?appId=${appId}&expiresPolicy=0`, data);
-    },
-
-    // API 키 목록 조회
-    getApiKeys: (appId) => {
-        console.log('🔑 API 키 목록 조회 API 호출:', appId);
-        return apiClient.get(`/api/dashboard/application/${appId}/api-key`);
+        return apiClient.post(`/api/dashboard/api-keys/?appId=${appId}&expiresPolicy=0`, data);
     },
 
     // API 키 삭제
     deleteApiKey: (keyId) => {
         console.log('🔑 API 키 삭제 API 호출:', { keyId });
-        return apiClient.delete(`/api/dashboard/api-key/${keyId}?keyId=${keyId}`);
+        return apiClient.delete(`/api/dashboard/api-keys/${keyId}`);
     },
 
     // API 키 활성화/비활성화
@@ -136,10 +105,10 @@ export const applicationAPI = {
         console.log('🔑 API 키 상태 변경 API 호출:', { keyId, isActive });
         if (isActive) {
             // 활성화
-            return apiClient.put(`/api/dashboard/api-key/${keyId}/activate?keyId=${keyId}`);
+            return apiClient.put(`/api/dashboard/api-keys/${keyId}/activate`);
         } else {
             // 비활성화
-            return apiClient.put(`/api/dashboard/api-key/${keyId}/deactivate?keyId=${keyId}`);
+            return apiClient.put(`/api/dashboard/api-keys/${keyId}/deactivate`);
         }
     },
 };
