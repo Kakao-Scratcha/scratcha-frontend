@@ -5,7 +5,6 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 import ActivityIcon from '../ui/ActivityIcon';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from '../../utils/chartImports';
 import { useDashboardStore } from '../../stores/dashboardStore';
-import { getRecentActivities } from '../../data/dummyData';
 
 export default function DashboardOverview() {
     const {
@@ -20,8 +19,8 @@ export default function DashboardOverview() {
         calculateTotalCost
     } = useDashboardStore();
 
-    // 더미 데이터에서 가져오기
-    const recentActivities = getRecentActivities();
+    // 최근 활동 데이터는 서버 연동 또는 별도 상태에서 관리하도록 변경 (임시 빈 배열)
+    const recentActivities = [];
 
     // 기간 선택 옵션
     const periodOptions = ['전체', '1일', '7일', '30일'];

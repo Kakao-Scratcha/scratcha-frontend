@@ -109,9 +109,20 @@ export default function Overview() {
                             </p>
                         </div>
                         <div className="text-center p-6">
-                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-purple-600">
-                                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-teal-500">
+                                <svg
+                                    className="w-12 h-12 text-white"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                    />
                                 </svg>
                             </div>
                             <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
@@ -123,9 +134,20 @@ export default function Overview() {
                             </p>
                         </div>
                         <div className="text-center p-6">
-                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-purple-600">
-                                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-orange-500">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={1.5}
+                                    stroke="currentColor"
+                                    className="w-12 h-12 text-white"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+                                    />
                                 </svg>
                             </div>
                             <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">

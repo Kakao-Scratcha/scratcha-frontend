@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { createDummyUser } from '../data/dummyData';
 import { authAPI } from '../services/api';
 
 // JWT 토큰 유틸리티 함수들
@@ -313,19 +312,13 @@ export const useAuthStore = create(
                         });
                     }
 
-                    // 개발 모드 토큰인지 확인
-                    const token = get().token;
-                    const isDevMode = token && token.startsWith('dev_token_');
-
-                    if (!isDevMode) {
-                        // 일반 모드: 백엔드 API 호출 시도 (구현되지 않았을 수 있음)
-                        try {
-                            await authAPI.logout();
-                            console.log('✅ 백엔드 로그아웃 성공');
-                        } catch (logoutError) {
-                            console.log('⚠️ 백엔드 로그아웃 API 미구현 또는 실패:', logoutError.message);
-                            // 백엔드 로그아웃 실패해도 프론트엔드에서는 로그아웃 처리
-                        }
+                    // 백엔드 API 호출 시도 (구현되지 않았을 수 있음)
+                    try {
+                        await authAPI.logout();
+                        console.log('✅ 백엔드 로그아웃 성공');
+                    } catch (logoutError) {
+                        console.log('⚠️ 백엔드 로그아웃 API 미구현 또는 실패:', logoutError.message);
+                        // 백엔드 로그아웃 실패해도 프론트엔드에서는 로그아웃 처리
                     }
                 } catch (error) {
                     console.log('⚠️ 로그아웃 중 오류:', error.message);
@@ -498,26 +491,7 @@ export const useAuthStore = create(
                 if (state.token) {
                     console.log('🔍 토큰 유효성 검증 시작');
 
-                    // 개발 모드 토큰 검증
-                    if (state.token.startsWith('dev_token_')) {
-                        console.log('🔧 개발 모드 토큰 검증');
-                        const isAdmin = state.token.includes('admin');
-                        const dummyUser = createDummyUser(
-                            isAdmin ? 1 : 2,
-                            isAdmin ? 'dummyname' : '개발자',
-                            isAdmin
-                        );
 
-                        set({
-                            user: dummyUser,
-                            isAuthenticated: true,
-                            isLoading: false,
-                            error: null,
-                            lastActivity: new Date().toISOString(),
-                        });
-                        console.log('✅ 개발 모드 인증 완료');
-                        return;
-                    }
 
                     // 일반 모드: 토큰 유효성 먼저 검증
                     try {

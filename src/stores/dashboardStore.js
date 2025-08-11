@@ -1,37 +1,25 @@
 import { create } from 'zustand';
-import {
-    generateUsageData,
-    generateStats,
-    DUMMY_APPS,
-    DUMMY_API_KEYS,
-    generateUsageLogs
-} from '../data/dummyData';
+// TODO: 서버 연동 시 교체. 임시 로그 생성 유틸은 추후 제거 예정
 
-// 더미 APP 데이터
-const generateApps = () => DUMMY_APPS;
-
-// 더미 API 키 데이터
-const generateApiKeys = () => DUMMY_API_KEYS;
+// 실제 데이터는 서버 연동 기준. 더미 데이터 생성 로직 제거
 
 // 더미 사용량 로그 데이터 생성 - 중앙 데이터 파일에서 가져옴
 
 export const useDashboardStore = create((set) => ({
     // 상태
     selectedPeriod: '전체',
-    usageData: generateUsageData('전체'),
-    stats: generateStats('전체'),
+    usageData: [],
+    stats: { today: { value: 0, change: 0 }, week: { value: 0, change: 0 }, month: { value: 0, change: 0 } },
     isLoading: false,
     apps: [], // 더미 데이터 제거 - 빈 배열로 시작
     selectedAppId: null,
     apiKeys: [], // 더미 데이터 제거 - 빈 배열로 시작
-    usageLogs: generateUsageLogs(1, 1, '전체'),
+    usageLogs: [],
 
     // 액션
     setPeriod: (period) => {
         set({
             selectedPeriod: period,
-            usageData: generateUsageData(period),
-            stats: generateStats(period),
             isLoading: true
         });
 
@@ -114,31 +102,10 @@ export const useDashboardStore = create((set) => ({
     updateUsageLogs: (appId, apiKeyId, period) => {
         // 전체 선택 시 모든 로그 생성
         if (appId === 'all' || apiKeyId === 'all') {
-            const allLogs = [];
-            const apps = generateApps();
-            const apiKeys = generateApiKeys();
-            let currentId = 1;
-
-            // 모든 APP과 API 키 조합으로 로그 생성
-            apps.forEach(app => {
-                const appKeys = apiKeys.filter(key => key.appId === app.id);
-                appKeys.forEach(key => {
-                    const logs = generateUsageLogs(app.id, key.id, period, currentId);
-                    allLogs.push(...logs);
-                    currentId += logs.length;
-                });
-            });
-
-            // 시간순으로 정렬 (최신순)하고 최대 100개만 표시
-            const sortedLogs = allLogs
-                .sort((a, b) => new Date(b.callTime) - new Date(a.callTime))
-                .slice(0, 100);
-
-            set({ usageLogs: sortedLogs });
+            // 서버 연동 전까지는 빈 배열 유지
+            set({ usageLogs: [] });
         } else {
-            set({
-                usageLogs: generateUsageLogs(appId, apiKeyId, period)
-            });
+            set({ usageLogs: [] });
         }
     },
 

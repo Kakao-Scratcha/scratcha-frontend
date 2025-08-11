@@ -1,23 +1,23 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import ThemeProvider from './conponents/ThemeProvider';
-import AuthProvider from './conponents/AuthProvider';
-import ProtectedRoute from './conponents/ProtectedRoute';
-import PublicRoute from './conponents/PublicRoute';
-import Layout from './conponents/Layout';
-import MainPage from './conponents/pages/MainPage';
-import Dashboard from './conponents/Dashboard';
-import Signin from './conponents/pages/Signin';
-import Signup from './conponents/pages/Signup';
-import Overview from './conponents/pages/Overview';
-import Pricing from './conponents/pages/Pricing';
-import Demo from './conponents/pages/Demo';
-import DashboardOverview from './conponents/pages/DashboardOverview';
-import DashboardSettings from './conponents/pages/DashboardSettings';
-import DashboardUsage from './conponents/pages/DashboardUsage';
-import DashboardBilling from './conponents/pages/DashboardBilling';
-import DashboardApp from './conponents/pages/DashboardApp';
-import NotFound from './conponents/pages/NotFound';
+import ThemeProvider from './components/ThemeProvider';
+import AuthProvider from './components/AuthProvider';
+import ProtectedRoute from './components/ProtectedRoute';
+import PublicRoute from './components/PublicRoute';
+import Layout from './components/Layout';
+import MainPage from './components/pages/MainPage';
+import Dashboard from './components/Dashboard';
+import Signin from './components/pages/Signin';
+import Signup from './components/pages/Signup';
+import Overview from './components/pages/Overview';
+import Pricing from './components/pages/Pricing';
+import Demo from './components/pages/Demo';
+import DashboardOverview from './components/pages/DashboardOverview';
+import DashboardSettings from './components/pages/DashboardSettings';
+import DashboardUsage from './components/pages/DashboardUsage';
+import DashboardBilling from './components/pages/DashboardBilling';
+import DashboardApp from './components/pages/DashboardApp';
+import NotFound from './components/pages/NotFound';
 
 function App() {
   return (

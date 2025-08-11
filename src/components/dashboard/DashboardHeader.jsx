@@ -1,29 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import Logo from './Logo';
-import Navigation from './Navigation';
-import useDarkModeStore from '../../stores/darkModeStore';
-import { useDevModeStore } from '../../stores/devModeStore';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Logo from '../ui/Logo';
 import { useAuth } from '../../hooks/useAuth';
 
-
-
-export default function Header() {
+export default function DashboardHeader() {
     const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const userDropdownRef = useRef(null);
     const navigate = useNavigate();
-    const location = useLocation();
 
-    const { isDark, toggle } = useDarkModeStore();
-    const isDevMode = useDevModeStore(state => state.isDevMode);
-    const toggleDevMode = useDevModeStore(state => state.toggleDevMode);
 
     const {
         isAuthenticated,
+        logout,
         getUserDisplayName,
-        getUserInitial,
-        logout
+        getUserInitial
     } = useAuth();
 
     // 외부 클릭 시 드롭다운 닫기
@@ -51,11 +42,6 @@ export default function Header() {
         }
     };
 
-    const handleDashboardClick = () => {
-        setIsUserDropdownOpen(false);
-        navigate('/dashboard');
-    };
-
     const handleMainPageClick = () => {
         setIsUserDropdownOpen(false);
         navigate('/');
@@ -63,44 +49,24 @@ export default function Header() {
     };
 
     return (
-        <header className={`w-full sticky z-40 transition-all duration-200 top-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700`}>
+        <header className="w-full sticky z-40 transition-all duration-200 top-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">
             <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 relative">
-                <Logo />
-                <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2">
-                    <Navigation />
+                {/* 좌측: 로고 */}
+                <div className="flex items-center">
+                    <Logo />
                 </div>
-                <div className="flex gap-2 items-center">
-                    {/* 모바일 네비게이션 */}
-                    <div className="md:hidden">
-                        <Navigation isMobile={true} />
-                    </div>
-                    {/* 다크모드 토글 버튼 */}
-                    <button
-                        onClick={toggle}
-                        className="px-4 py-2 rounded-lg transition-all duration-200 hover:scale-110 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600"
-                    >
-                        {isDark ? (
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" />
-                            </svg>
-                        ) : (
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-                            </svg>
-                        )}
-                    </button>
 
-                    {/* 모드 전환 UI */}
-                    <button
-                        onClick={toggleDevMode}
-                        className={`px-4 py-2 rounded font-semibold border focus:outline-none flex items-center gap-2 min-w-[90px] ${isDevMode ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'} border-gray-200 dark:border-gray-600`}
-                        aria-label="모드 전환"
-                    >
-                        {isDevMode ? '개발 모드' : '일반 모드'}
-                    </button>
+                {/* 중앙: 타이틀 */}
+                <div className="absolute left-1/2 transform -translate-x-1/2">
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+                </div>
 
-                    {/* 로그인 상태에 따른 UI */}
-                    {isAuthenticated ? (
+                {/* 우측 영역 */}
+                <div className="flex gap-3 items-center">
+
+
+                    {/* 사용자 정보 */}
+                    {isAuthenticated && (
                         <div className="relative" ref={userDropdownRef}>
                             <button
                                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
@@ -139,26 +105,16 @@ export default function Header() {
                                     </div>
 
                                     <div className="p-2">
-                                        {location.pathname.startsWith('/dashboard') && (
-                                            <button
-                                                onClick={handleMainPageClick}
-                                                className="w-full flex items-center gap-3 px-3 py-2 rounded text-left transition text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                                </svg>
-                                                메인화면
-                                            </button>
-                                        )}
                                         <button
-                                            onClick={handleDashboardClick}
+                                            onClick={handleMainPageClick}
                                             className="w-full flex items-center gap-3 px-3 py-2 rounded text-left transition text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                             </svg>
-                                            대시보드
+                                            메인화면
                                         </button>
+                                        {/* 대시보드 버튼은 대시보드 페이지에서 숨김 */}
 
                                         <button
                                             onClick={() => {
@@ -175,12 +131,12 @@ export default function Header() {
 
                                         <button
                                             onClick={handleLogout}
-                                            className="w-full flex items-center gap-3 px-3 py-2 rounded text-left hover:bg-red-50 dark:hover:bg-red-900 hover:text-red-600 dark:hover:text-red-400 transition text-gray-900 dark:text-white"
+                                            className="w-full flex items-center gap-3 px-3 py-2 rounded text-left hover:bg-red-50 hover:text-red-600 transition text-gray-900 dark:text-white"
                                             disabled={isLoggingOut}
                                         >
                                             {isLoggingOut ? (
                                                 <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.644 9m0 0H9m11 11v-5h-.581m-15.356 0A8.001 8.001 0 0019.356 9m0 0H14m-2-2V4.644M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8 0 004.644 9m0 0H9m11 11v-5h-.581m-15.356 0A8.001 8 0 0019.356 9m0 0H14m-2-2V4.644M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                 </svg>
                                             ) : (
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,13 +149,6 @@ export default function Header() {
                                 </div>
                             )}
                         </div>
-                    ) : (
-                        <Link
-                            to="/signin"
-                            className="inline-block px-3 md:px-4 py-2 rounded font-semibold border transition bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 border-blue-600 dark:border-blue-500 text-sm md:text-base"
-                        >
-                            Sign in
-                        </Link>
                     )}
                 </div>
             </div>

@@ -3,8 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
 import { useAuth } from '../../hooks/useAuth';
-import { useDevModeStore } from '../../stores/devModeStore';
-import { createDummyUser } from '../../data/dummyData';
+
 
 // 배경 스타일 상수 (재렌더링 시 새 객체 생성 방지)
 const backgroundStyle = { backgroundImage: 'url(/images/signin-background.png)' };
@@ -62,7 +61,6 @@ export default function Signin() {
     const [showPassword, setShowPassword] = useState(false);
 
     const { login, updateUser, isAuthenticated } = useAuth();
-    const isDevMode = useDevModeStore(state => state.isDevMode);
 
     // 리다이렉트된 페이지 정보 가져오기
     const from = location.state?.from?.pathname || '/dashboard';
@@ -126,75 +124,29 @@ export default function Signin() {
 
         setIsLoading(true);
 
-        if (isDevMode) {
-            // 개발 모드: 더미 데이터로 로그인
-            setTimeout(() => {
-                setIsLoading(false);
+        // 실제 API 호출
+        try {
+            const result = await login(currentFormData);
 
-                // admin 계정 검증
-                if (currentFormData.email === 'admin@example.com' && currentFormData.password === '12345678') {
-                    console.log('👑 Admin 계정 로그인 성공');
-                    // admin 계정으로 로그인 성공
-                    const adminUser = createDummyUser(1, 'dummyname', true);
-                    // 전역 상태에 admin 사용자 정보 저장
-                    updateUser(adminUser);
-
-                    setIsSuccessModalOpen(true);
-                } else {
-                    console.log('👤 일반 계정 로그인 시도');
-                    // 더미 데이터에 정의된 사용자인지 확인
-                    const validUsers = {
-                        'dev@example.com': { id: 2, name: '개발자', isAdmin: false },
-                        'test@example.com': { id: 3, name: '테스터', isAdmin: false },
-                        'user@example.com': { id: 4, name: '사용자', isAdmin: false }
-                    };
-
-                    const userKey = currentFormData.email.toLowerCase();
-                    const validUser = validUsers[userKey];
-
-                    if (validUser && currentFormData.password === '12345678') {
-                        console.log('✅ 일반 계정 로그인 성공:', userKey);
-                        // 유효한 사용자 계정으로 로그인 성공
-                        const dummyUser = createDummyUser(validUser.id, validUser.name, validUser.isAdmin);
-                        // 전역 상태에 더미 사용자 정보 저장
-                        updateUser(dummyUser);
-                        setIsSuccessModalOpen(true);
-                    } else {
-                        // 유효하지 않은 계정
-                        setErrorMessage('로그인에 실패했습니다. 입력하신 정보를 다시 확인해주세요.');
-                        setTimeout(() => {
-                            setIsErrorModalOpen(true);
-                        }, 10);
-                    }
-                }
-            }, 1000);
-        } else {
-            // 일반 모드: 실제 API 호출
-            try {
-                const result = await login(currentFormData);
-
-                if (result && result.success) {
-                    setIsSuccessModalOpen(true);
-                } else {
-                    const errorMsg = '로그인에 실패했습니다. 입력하신 정보를 다시 확인해주세요.';
-                    setErrorMessage(errorMsg);
-                    setTimeout(() => {
-                        setIsErrorModalOpen(true);
-                    }, 10);
-                }
-            } catch {
-                // 보안상 일관된 에러 메시지 사용
-                const errorMsg = '로그인에 실패했습니다. 잠시 후 다시 시도해주세요.';
-
+            if (result && result.success) {
+                setIsSuccessModalOpen(true);
+            } else {
+                const errorMsg = '로그인에 실패했습니다. 입력하신 정보를 다시 확인해주세요.';
                 setErrorMessage(errorMsg);
                 setTimeout(() => {
                     setIsErrorModalOpen(true);
                 }, 10);
-            } finally {
-                setIsLoading(false);
             }
+        } catch {
+            const errorMsg = '로그인에 실패했습니다. 잠시 후 다시 시도해주세요.';
+            setErrorMessage(errorMsg);
+            setTimeout(() => {
+                setIsErrorModalOpen(true);
+            }, 10);
+        } finally {
+            setIsLoading(false);
         }
-    }, [isDevMode, login, updateUser]);
+    }, [login, updateUser]);
 
     const handleSuccess = useCallback(() => {
         setIsSuccessModalOpen(false);
@@ -220,11 +172,7 @@ export default function Signin() {
     }, []);
 
     // 성공 메시지 메모이제이션
-    const successMessage = useMemo(() =>
-        isDevMode
-            ? "개발 모드로 로그인되었습니다. 더미 데이터를 사용합니다."
-            : "로그인이 완료되었습니다. 대시보드로 이동합니다."
-        , [isDevMode]);
+    const successMessage = useMemo(() => "로그인이 완료되었습니다. 대시보드로 이동합니다.", []);
 
     // 비밀번호 토글 핸들러 메모이제이션
     const handlePasswordToggle = useCallback(() => {
@@ -267,23 +215,7 @@ export default function Signin() {
                         </p>
                     </div>
 
-                    {/* 개발 모드 표시 */}
-                    {isDevMode && (
-                        <div className="mb-6 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-medium">
-                            🔧 개발 모드: 더미 데이터로 로그인합니다
-                        </div>
-                    )}
 
-                    {/* 개발 모드 계정 정보 */}
-                    {isDevMode && (
-                        <div className="mb-6 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <h3 className="text-sm font-semibold text-blue-800 mb-2">개발용 계정 정보:</h3>
-                            <div className="text-xs text-blue-700 space-y-1">
-                                <div><strong>Admin 계정:</strong> Email: admin@example.com, PW: 12345678</div>
-                                <div><strong>일반 계정:</strong> Email: dev@example.com/test@example.com/user@example.com, PW: 12345678</div>
-                            </div>
-                        </div>
-                    )}
 
                     {/* 로그인 폼 */}
                     <form

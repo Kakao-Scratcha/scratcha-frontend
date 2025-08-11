@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
 import StatusBadge from '../ui/StatusBadge';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { applicationAPI } from '../../services/api';
-import { useDevModeStore } from '../../stores/devModeStore';
-import { DUMMY_APPS, DUMMY_API_KEYS } from '../../data/dummyData';
 
 export default function DashboardApp() {
     const {
@@ -13,13 +11,10 @@ export default function DashboardApp() {
         apiKeys,
         addApp,
         addApiKey,
-        deleteApiKey,
-        toggleApiKeyStatus,
         clearApps,
         clearApiKeys
     } = useDashboardStore();
 
-    const { isDevMode } = useDevModeStore();
 
     const [isAddAppModalOpen, setIsAddAppModalOpen] = useState(false);
     const [isDeleteAppModalOpen, setIsDeleteAppModalOpen] = useState(false);
@@ -116,43 +111,13 @@ export default function DashboardApp() {
     };
 
     // 데이터 로드 함수 (재사용 가능)
-    const loadApplications = async () => {
+    const loadApplications = useCallback(async () => {
         console.log('🚀 데이터 로드 시작');
         setLoading(true);
 
         // 기존 데이터 클리어
         clearApps();
         clearApiKeys();
-
-        // 개발 모드에서는 더미 데이터 사용
-        if (isDevMode) {
-            console.log('🔄 개발 모드 - 더미 데이터 로드');
-
-            // 더미 앱 데이터 추가
-            DUMMY_APPS.forEach(app => {
-                addApp({
-                    id: app.id,
-                    name: app.name,
-                    description: app.description,
-                    status: app.status || 'active'
-                });
-            });
-
-            // 더미 API 키 데이터 추가
-            DUMMY_API_KEYS.forEach(apiKey => {
-                addApiKey({
-                    id: apiKey.id,
-                    appId: apiKey.appId,
-                    name: apiKey.name,
-                    key: apiKey.key,
-                    status: apiKey.status || 'active',
-                    lastUsed: apiKey.lastUsed || '사용 기록 없음'
-                });
-            });
-
-            setLoading(false);
-            return;
-        }
 
         // 일반 모드에서는 실제 API 호출
         try {
@@ -218,7 +183,7 @@ export default function DashboardApp() {
             console.log('🏁 loadApplications 함수 종료');
             setLoading(false);
         }
-    };
+    }, [addApp, addApiKey, clearApps, clearApiKeys]);
 
     // APP 추가 처리 (API 연결)
     const handleAddApp = async (e) => {
@@ -302,22 +267,10 @@ export default function DashboardApp() {
 
         setLoading(true);
         try {
-            if (isDevMode) {
-                // 개발 모드에서는 더미 데이터 사용
-                addApiKey({
-                    appId: selectedAppId,
-                    name: newApiKeyForm.name.trim(),
-                    key: `sk_live_${Math.random().toString(36).substring(2, 15)}`,
-                    status: 'active',
-                    lastUsed: '사용 기록 없음'
-                });
-            } else {
-                // 실제 API 호출
-                console.log('🔄 API 키 생성 시작:', { appId: selectedAppId, name: newApiKeyForm.name.trim() });
-                const response = await applicationAPI.createApiKey(selectedAppId, '');
-
-                console.log('✅ API 키 생성 성공:', response.data);
-            }
+            // 실제 API 호출
+            console.log('🔄 API 키 생성 시작:', { appId: selectedAppId, name: newApiKeyForm.name.trim() });
+            const response = await applicationAPI.createApiKey(selectedAppId, '');
+            console.log('✅ API 키 생성 성공:', response.data);
 
             setNewApiKeyForm({ name: '' });
             setIsAddApiKeyModalOpen(false);
@@ -343,17 +296,10 @@ export default function DashboardApp() {
 
         setLoading(true);
         try {
-            if (isDevMode) {
-                // 개발 모드에서는 더미 데이터 사용
-                console.log('🔄 개발 모드 - 더미 데이터에서 삭제');
-                deleteApiKey(selectedApiKeyId);
-            } else {
-                // 실제 API 호출
-                console.log('🔄 API 키 삭제 시작:', { keyId: selectedApiKeyId });
-                await applicationAPI.deleteApiKey(selectedApiKeyId);
-
-                console.log('✅ API 키 삭제 성공');
-            }
+            // 실제 API 호출
+            console.log('🔄 API 키 삭제 시작:', { keyId: selectedApiKeyId });
+            await applicationAPI.deleteApiKey(selectedApiKeyId);
+            console.log('✅ API 키 삭제 성공');
 
             setSelectedApiKeyId(null);
             setIsDeleteApiKeyModalOpen(false);
@@ -394,7 +340,7 @@ export default function DashboardApp() {
             console.log('🧹 useEffect 클린업 - 컴포넌트 언마운트');
             isMounted = false;
         };
-    }, []); // 빈 의존성 배열로 설정하여 한 번만 실행
+    }, [loadApplications]);
 
     return (
         <DashboardLayout
@@ -407,9 +353,6 @@ export default function DashboardApp() {
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">APP 관리</h2>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">총 {apps.length}개의 APP</p>
-                        {isDevMode && (
-                            <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">개발 모드 - 더미 데이터 사용</p>
-                        )}
                     </div>
                     <button
                         onClick={() => setIsAddAppModalOpen(true)}
@@ -543,18 +486,11 @@ export default function DashboardApp() {
                                                             <button
                                                                 onClick={async () => {
                                                                     try {
-                                                                        if (isDevMode) {
-                                                                            // 개발 모드에서는 로컬 상태만 변경
-                                                                            toggleApiKeyStatus(apiKey.id);
-                                                                        } else {
-                                                                            // 실제 API 호출
-                                                                            const newStatus = apiKey.status === 'active' ? false : true;
-                                                                            console.log('🔄 API 키 상태 변경 시작:', { keyId: apiKey.id, isActive: newStatus });
-
-                                                                            await applicationAPI.toggleApiKeyStatus(apiKey.id, newStatus);
-
-                                                                            console.log('✅ API 키 상태 변경 성공');
-                                                                        }
+                                                                        // 실제 API 호출
+                                                                        const newStatus = apiKey.status === 'active' ? false : true;
+                                                                        console.log('🔄 API 키 상태 변경 시작:', { keyId: apiKey.id, isActive: newStatus });
+                                                                        await applicationAPI.toggleApiKeyStatus(apiKey.id, newStatus);
+                                                                        console.log('✅ API 키 상태 변경 성공');
 
                                                                         // 데이터 다시 조회
                                                                         console.log('🔄 API 키 상태 변경 후 데이터 다시 조회');

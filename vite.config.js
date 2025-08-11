@@ -23,16 +23,16 @@ export default defineConfig({
           'ui-vendor': ['recharts', 'zustand'],
           // 대시보드 관련 컴포넌트
           'dashboard': [
-            './src/conponents/pages/DashboardOverview.jsx',
-            './src/conponents/pages/DashboardSettings.jsx',
-            './src/conponents/pages/DashboardUsage.jsx',
-            './src/conponents/pages/DashboardBilling.jsx',
-            './src/conponents/pages/DashboardApp.jsx'
+            './src/components/pages/DashboardOverview.jsx',
+            './src/components/pages/DashboardSettings.jsx',
+            './src/components/pages/DashboardUsage.jsx',
+            './src/components/pages/DashboardBilling.jsx',
+            './src/components/pages/DashboardApp.jsx'
           ],
           // 인증 관련 컴포넌트
           'auth': [
-            './src/conponents/pages/Signin.jsx',
-            './src/conponents/pages/Signup.jsx'
+            './src/components/pages/Signin.jsx',
+            './src/components/pages/Signup.jsx'
           ]
         }
       }
