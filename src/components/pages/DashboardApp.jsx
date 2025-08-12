@@ -12,7 +12,8 @@ export default function DashboardApp() {
         addApp,
         addApiKey,
         clearApps,
-        clearApiKeys
+        clearApiKeys,
+        toggleApiKeyStatus: toggleApiKeyStatusInStore,
     } = useDashboardStore();
 
 
@@ -23,6 +24,7 @@ export default function DashboardApp() {
     const [selectedAppId, setSelectedAppId] = useState(null);
     const [selectedApiKeyId, setSelectedApiKeyId] = useState(null);
     const [expandedApps, setExpandedApps] = useState(new Set());
+    const [togglingKeyIds, setTogglingKeyIds] = useState(new Set());
 
     // API 관련 상태
     const [loading, setLoading] = useState(false);
@@ -472,55 +474,94 @@ export default function DashboardApp() {
                                                     });
                                                     return uniqueApiKeys;
                                                 })().map((apiKey, index) => (
-                                                    <div key={`api_key_${app.id}_${apiKey.id}_${index}`} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                                        <div className="flex items-center gap-3">
-                                                            <div>
+                                                    <div key={`api_key_${app.id}_${apiKey.id}_${index}`} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                                        {/* 첫 줄: 이름(좌, 상태 배지 붙임), 마지막사용일(우), 삭제(우) */}
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
                                                                 <p className="font-medium text-gray-900 dark:text-gray-100">{apiKey.name}</p>
-                                                                <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                                                                    {maskApiKey(apiKey.key)}
-                                                                </p>
+                                                                <StatusBadge
+                                                                    status={apiKey.status}
+                                                                    size="md"
+                                                                    className={`h-8 leading-8 px-3 py-0 ${apiKey.status === 'inactive' ? 'bg-red-100 text-red-800 border-red-200' : ''}`}
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-xs text-gray-600 dark:text-gray-400">마지막 사용: {apiKey.lastUsed}</span>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSelectedApiKeyId(apiKey.id);
+                                                                        setSelectedAppId(app.id);
+                                                                        setIsDeleteApiKeyModalOpen(true);
+                                                                    }}
+                                                                    className="h-8 px-3 py-0 bg-red-100 text-red-600 rounded text-xs font-medium hover:bg-red-200 transition inline-flex items-center"
+                                                                >
+                                                                    삭제
+                                                                </button>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-3">
-                                                            <StatusBadge status={apiKey.status} />
-                                                            <button
-                                                                onClick={async () => {
-                                                                    try {
-                                                                        // 실제 API 호출
-                                                                        const newStatus = apiKey.status === 'active' ? false : true;
-                                                                        console.log('🔄 API 키 상태 변경 시작:', { keyId: apiKey.id, isActive: newStatus });
-                                                                        await applicationAPI.toggleApiKeyStatus(apiKey.id, newStatus);
-                                                                        console.log('✅ API 키 상태 변경 성공');
-
-                                                                        // 데이터 다시 조회
-                                                                        console.log('🔄 API 키 상태 변경 후 데이터 다시 조회');
-                                                                        await loadApplications();
-                                                                    } catch (error) {
-                                                                        handleApiError(error, 'API 키 상태 변경');
-                                                                    }
-                                                                }}
-                                                                className={`px-2 py-1 rounded text-xs font-medium transition ${apiKey.status === 'active'
-                                                                    ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                                                                    : 'bg-green-100 text-green-600 hover:bg-green-200'
-                                                                    }`}
-                                                            >
-                                                                {apiKey.status === 'active' ? '비활성화' : '활성화'}
-                                                            </button>
-                                                            <span className="text-xs text-gray-600 dark:text-gray-400">
-                                                                마지막 사용: {apiKey.lastUsed}
-                                                            </span>
-                                                            <button
-                                                                onClick={() => {
-                                                                    console.log('🔘 API 키 삭제 버튼 클릭:', { apiKeyId: apiKey.id, apiKeyName: apiKey.name, appId: app.id });
-                                                                    setSelectedApiKeyId(apiKey.id);
-                                                                    setSelectedAppId(app.id); // 앱 ID도 함께 설정
-                                                                    setIsDeleteApiKeyModalOpen(true);
-                                                                    console.log('✅ 삭제 모달 열기 완료');
-                                                                }}
-                                                                className="px-2 py-1 bg-red-100 text-red-600 rounded text-xs font-medium hover:bg-red-200 transition"
-                                                            >
-                                                                삭제
-                                                            </button>
+                                                        {/* 둘째 줄: 전체 키(좌), 활성/비활성 토글(우), 복사(우) */}
+                                                        <div className="mt-2 flex items-center justify-between">
+                                                            <p className="text-sm text-gray-800 dark:text-gray-200 font-mono">{apiKey.key}</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        const id = apiKey.id;
+                                                                        setTogglingKeyIds((prev) => {
+                                                                            const next = new Set(prev);
+                                                                            next.add(id);
+                                                                            return next;
+                                                                        });
+                                                                        // Optimistic UI 업데이트: 현재 상태 반전만 수행(한 번)
+                                                                        const currentKeys = useDashboardStore.getState().apiKeys;
+                                                                        const current = currentKeys.find(k => k.id === id);
+                                                                        const optimisticNext = current?.status === 'active' ? 'inactive' : 'active';
+                                                                        toggleApiKeyStatusInStore(id, optimisticNext);
+                                                                        try {
+                                                                            const newStatus = apiKey.status === 'active' ? false : true;
+                                                                            const res = await applicationAPI.toggleApiKeyStatus(id, newStatus);
+                                                                            console.log('🔁 토글 응답 본문:', res?.data);
+                                                                            await loadApplications();
+                                                                            const afterKeys = useDashboardStore.getState().apiKeys;
+                                                                            const updated = afterKeys.find(k => k.id === id);
+                                                                            console.log('✅ 토글 후 최신 상태:', {
+                                                                                id,
+                                                                                storeStatus: updated?.status,
+                                                                                isActive: updated ? updated.status === 'active' : undefined
+                                                                            });
+                                                                        } catch (error) {
+                                                                            // 실패 시 롤백: 원래 상태로 되돌림
+                                                                            toggleApiKeyStatusInStore(id, current?.status);
+                                                                            handleApiError(error, 'API 키 상태 변경');
+                                                                        } finally {
+                                                                            setTogglingKeyIds((prev) => {
+                                                                                const next = new Set(prev);
+                                                                                next.delete(id);
+                                                                                return next;
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    disabled={togglingKeyIds.has(apiKey.id) || loading}
+                                                                    className={`h-8 px-3 py-0 rounded text-xs font-medium transition inline-flex items-center ${apiKey.status === 'active' ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'} ${togglingKeyIds.has(apiKey.id) || loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                >
+                                                                    {togglingKeyIds.has(apiKey.id) ? '처리중...' : (apiKey.status === 'active' ? '비활성화' : '활성화')}
+                                                                </button>
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            await navigator.clipboard.writeText(apiKey.key);
+                                                                            alert('API 키가 복사되었습니다.');
+                                                                        } catch {
+                                                                            alert('복사에 실패했습니다.');
+                                                                        }
+                                                                    }}
+                                                                    className="h-8 w-8 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition inline-flex items-center justify-center"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                                                        <path d="M4 4a2 2 0 012-2h6a2 2 0 012 2v1h1a2 2 0 012 2v7a2 2 0 01-2 2h-6a2 2 0 01-2-2v-1H6a2 2 0 01-2-2V4zm2 0v7h6V4H6zm7 3h1a1 1 0 011 1v7a1 1 0 01-1 1h-6a1 1 0 01-1-1v-1h5a2 2 0 002-2V7z" />
+                                                                    </svg>
+                                                                    <span className="sr-only">복사</span>
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 ))}

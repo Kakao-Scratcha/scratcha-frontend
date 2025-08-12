@@ -472,16 +472,17 @@ export const useDashboardStore = create((set) => ({
 
     // API 키 추가
     addApiKey: (apiKeyData) => {
+        const nowIso = new Date().toISOString();
         const newApiKey = {
-            id: Date.now(),
             ...apiKeyData,
-            status: 'active',
-            createdAt: new Date().toISOString().split('T')[0],
-            lastUsed: new Date().toISOString().replace('T', ' ').substring(0, 19)
+            // 기본값 보완만 하고, 서버 값은 덮어쓰지 않음
+            status: apiKeyData.status || 'active',
+            createdAt: apiKeyData.createdAt || nowIso.split('T')[0],
+            lastUsed: apiKeyData.lastUsed || nowIso.replace('T', ' ').substring(0, 19),
         };
 
         set(state => ({
-            apiKeys: [...state.apiKeys, newApiKey]
+            apiKeys: [...state.apiKeys.filter(k => k.id !== newApiKey.id), newApiKey]
         }));
     },
 
@@ -492,14 +493,14 @@ export const useDashboardStore = create((set) => ({
         }));
     },
 
-    // API 키 상태 토글
-    toggleApiKeyStatus: (apiKeyId) => {
+    // API 키 상태 토글 (옵티미스틱 업데이트용)
+    toggleApiKeyStatus: (apiKeyId, forceStatus) => {
         set(state => ({
-            apiKeys: state.apiKeys.map(key =>
-                key.id === apiKeyId
-                    ? { ...key, status: key.status === 'active' ? 'inactive' : 'active' }
-                    : key
-            )
+            apiKeys: state.apiKeys.map(key => {
+                if (key.id !== apiKeyId) return key;
+                const next = forceStatus ?? (key.status === 'active' ? 'inactive' : 'active');
+                return { ...key, status: next };
+            })
         }));
     },
 

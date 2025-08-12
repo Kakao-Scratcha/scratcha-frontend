@@ -3,7 +3,8 @@ import React from 'react';
 export default function StatusBadge({
     status,
     size = "sm",
-    showIcon = false
+    showIcon = false,
+    className = ""
 }) {
     const statusConfig = {
         active: {
@@ -42,7 +43,7 @@ export default function StatusBadge({
     const config = statusConfig[status] || statusConfig.inactive;
 
     return (
-        <span className={`inline-flex items-center gap-1 border rounded-full font-medium ${config.color} ${sizeClasses[size]}`}>
+        <span className={`inline-flex items-center gap-1 border rounded-full font-medium ${config.color} ${sizeClasses[size]} ${className}`}>
             {showIcon && <span className="text-xs">{config.icon}</span>}
             {config.label}
         </span>

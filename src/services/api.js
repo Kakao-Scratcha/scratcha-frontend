@@ -1,4 +1,5 @@
 import apiClient from '../config/api';
+import { useAuthStore } from '../stores/authStore';
 
 // 인증 관련 API
 export const authAPI = {
@@ -102,14 +103,16 @@ export const applicationAPI = {
 
     // API 키 활성화/비활성화
     toggleApiKeyStatus: (keyId, isActive) => {
-        console.log('🔑 API 키 상태 변경 API 호출:', { keyId, isActive });
-        if (isActive) {
-            // 활성화
-            return apiClient.put(`/api/dashboard/api-keys/${keyId}/activate`);
-        } else {
-            // 비활성화
-            return apiClient.put(`/api/dashboard/api-keys/${keyId}/deactivate`);
-        }
+        const action = isActive ? 'activate' : 'deactivate';
+        const endpoint = `/api/dashboard/api-keys/${keyId}/${action}`;
+        const baseURL = apiClient.defaults.baseURL || '';
+        const token = useAuthStore.getState().token || '';
+        const authHeader = token && token.startsWith('Bearer ') ? token : (token ? `Bearer ${token}` : '');
+
+        console.log('🔑 API 키 상태 변경 API 호출:', { keyId, isActive, endpoint, fullUrl: `${baseURL}${endpoint}` });
+        console.log('🧪 재현용 curl:', `curl -X 'PUT' '${baseURL}${endpoint}' -H 'accept: application/json'${authHeader ? ` -H 'Authorization: ${authHeader}'` : ''}`);
+
+        return apiClient.put(endpoint, null, { headers: { Accept: 'application/json' } });
     },
 };
 
