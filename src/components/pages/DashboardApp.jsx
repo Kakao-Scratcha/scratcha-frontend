@@ -9,11 +9,9 @@ export default function DashboardApp() {
     const {
         apps,
         apiKeys,
-        addApp,
-        addApiKey,
-        clearApps,
-        clearApiKeys,
         toggleApiKeyStatus: toggleApiKeyStatusInStore,
+        refreshApplications,
+        isAppsLoading,
     } = useDashboardStore();
 
 
@@ -116,76 +114,14 @@ export default function DashboardApp() {
     const loadApplications = useCallback(async () => {
         console.log('🚀 데이터 로드 시작');
         setLoading(true);
-
-        // 기존 데이터 클리어
-        clearApps();
-        clearApiKeys();
-
-        // 일반 모드에서는 실제 API 호출
         try {
-            console.log('🔄 애플리케이션 목록 로드 시작');
-            const response = await applicationAPI.getAllApplications();
-            console.log('✅ 애플리케이션 목록 로드 성공:', response.data);
-
-            // Set을 사용한 중복 체크
-            const processedKeyIds = new Set();
-            console.log('🔄 데이터 처리 시작 - 총 앱 개수:', response.data.length);
-
-            // 응답 데이터를 Zustand store 형식에 맞게 변환하여 저장
-            response.data.forEach((app, index) => {
-                console.log(`📝 앱 ${index + 1}/${response.data.length} 처리 중:`, { id: app.id, name: app.appName });
-
-                // 앱 정보 저장
-                addApp({
-                    id: app.id,
-                    name: app.appName, // API 응답의 appName 필드 사용
-                    description: app.description,
-                    status: 'active' // 기본값으로 active 설정
-                });
-                console.log(`✅ 앱 저장 완료: ${app.appName} (ID: ${app.id})`);
-
-                // 앱에 포함된 키 정보가 있다면 함께 저장
-                if (app.key && !processedKeyIds.has(app.key.id)) {
-                    console.log(`🔑 앱 ${app.id}의 키 정보 발견:`, app.key);
-                    processedKeyIds.add(app.key.id);
-                    console.log(`📋 처리된 키 ID 목록:`, Array.from(processedKeyIds));
-
-                    addApiKey({
-                        id: app.key.id,
-                        appId: app.id,
-                        name: `API Key ${app.key.id}`,
-                        key: app.key.key,
-                        status: app.key.isActive ? 'active' : 'inactive',
-                        lastUsed: '사용 기록 없음'
-                    });
-                    console.log(`✅ API 키 저장 완료: ${app.key.id}`);
-                } else if (app.key) {
-                    console.log(`⚠️ 키 ${app.key.id}는 이미 처리되었습니다. (중복 방지)`);
-                } else {
-                    console.log(`ℹ️ 앱 ${app.id}에는 키 정보가 없습니다.`);
-                }
-            });
-
-            console.log('🎯 최종 처리 결과:', {
-                총앱개수: response.data.length,
-                처리된키개수: processedKeyIds.size,
-                처리된키목록: Array.from(processedKeyIds)
-            });
-
+            await refreshApplications();
         } catch (error) {
-            console.log('❌ loadApplications 함수에서 오류 발생:', error);
-            console.log('❌ 오류 상세 정보:', {
-                message: error.message,
-                status: error.response?.status,
-                statusText: error.response?.statusText,
-                data: error.response?.data
-            });
             handleApiError(error, '애플리케이션 목록 로드');
         } finally {
-            console.log('🏁 loadApplications 함수 종료');
             setLoading(false);
         }
-    }, [addApp, addApiKey, clearApps, clearApiKeys]);
+    }, [refreshApplications]);
 
     // APP 추가 처리 (API 연결)
     const handleAddApp = async (e) => {
@@ -366,7 +302,7 @@ export default function DashboardApp() {
                 </div>
 
                 {/* 로딩 상태 */}
-                {loading && (
+                {(loading || isAppsLoading) && (
                     <div className="text-center py-8">
                         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                         <p className="mt-2 text-gray-600 dark:text-gray-400">데이터를 불러오는 중...</p>
@@ -374,7 +310,7 @@ export default function DashboardApp() {
                 )}
 
                 {/* APP 리스트 */}
-                {!loading && (
+                {!loading && !isAppsLoading && (
                     <div className="space-y-4">
                         {(() => {
                             const filteredApps = apps.filter((app, index, self) =>

@@ -14,6 +14,7 @@ import {
     getStableSessionLogs,
 } from '../data/dashboardDummy';
 import { LOG_DATASETS } from '../data/logDatasets';
+import { applicationAPI } from '../services/api';
 
 // 초기 로그/차트/통계 값 준비 (개요 페이지 첫 렌더 안정화)
 const INITIAL_PERIOD = '전체';
@@ -69,8 +70,62 @@ export const useDashboardStore = create((set) => ({
     selectedAppId: null,
     apiKeys: DUMMY_API_KEYS,
     usageLogs: INITIAL_LOGS,
+    isAppsLoading: false,
 
     // 액션
+    setApps: (apps) => set({ apps }),
+    setApiKeys: (apiKeys) => set({ apiKeys }),
+
+    // 서버에서 최신 APP/API 키 목록을 가져와 스토어를 덮어씀
+    refreshApplications: async () => {
+        set({ isAppsLoading: true, apps: [], apiKeys: [] });
+        try {
+            const response = await applicationAPI.getAllApplications();
+            const processedKeyIds = new Set();
+
+            // 모든 키 수집 (배열/단일 모두 지원), 중복 제거
+            const freshKeys = [];
+            (response.data || []).forEach(app => {
+                const keys = Array.isArray(app.keys) ? app.keys : (app.key ? [app.key] : []);
+                keys.forEach(k => {
+                    if (k && !processedKeyIds.has(k.id)) {
+                        processedKeyIds.add(k.id);
+                        freshKeys.push({
+                            id: k.id,
+                            appId: app.id,
+                            name: `API Key ${k.id}`,
+                            key: k.key,
+                            status: k.isActive ? 'active' : 'inactive',
+                            lastUsed: '사용 기록 없음',
+                        });
+                    }
+                });
+            });
+
+            // 앱 활성 여부: 해당 앱의 키 중 하나라도 active면 active, 키 없거나 모두 inactive면 inactive
+            const freshApps = (response.data || []).map((app) => {
+                const keys = freshKeys.filter(k => k.appId === app.id);
+                const isActive = keys.length > 0 ? keys.some(k => k.status === 'active') : false;
+                return {
+                    id: app.id,
+                    name: app.appName,
+                    description: app.description || '',
+                    status: isActive ? 'active' : 'inactive',
+                    settings: {
+                        model: 'gpt-4',
+                        noiseLevel: '중',
+                        heuristicLevel: '중',
+                    },
+                    usage: { today: 0, week: 0, month: 0 },
+                    createdAt: new Date().toISOString().split('T')[0],
+                };
+            });
+
+            set({ apps: freshApps, apiKeys: freshKeys });
+        } finally {
+            set({ isAppsLoading: false });
+        }
+    },
     setDatasetScenario: (scenarioKey) => {
         set((state) => {
             const avgTokens = state.planUsageData.current.requests.avgTokensPerRequest || 20;
@@ -186,9 +241,9 @@ export const useDashboardStore = create((set) => ({
         }, 500);
     },
 
-    // APP 선택
+    // APP 선택 (같은 항목 두 번 클릭 시 선택 해제)
     selectApp: (appId) => {
-        set({ selectedAppId: appId });
+        set((state) => ({ selectedAppId: state.selectedAppId === appId ? null : appId }));
     },
 
     // APP 설정 업데이트
@@ -223,19 +278,19 @@ export const useDashboardStore = create((set) => ({
         });
     },
 
-    // 새 APP 추가
+    // 새 APP 추가 (동일 id는 교체하여 중복 방지)
     addApp: (appData) => {
+        const nowIso = new Date().toISOString();
         const newApp = {
-            id: Date.now(),
             ...appData,
-            status: 'active',
-            createdAt: new Date().toISOString().split('T')[0],
-            settings: {
+            status: appData.status || 'active',
+            createdAt: appData.createdAt || nowIso.split('T')[0],
+            settings: appData.settings || {
                 model: 'gpt-4',
                 noiseLevel: '중',
                 heuristicLevel: '중'
             },
-            usage: {
+            usage: appData.usage || {
                 today: 0,
                 week: 0,
                 month: 0
@@ -243,7 +298,7 @@ export const useDashboardStore = create((set) => ({
         };
 
         set(state => ({
-            apps: [...state.apps, newApp]
+            apps: [...state.apps.filter(a => a.id !== newApp.id), newApp]
         }));
     },
 

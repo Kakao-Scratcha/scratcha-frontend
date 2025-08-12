@@ -7,6 +7,11 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from '../../uti
 import { useDashboardStore } from '../../stores/dashboardStore';
 
 export default function DashboardUsage() {
+    // Typography scale for consistency with Overview
+    const T = {
+        sectionTitle: 'text-lg font-semibold',
+        label: 'text-sm'
+    };
     const {
         apps,
         apiKeys,
@@ -111,12 +116,12 @@ export default function DashboardUsage() {
             <div className="space-y-6">
                 {/* 필터 섹션 */}
                 <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">필터 설정</h3>
+                    <h3 className={`${T.sectionTitle} text-gray-900 dark:text-white mb-4`}>필터 설정</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         {/* APP 선택 */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            <label className={`${T.label} font-medium text-gray-900 dark:text-white mb-2`}>
                                 APP 선택
                             </label>
                             <select
@@ -135,7 +140,7 @@ export default function DashboardUsage() {
 
                         {/* API 키 선택 */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            <label className={`${T.label} font-medium text-gray-900 dark:text-white mb-2`}>
                                 API 키 선택
                             </label>
                             <select
@@ -154,7 +159,7 @@ export default function DashboardUsage() {
 
                         {/* 기간 선택 */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            <label className={`${T.label} font-medium text-gray-900 dark:text-white mb-2`}>
                                 기간 선택
                             </label>
                             <select
@@ -172,7 +177,7 @@ export default function DashboardUsage() {
 
                         {/* 뷰 모드 선택 */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            <label className={`${T.label} font-medium text-gray-900 dark:text-white mb-2`}>
                                 표시 모드
                             </label>
                             <div className="flex gap-2">
@@ -220,7 +225,7 @@ export default function DashboardUsage() {
                 {/* 데이터 표시 섹션 */}
                 <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">사용량 데이터</h3>
+                        <h3 className={`${T.sectionTitle} text-gray-900 dark:text-white`}>사용량 데이터</h3>
                         {isLoading && (
                             <div className="flex items-center gap-2">
                                 <LoadingSpinner />

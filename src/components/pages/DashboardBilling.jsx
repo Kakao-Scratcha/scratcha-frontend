@@ -5,6 +5,11 @@ import ProgressBar from '../ui/ProgressBar';
 import { useDashboardStore } from '../../stores/dashboardStore';
 
 export default function DashboardBilling() {
+    // Typography scale for consistency
+    const T = {
+        sectionTitle: 'text-xl font-semibold',
+        label: 'text-sm'
+    };
     const {
         currentPlan,
         planUsageData,
@@ -99,7 +104,7 @@ export default function DashboardBilling() {
                 {/* 현재 요금제 */}
                 <div className="theme-card p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">현재 요금제</h3>
+                        <h3 className={`${T.sectionTitle} text-gray-900 dark:text-gray-100`}>현재 요금제</h3>
                         <button
                             onClick={() => setIsPlanChangeModalOpen(true)}
                             className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white dark:text-gray-900 rounded-lg font-semibold hover:opacity-90 transition"
@@ -183,7 +188,7 @@ export default function DashboardBilling() {
 
                 {/* 요금 청구 내역 */}
                 <div className="theme-card p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">요금 청구 내역</h3>
+                    <h3 className={`${T.sectionTitle} text-gray-900 dark:text-gray-100 mb-6`}>요금 청구 내역</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* 실시간 사용량 금액 */}

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 
-export default function Modal({ isOpen, onClose, title, children }) {
+export default function Modal({ isOpen, onClose, title, children, hideClose = false, centerTitle = false, borderless = false, titleClassName = 'text-xl', headerClassName = 'p-6', bodyClassName = 'p-6' }) {
     // ESC 키로 모달 닫기
     useEffect(() => {
         const handleEscape = (e) => {
@@ -33,25 +33,25 @@ export default function Modal({ isOpen, onClose, title, children }) {
             ></div>
 
             {/* 모달 컨텐츠 */}
-            <div className="relative rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto  bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <div className={`relative rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 ${borderless ? '' : 'border border-gray-200 dark:border-gray-700'}`}>
                 {/* 헤더 */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        {title}
-                    </h2>
-                    <button
-                        onClick={onClose}
-                        className="p-1 rounded-lg transition-colors text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-                        aria-label="닫기"
-                    >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                <div className={`flex items-center ${centerTitle ? 'justify-center' : 'justify-between'} ${headerClassName} ${borderless ? '' : 'border-b border-gray-200 dark:border-gray-700'}`}>
+                    <h2 className={`${titleClassName} font-semibold text-gray-900 dark:text-white`}>{title}</h2>
+                    {!hideClose && !centerTitle && (
+                        <button
+                            onClick={onClose}
+                            className="p-1 rounded-lg transition-colors text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                            aria-label="닫기"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    )}
                 </div>
 
                 {/* 바디 */}
-                <div className="p-6">
+                <div className={`${bodyClassName}`}>
                     {children}
                 </div>
             </div>

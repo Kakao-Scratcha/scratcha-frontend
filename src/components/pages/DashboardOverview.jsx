@@ -6,6 +6,13 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from '../../uti
 import { useDashboardStore } from '../../stores/dashboardStore';
 
 export default function DashboardOverview() {
+    // Typography scale (dashboard-wide consistency)
+    const T = {
+        sectionTitle: 'text-xl font-semibold',
+        cardTitle: 'text-base md:text-lg font-semibold',
+        label: 'text-sm',
+        caption: 'text-xs'
+    };
     const {
         selectedPeriod,
         usageData: chartUsageData,
@@ -130,8 +137,6 @@ export default function DashboardOverview() {
         return value;
     };
 
-    // 활동 타입별 배경색 (미사용 제거)
-
     return (
         <DashboardLayout
             title="대시보드 개요"
@@ -185,7 +190,7 @@ export default function DashboardOverview() {
                 {/* 전체 사용량 (경고 아이콘 제거, 중앙 정렬, 변화율 확대) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-5 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-center">
-                        <h3 className="font-semibold text-base md:text-lg text-gray-900 dark:text-white mb-1">오늘 사용량</h3>
+                        <h3 className={`${T.cardTitle} text-gray-900 dark:text-white mb-1`}>오늘 사용량</h3>
                         <p className="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400">{stats.today.value.toLocaleString()}</p>
                         <div className="mt-2 inline-flex items-center gap-2 justify-center">
                             {stats.today.change >= 0 ? (
@@ -203,7 +208,7 @@ export default function DashboardOverview() {
                     </div>
 
                     <div className="p-5 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-center">
-                        <h3 className="font-semibold text-base md:text-lg text-gray-900 dark:text-white mb-1">이번 주</h3>
+                        <h3 className={`${T.cardTitle} text-gray-900 dark:text-white mb-1`}>이번 주</h3>
                         <p className="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400">{stats.week.value.toLocaleString()}</p>
                         <div className="mt-2 inline-flex items-center gap-2 justify-center">
                             {stats.week.change >= 0 ? (
@@ -221,7 +226,7 @@ export default function DashboardOverview() {
                     </div>
 
                     <div className="p-5 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-center">
-                        <h3 className="font-semibold text-base md:text-lg text-gray-900 dark:text-white mb-1">이번 달</h3>
+                        <h3 className={`${T.cardTitle} text-gray-900 dark:text-white mb-1`}>이번 달</h3>
                         <p className="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400">{stats.month.value.toLocaleString()}</p>
                         <div className="mt-2 inline-flex items-center gap-2 justify-center">
                             {stats.month.change >= 0 ? (
@@ -243,9 +248,9 @@ export default function DashboardOverview() {
                 <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">사용량 추이</h3>
+                            <h3 className={`${T.sectionTitle} text-gray-900 dark:text-white`}>사용량 추이</h3>
                             {!isLoading && (
-                                <span className="text-sm text-gray-600 dark:text-gray-400">{rangeLabel}</span>
+                                <span className={`${T.label} text-gray-600 dark:text-gray-400`}>{rangeLabel}</span>
                             )}
                             {/* 테스트용 데이터셋 드롭다운 */}
                             <DatasetSelector />
@@ -310,7 +315,7 @@ export default function DashboardOverview() {
 
                 {/* 최근 활동 */}
                 <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">최근 활동</h3>
+                    <h3 className={`${T.sectionTitle} text-gray-900 dark:text-white mb-4`}>최근 활동</h3>
                     <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                         <li className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
