@@ -188,7 +188,7 @@ export default function Header() {
                             to="/signin"
                             className="inline-block px-3 md:px-4 py-2 rounded font-semibold border transition bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 border-blue-600 dark:border-blue-500 text-sm md:text-base"
                         >
-                            Sign in
+                            로그인
                         </Link>
                     )}
                 </div>

@@ -11,7 +11,9 @@ export default function DashboardUsage() {
         apps,
         apiKeys,
         usageLogs,
-        updateUsageLogs
+        usageData,
+        updateUsageLogs,
+        setPeriod: setGlobalPeriod,
     } = useDashboardStore();
 
     const [selectedAppId, setSelectedAppId] = useState('all');
@@ -32,81 +34,23 @@ export default function DashboardUsage() {
     // 기간 옵션
     const periodOptions = ['전체', '1일', '7일', '30일'];
 
-    // 사용량 데이터 생성 (그래프용)
-    const generateUsageData = (period) => {
-        const data = [];
-        const now = new Date();
+    // 그래프 데이터는 전역 스토어 usageData(로그 기반 버킷팅) 사용
 
-        switch (period) {
-            case '1일':
-                // 24시간 데이터
-                for (let i = 23; i >= 0; i--) {
-                    const time = new Date(now);
-                    time.setHours(now.getHours() - i);
-                    data.push({
-                        date: `${time.getHours()}:00`,
-                        usage: Math.floor(Math.random() * 200) + 50
-                    });
-                }
-                break;
-
-            case '7일':
-                // 7일 데이터
-                for (let i = 6; i >= 0; i--) {
-                    const date = new Date(now);
-                    date.setDate(now.getDate() - i);
-                    data.push({
-                        date: `${date.getMonth() + 1}월 ${date.getDate()}일`,
-                        usage: Math.floor(Math.random() * 1000) + 500
-                    });
-                }
-                break;
-
-            case '30일':
-                // 30일 데이터
-                for (let i = 29; i >= 0; i--) {
-                    const date = new Date(now);
-                    date.setDate(now.getDate() - i);
-                    data.push({
-                        date: `${date.getMonth() + 1}월 ${date.getDate()}일`,
-                        usage: Math.floor(Math.random() * 2000) + 800
-                    });
-                }
-                break;
-
-            default: // '전체'
-                // 14일 데이터 (기본)
-                for (let i = 13; i >= 0; i--) {
-                    const date = new Date(now);
-                    date.setDate(now.getDate() - i);
-                    data.push({
-                        date: `${date.getMonth() + 1}월 ${date.getDate()}일`,
-                        usage: Math.floor(Math.random() * 1500) + 600
-                    });
-                }
-                break;
-        }
-
-        return data;
-    };
-
-    const [usageData, setUsageData] = useState(generateUsageData('전체'));
+    // 전역 스토어 usageData 사용으로 지역 상태 불필요
 
     // 필터 변경 시 데이터 업데이트
     useEffect(() => {
         setIsLoading(true);
 
-        // 로그 데이터 업데이트
+        // 스토어 기간 동기화 후 로그 업데이트 (그래프/카드 모두 로그 기반으로 재계산)
+        setGlobalPeriod(selectedPeriod);
         updateUsageLogs(selectedAppId, selectedApiKeyId, selectedPeriod);
-
-        // 그래프 데이터 업데이트
-        setUsageData(generateUsageData(selectedPeriod));
 
         // 로딩 시뮬레이션
         setTimeout(() => {
             setIsLoading(false);
         }, 500);
-    }, [selectedAppId, selectedApiKeyId, selectedPeriod, updateUsageLogs]);
+    }, [selectedAppId, selectedApiKeyId, selectedPeriod, updateUsageLogs, setGlobalPeriod]);
 
     // 페이징 계산
     const totalPages = Math.ceil(usageLogs.length / itemsPerPage);
@@ -136,6 +80,29 @@ export default function DashboardUsage() {
         return key.substring(0, 8) + '...' + key.substring(key.length - 4);
     };
 
+    // 기간별 X축 라벨 포맷터
+    const xTickFormatter = (value) => {
+        if (selectedPeriod === '1일') {
+            const hh = parseInt(String(value).split(':')[0], 10);
+            return Number.isNaN(hh) ? value : `${hh}시`;
+        }
+        if (selectedPeriod === '7일' || selectedPeriod === '30일') {
+            const m = String(value).match(/(\d+)월\s+(\d+)일/);
+            if (m) return `${m[2]}일`;
+            const parts = String(value).split('-');
+            if (parts.length === 3) return `${parseInt(parts[2], 10)}일`;
+            return value;
+        }
+        // 전체: 월만 표기
+        const m = String(value).match(/(\d+)년\s+(\d+)월/);
+        if (m) return `${m[2]}월`;
+        const parts = String(value).split('-');
+        if (parts.length === 2) return `${parseInt(parts[1], 10)}월`;
+        return value;
+    };
+
+    // 라벨은 회전하지 않음
+
     return (
         <DashboardLayout
             title="사용량"
@@ -159,7 +126,7 @@ export default function DashboardUsage() {
                             >
                                 <option value="all">전체</option>
                                 {apps.map((app) => (
-                                    <option key={app.id} value={app.id}>
+                                    <option key={`${app.id}-${app.name}`} value={app.id}>
                                         {app.name}
                                     </option>
                                 ))}
@@ -178,7 +145,7 @@ export default function DashboardUsage() {
                             >
                                 <option value="all">전체</option>
                                 {appApiKeys.map((key) => (
-                                    <option key={key.id} value={key.id}>
+                                    <option key={`${key.id}-${key.key}`} value={key.id}>
                                         {key.name} ({key.key})
                                     </option>
                                 ))}
@@ -269,18 +236,24 @@ export default function DashboardUsage() {
                                 <LoadingSpinner message="그래프를 불러오는 중..." className="h-full" />
                             ) : (
                                 <Chart>
-                                    <LineChart data={usageData}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgb(156 163 175)" />
+                                    <LineChart data={usageData} margin={{ top: 40, right: 12, bottom: 40, left: 12 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgb(156 163 175)" vertical={true} />
                                         <XAxis
                                             dataKey="date"
                                             stroke="rgb(156 163 175)"
                                             fontSize={12}
                                             tick={{ fill: 'rgb(156 163 175)' }}
+                                            interval={0}
+                                            minTickGap={0}
+                                            tickMargin={12}
+                                            tickFormatter={xTickFormatter}
                                         />
                                         <YAxis
                                             stroke="rgb(156 163 175)"
                                             fontSize={12}
                                             tick={{ fill: 'rgb(156 163 175)' }}
+                                            allowDecimals={false}
+                                            domain={[0, 'auto']}
                                         />
                                         <Tooltip
                                             contentStyle={{
@@ -297,6 +270,7 @@ export default function DashboardUsage() {
                                             strokeWidth={3}
                                             dot={{ fill: 'rgb(59 130 246)', strokeWidth: 2, r: 4 }}
                                             activeDot={{ r: 6, stroke: 'rgb(59 130 246)', strokeWidth: 2 }}
+                                            connectNulls={false}
                                         />
                                     </LineChart>
                                 </Chart>
@@ -322,7 +296,7 @@ export default function DashboardUsage() {
                                         </TableHead>
                                         <TableBody>
                                             {currentLogs.map((log) => (
-                                                <TableRow key={log.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                                <TableRow key={`${log.id}-${log.callAt}-${log.apiKey}`} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                                                     <TableCell className="text-left py-3 px-4 text-gray-900 dark:text-white">{log.id}</TableCell>
                                                     <TableCell className="text-left py-3 px-4 text-gray-900 dark:text-white">{log.appName}</TableCell>
                                                     <TableCell className="text-left py-3 px-4 text-gray-900 dark:text-white font-mono text-sm">

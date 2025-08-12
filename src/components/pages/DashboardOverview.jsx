@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Chart from '../ui/Chart';
 import LoadingSpinner from '../ui/LoadingSpinner';
-import ActivityIcon from '../ui/ActivityIcon';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from '../../utils/chartImports';
 import { useDashboardStore } from '../../stores/dashboardStore';
 
@@ -16,29 +15,122 @@ export default function DashboardOverview() {
         currentPlan,
         planUsageData,
         calculateOverageCost,
-        calculateTotalCost
+        calculateTotalCost,
     } = useDashboardStore();
 
-    // 최근 활동 데이터는 서버 연동 또는 별도 상태에서 관리하도록 변경 (임시 빈 배열)
-    const recentActivities = [];
+    // 최근 활동 데이터 (세션 로그 기반)
+    const { sessionLogs } = useDashboardStore();
+    const avgTokens = planUsageData.current?.requests?.avgTokensPerRequest || 20;
+    const ICONS = {
+        success: '/images/green_check_icon.png',
+        info: '/images/blue_check_icon.png',
+        warning: '/images/yellow_alert_icon.png',
+        error: '/images/red_fail_icon.png',
+    };
+    const formatTimeAgo = (iso) => {
+        if (!iso) return '-';
+        const diff = Date.now() - new Date(iso).getTime();
+        const m = Math.floor(diff / 60000);
+        if (m < 1) return '방금 전';
+        if (m < 60) return `${m}분 전`;
+        const h = Math.floor(m / 60);
+        if (h < 24) return `${h}시간 전`;
+        const d = Math.floor(h / 24);
+        return `${d}일 전`;
+    };
+    const activity = useMemo(() => {
+        const byResult = (r) => sessionLogs.filter(l => l.result === r);
+        const successes = byResult('성공');
+        const fails = sessionLogs.filter(l => ['실패', '타임아웃', '인증오류'].includes(l.result));
+        const latest = (arr) => arr.length ? arr.reduce((a, b) => (new Date(a.callAt) > new Date(b.callAt) ? a : b)) : null;
+        const now = Date.now();
+        const succ24 = successes.filter(l => (now - new Date(l.callAt).getTime()) <= 24 * 60 * 60 * 1000);
+        return {
+            totalSuccess: successes.length,
+            lastSuccess: latest(successes),
+            succ24Count: succ24.length,
+            lastSucc24: latest(succ24),
+            totalFail: fails.length,
+            lastFail: latest(fails),
+        };
+    }, [sessionLogs]);
 
     // 기간 선택 옵션
     const periodOptions = ['전체', '1일', '7일', '30일'];
+
+    // 사용률/요금 계산
+    const usagePercent = typeof planUsageData.current.tokens.percentage === 'number'
+        ? planUsageData.current.tokens.percentage
+        : Math.round((planUsageData.current.tokens.used / planUsageData.current.tokens.limit) * 100);
+    const getUsageColorClass = (p) => {
+        if (p < 30) return 'green';
+        if (p < 60) return 'yellow';
+        return 'red';
+    };
+    const usageColor = getUsageColorClass(usagePercent);
+
+    // 디버그 로그: 기간/차트타입/데이터 포인트 수
+    useEffect(() => {
+        // 너무 긴 데이터 출력 방지 위해 앞/뒤 2개만 미리보기
+        const preview = Array.isArray(chartUsageData)
+            ? { head: chartUsageData.slice(0, 2), tail: chartUsageData.slice(-2) }
+            : null;
+        console.log('[Overview] selectedPeriod:', selectedPeriod);
+        console.log('[Overview] chartUsageData length:', Array.isArray(chartUsageData) ? chartUsageData.length : 'N/A');
+        console.log('[Overview] chartUsageData preview:', preview);
+    }, [selectedPeriod, chartUsageData]);
 
     // 초과분 요금 계산 (통합 사용량 데이터 사용)
     const overageCost = calculateOverageCost(planUsageData.current.tokens.used, currentPlan.limit, currentPlan.overageRate);
     const totalCost = calculateTotalCost(planUsageData.current.tokens.used, currentPlan.limit, currentPlan.price, currentPlan.overageRate);
 
-    // 활동 타입별 배경색
-    const getActivityColor = (type) => {
-        switch (type) {
-            case 'success': return 'bg-green-500';
-            case 'info': return 'bg-blue-500';
-            case 'warning': return 'bg-purple-500';
-            case 'error': return 'bg-red-500';
-            default: return 'bg-gray-500';
+    // 기간 라벨 및 X축 라벨 포맷터
+    const fmtMD = (d) => `${d.getMonth() + 1}월 ${d.getDate()}일`;
+    const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+    const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
+    const endOfMonth = (d) => new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+    const now = new Date();
+    const rangeLabel = (() => {
+        if (selectedPeriod === '1일') {
+            return `${fmtMD(now)} 00:00 ~ 현재`;
         }
+        if (selectedPeriod === '7일') {
+            const s = startOfDay(new Date(now));
+            s.setDate(s.getDate() - 6);
+            return `${fmtMD(s)} ~ ${fmtMD(now)}`;
+        }
+        if (selectedPeriod === '30일') {
+            const s = startOfMonth(now);
+            const e = endOfMonth(now);
+            return `${fmtMD(s)} ~ ${fmtMD(e)}`;
+        }
+        const s = new Date(startOfMonth(now));
+        s.setMonth(s.getMonth() - 11);
+        return `${s.getFullYear()}년 ${s.getMonth() + 1}월 ~ ${now.getFullYear()}년 ${now.getMonth() + 1}월`;
+    })();
+
+    const xTickFormatter = (value) => {
+        if (selectedPeriod === '1일') {
+            // 'HH:00' → 'H시'
+            const hh = parseInt(String(value).split(':')[0], 10);
+            if (!Number.isNaN(hh)) return `${hh}시`;
+            return value;
+        }
+        if (selectedPeriod === '7일' || selectedPeriod === '30일') {
+            const m = value.match(/(\d+)월\s+(\d+)일/);
+            if (m) return `${m[2]}일`;
+            const parts = value.split('-');
+            if (parts.length === 3) return `${parseInt(parts[2], 10)}일`;
+            return value;
+        }
+        const m = value.match(/(\d+)년\s+(\d+)월/);
+        if (m) return `${m[2]}월`;
+        const parts = value.split('-');
+        if (parts.length === 2) return `${parseInt(parts[1], 10)}월`;
+        return value;
     };
+
+    // 활동 타입별 배경색 (미사용 제거)
 
     return (
         <DashboardLayout
@@ -46,18 +138,22 @@ export default function DashboardOverview() {
             subtitle="현재 플랜과 사용량을 확인하세요"
         >
             <div className="space-y-6">
-                {/* 현재 요금제 */}
-                <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">현재 요금제</h3>
+                {/* 현재 요금제 (타이틀 제거, 스타일 업그레이드) */}
+                <div className="p-5 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{currentPlan.name}</p>
-                            <p className="text-gray-600 dark:text-gray-400">{currentPlan.description}</p>
+                            <div className="flex items-center gap-2">
+                                <p className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">{currentPlan.name}</p>
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${usageColor === 'green' ? 'bg-green-500' : usageColor === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'}`}>
+                                    {usagePercent}%
+                                </span>
+                            </div>
+                            <p className="text-base text-gray-600 dark:text-gray-400">{currentPlan.description}</p>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{currentPlan.price}</p>
                             {overageCost > 0 && (
-                                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded text-sm">
+                                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded text-xs">
                                     <p className="text-red-700 dark:text-red-300 font-medium">초과분 요금: ₩{overageCost.toLocaleString()}</p>
-                                    <p className="text-red-600 dark:text-red-400 text-xs">
+                                    <p className="text-red-600 dark:text-red-400 text-[11px]">
                                         초과 사용량: {(planUsageData.current.tokens.used - planUsageData.current.tokens.limit).toLocaleString()} 토큰 × ₩{currentPlan.overageRate}/1,000토큰
                                     </p>
                                 </div>
@@ -65,9 +161,9 @@ export default function DashboardOverview() {
                         </div>
                         <div className="text-right">
                             <p className="text-sm text-gray-600 dark:text-gray-400">토큰 사용량</p>
-                            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{planUsageData.current.tokens.used.toLocaleString()}</p>
+                            <p className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400">{planUsageData.current.tokens.used.toLocaleString()}</p>
                             <p className="text-sm text-gray-600 dark:text-gray-400">/ {planUsageData.current.tokens.limit.toLocaleString()} 토큰</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                            <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
                                 API 호출: {planUsageData.current.requests.count.toLocaleString()}회 (평균 {planUsageData.current.requests.avgTokensPerRequest}토큰/회)
                             </p>
                             {overageCost > 0 && (
@@ -77,53 +173,83 @@ export default function DashboardOverview() {
                             )}
                         </div>
                     </div>
-                    <div className="mt-4 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div className="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                         <div
-                            className={`h-2 rounded-full transition-all duration-300 ${planUsageData.current.tokens.percentage >= 90
-                                ? 'bg-red-500'
-                                : planUsageData.current.tokens.percentage >= 70
-                                    ? 'bg-yellow-500'
-                                    : 'bg-blue-600 dark:bg-blue-500'
+                            className={`h-3 rounded-full transition-all duration-300 ${usageColor === 'green' ? 'bg-green-500' : usageColor === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
                                 }`}
-                            style={{ width: `${Math.min(planUsageData.current.tokens.percentage, 100)}%` }}
-                        ></div>
+                            style={{ width: `${Math.min(usagePercent, 100)}%` }}
+                        />
                     </div>
                 </div>
 
-                {/* 전체 사용량 */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold text-gray-900 dark:text-white">오늘 사용량</h3>
-                            <span className="text-sm text-gray-600 dark:text-gray-400">+{stats.today.change}%</span>
+                {/* 전체 사용량 (경고 아이콘 제거, 중앙 정렬, 변화율 확대) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-5 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-center">
+                        <h3 className="font-semibold text-base md:text-lg text-gray-900 dark:text-white mb-1">오늘 사용량</h3>
+                        <p className="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400">{stats.today.value.toLocaleString()}</p>
+                        <div className="mt-2 inline-flex items-center gap-2 justify-center">
+                            {stats.today.change >= 0 ? (
+                                <>
+                                    <svg className="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
+                                    <span className="text-lg md:text-xl font-bold text-green-600">+{stats.today.change}%</span>
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                    <span className="text-lg md:text-xl font-bold text-red-600">-{Math.abs(stats.today.change)}%</span>
+                                </>
+                            )}
                         </div>
-                        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.today.value.toLocaleString()}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">캡차 검증</p>
                     </div>
 
-                    <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold text-gray-900 dark:text-white">이번 주</h3>
-                            <span className="text-sm text-gray-600 dark:text-gray-400">+{stats.week.change}%</span>
+                    <div className="p-5 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-center">
+                        <h3 className="font-semibold text-base md:text-lg text-gray-900 dark:text-white mb-1">이번 주</h3>
+                        <p className="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400">{stats.week.value.toLocaleString()}</p>
+                        <div className="mt-2 inline-flex items-center gap-2 justify-center">
+                            {stats.week.change >= 0 ? (
+                                <>
+                                    <svg className="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
+                                    <span className="text-lg md:text-xl font-bold text-green-600">+{stats.week.change}%</span>
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                    <span className="text-lg md:text-xl font-bold text-red-600">-{Math.abs(stats.week.change)}%</span>
+                                </>
+                            )}
                         </div>
-                        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.week.value.toLocaleString()}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">캡차 검증</p>
                     </div>
 
-                    <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold text-gray-900 dark:text-white">이번 달</h3>
-                            <span className="text-sm text-gray-600 dark:text-gray-400">+{stats.month.change}%</span>
+                    <div className="p-5 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-center">
+                        <h3 className="font-semibold text-base md:text-lg text-gray-900 dark:text-white mb-1">이번 달</h3>
+                        <p className="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400">{stats.month.value.toLocaleString()}</p>
+                        <div className="mt-2 inline-flex items-center gap-2 justify-center">
+                            {stats.month.change >= 0 ? (
+                                <>
+                                    <svg className="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
+                                    <span className="text-lg md:text-xl font-bold text-green-600">+{stats.month.change}%</span>
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                    <span className="text-lg md:text-xl font-bold text-red-600">-{Math.abs(stats.month.change)}%</span>
+                                </>
+                            )}
                         </div>
-                        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.month.value.toLocaleString()}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">캡차 검증</p>
                     </div>
                 </div>
 
                 {/* 사용량 그래프 */}
                 <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">사용량 추이</h3>
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">사용량 추이</h3>
+                            {!isLoading && (
+                                <span className="text-sm text-gray-600 dark:text-gray-400">{rangeLabel}</span>
+                            )}
+                            {/* 테스트용 데이터셋 드롭다운 */}
+                            <DatasetSelector />
+                        </div>
                         <div className="flex gap-2">
                             {periodOptions.map((period) => (
                                 <button
@@ -141,23 +267,31 @@ export default function DashboardOverview() {
                         </div>
                     </div>
 
-                    <div className="h-80">
+                    <div className="h-80 min-w-0">
                         {isLoading ? (
                             <LoadingSpinner message="데이터를 불러오는 중..." className="h-full" />
                         ) : (
-                            <Chart>
-                                <LineChart data={chartUsageData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgb(156 163 175)" />
+                            <Chart debugName="OverviewChart">
+                                <LineChart data={chartUsageData} margin={{ top: 40, right: 12, bottom: 40, left: 12 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgb(156 163 175)" vertical={true} />
                                     <XAxis
                                         dataKey="date"
                                         stroke="rgb(156 163 175)"
                                         fontSize={12}
                                         tick={{ fill: 'rgb(156 163 175)' }}
+                                        interval={0}
+                                        minTickGap={0}
+                                        tickMargin={12}
+                                        tickFormatter={xTickFormatter}
+                                        allowDataOverflow={false}
                                     />
                                     <YAxis
                                         stroke="rgb(156 163 175)"
                                         fontSize={12}
                                         tick={{ fill: 'rgb(156 163 175)' }}
+                                        allowDecimals={false}
+                                        domain={[0, (dataMax) => (Math.max(1, dataMax))]}
+                                        allowDataOverflow={false}
                                     />
                                     <Tooltip
                                         contentStyle={{
@@ -167,14 +301,7 @@ export default function DashboardOverview() {
                                             color: 'rgb(243 244 246)'
                                         }}
                                     />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="usage"
-                                        stroke="rgb(59 130 246)"
-                                        strokeWidth={3}
-                                        dot={{ fill: 'rgb(59 130 246)', strokeWidth: 2, r: 4 }}
-                                        activeDot={{ r: 6, stroke: 'rgb(59 130 246)', strokeWidth: 2 }}
-                                    />
+                                    <Line type="monotone" dataKey="usage" stroke="rgb(59 130 246)" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} connectNulls={false} />
                                 </LineChart>
                             </Chart>
                         )}
@@ -184,24 +311,71 @@ export default function DashboardOverview() {
                 {/* 최근 활동 */}
                 <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">최근 활동</h3>
-                    <div className="space-y-3">
-                        {recentActivities.map((activity) => (
-                            <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getActivityColor(activity.type)}`}>
-                                        <ActivityIcon icon={activity.icon} />
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-gray-900 dark:text-white">{activity.title}</p>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">{activity.time}</p>
-                                    </div>
+                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                        <li className="py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <img src={ICONS.success} alt="성공" className="w-7 h-7 rounded-full" />
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-white">API 호출 성공</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatTimeAgo(activity.lastSuccess?.callAt)}</p>
                                 </div>
-                                <span className="text-sm text-gray-600 dark:text-gray-400">{activity.count}</span>
                             </div>
-                        ))}
-                    </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-300">총 {activity.totalSuccess.toLocaleString()}회 ({(activity.totalSuccess * avgTokens).toLocaleString()} 토큰)</div>
+                        </li>
+                        <li className="py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <img src={ICONS.info} alt="검증성공" className="w-7 h-7 rounded-full" />
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-white">CAPTCHA 검증 성공</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatTimeAgo(activity.lastSucc24?.callAt)}</p>
+                                </div>
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-300">총 {activity.succ24Count.toLocaleString()}회 ({(activity.succ24Count * avgTokens).toLocaleString()} 토큰)</div>
+                        </li>
+                        <li className="py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <img src={ICONS.error} alt="실패" className="w-7 h-7 rounded-full" />
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-white">CAPTCHA 검증 실패</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatTimeAgo(activity.lastFail?.callAt)}</p>
+                                </div>
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-300">총 {activity.totalFail.toLocaleString()}회 ({(activity.totalFail * avgTokens).toLocaleString()} 토큰)</div>
+                        </li>
+                        <li className="py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <img src={ICONS.warning} alt="경고" className="w-7 h-7 rounded-full" />
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-white">토큰 사용량 경고</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatTimeAgo(new Date().toISOString())}</p>
+                                </div>
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-300">{(planUsageData.current?.tokens?.percentage || 0)}% 도달</div>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </DashboardLayout>
     );
-} 
+}
+
+function DatasetSelector() {
+    const { datasetScenario, setDatasetScenario } = useDashboardStore();
+    return (
+        <select
+            value={datasetScenario}
+            onChange={(e) => {
+                console.log('[Overview] datasetScenario ->', e.target.value);
+                setDatasetScenario(e.target.value);
+            }}
+            className="ml-2 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            title="테스트 데이터셋 선택"
+        >
+            <option value="low">Low (~30%)</option>
+            <option value="mid">Mid (30~60%)</option>
+            <option value="high">High (60%+)</option>
+        </select>
+    );
+}
+
+// ChartTypeSelector 및 ChartBody 롤백 (차트 타입 고정: Line)

@@ -120,11 +120,16 @@ export default function DashboardBilling() {
 
                                 {/* 사용량 진행률 */}
                                 <div className="mb-4">
-                                    <ProgressBar
-                                        percentage={realtimeUsage.tokens.percentage}
-                                        showLabel={true}
-                                        showPercentage={true}
-                                    />
+                                    {/* 개요와 동일한 임계값 색상 규칙 적용 */}
+                                    {(() => {
+                                        const p = realtimeUsage.tokens.percentage;
+                                        const color = p < 30 ? 'bg-green-500' : p < 60 ? 'bg-yellow-500' : 'bg-red-500';
+                                        return (
+                                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                                <div className={`h-2 rounded-full transition-all duration-300 ${color}`} style={{ width: `${Math.min(p, 100)}%` }} />
+                                            </div>
+                                        );
+                                    })()}
                                     <div className="flex items-center justify-between text-xs mt-1">
                                         <span className="text-gray-600 dark:text-gray-400">
                                             토큰: {realtimeUsage.tokens.used.toLocaleString()} / {realtimeUsage.tokens.limit.toLocaleString()}

@@ -6,5 +6,10 @@ export {
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer
+    ResponsiveContainer,
+    AreaChart,
+    Area,
+    BarChart,
+    Bar,
+    ComposedChart
 } from 'recharts'; 

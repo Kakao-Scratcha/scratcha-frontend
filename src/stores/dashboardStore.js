@@ -1,30 +1,187 @@
 import { create } from 'zustand';
-// TODO: 서버 연동 시 교체. 임시 로그 생성 유틸은 추후 제거 예정
+import {
+    DUMMY_APPS,
+    DUMMY_API_KEYS,
+    DEFAULT_PLAN,
+    PLAN_USAGE_DATA,
+    // generateUsageLogs,
+    // generateStats,
+    // generateUsageData,
+    bucketUsageSeries,
+    computeStatsFromLogs,
+    getMonthToDateLogs,
+    synthesizeMonthToDateLogs,
+    getStableSessionLogs,
+} from '../data/dashboardDummy';
+import { LOG_DATASETS } from '../data/logDatasets';
 
-// 실제 데이터는 서버 연동 기준. 더미 데이터 생성 로직 제거
-
-// 더미 사용량 로그 데이터 생성 - 중앙 데이터 파일에서 가져옴
+// 초기 로그/차트/통계 값 준비 (개요 페이지 첫 렌더 안정화)
+const INITIAL_PERIOD = '전체';
+// 경계값 시나리오 중 하나를 매 새로고침마다 랜덤 선택: low/mid/high
+const DATASET_KEYS = ['low', 'mid', 'high'];
+const INITIAL_SCENARIO = DATASET_KEYS[Math.floor(Math.random() * DATASET_KEYS.length)];
+const INITIAL_LOGS = getStableSessionLogs('all', 'all', 365);
+const SCENARIO_LOGS = {
+    low: LOG_DATASETS.low || INITIAL_LOGS,
+    mid: LOG_DATASETS.mid || INITIAL_LOGS,
+    high: LOG_DATASETS.high || INITIAL_LOGS,
+};
+const INITIAL_AVG_TOKENS = (PLAN_USAGE_DATA.current?.requests?.avgTokensPerRequest) || 20;
+const INITIAL_LIMIT = (PLAN_USAGE_DATA.current?.tokens?.limit) || DEFAULT_PLAN.limit;
+// 월별(MTD) 기준 사용량 집계
+const INITIAL_MTD_LOGS = getMonthToDateLogs('all', 'all');
+const INITIAL_USED = INITIAL_MTD_LOGS.length * INITIAL_AVG_TOKENS;
+const INITIAL_PERCENTAGE = Math.min(100, Math.round((INITIAL_USED / INITIAL_LIMIT) * 100));
 
 export const useDashboardStore = create((set) => ({
     // 상태
-    selectedPeriod: '전체',
-    usageData: [],
-    stats: { today: { value: 0, change: 0 }, week: { value: 0, change: 0 }, month: { value: 0, change: 0 } },
+    datasetScenario: INITIAL_SCENARIO,
+    chartType: 'line', // 'line' | 'area' | 'bar' | 'composed'
+    selectedPeriod: INITIAL_PERIOD,
+    usageData: bucketUsageSeries(INITIAL_PERIOD, INITIAL_LOGS),
+    stats: computeStatsFromLogs(INITIAL_LOGS),
     isLoading: false,
-    apps: [], // 더미 데이터 제거 - 빈 배열로 시작
+    // 세션 고정 원본 로그 (기간 변경 시 이 데이터만 필터링하여 사용)
+    sessionLogs: INITIAL_LOGS,
+    sessionLogsByScenario: SCENARIO_LOGS,
+    // 기준 시점 고정(세션 시작 시 now). 기간 변경해도 동일 기준으로 버킷팅/통계 계산
+    sessionNow: new Date().toISOString(),
+    // 월 기준 임계값 확인용 합성 로그 (이번 달)
+    syntheticMtdLogs: INITIAL_MTD_LOGS,
+    apps: DUMMY_APPS.map((app) => ({
+        id: app.id,
+        name: app.name,
+        description: app.description || '',
+        status: app.status || 'active',
+        // Settings/Usage defaults to satisfy settings page
+        settings: app.settings || {
+            model: 'gpt-4',
+            noiseLevel: '중',
+            heuristicLevel: '중',
+        },
+        usage: app.usage || {
+            today: 0,
+            week: 0,
+            month: 0,
+        },
+        createdAt: app.createdAt || new Date().toISOString().split('T')[0],
+    })),
     selectedAppId: null,
-    apiKeys: [], // 더미 데이터 제거 - 빈 배열로 시작
-    usageLogs: [],
+    apiKeys: DUMMY_API_KEYS,
+    usageLogs: INITIAL_LOGS,
 
     // 액션
+    setDatasetScenario: (scenarioKey) => {
+        set((state) => {
+            const avgTokens = state.planUsageData.current.requests.avgTokensPerRequest || 20;
+            const limit = state.planUsageData.current.tokens.limit || state.currentPlan.limit;
+            // 개요 요금제 퍼센트는 항상 "이번달(MTD)" 기준 - 목표 퍼센트에 맞춰 합성 로그 생성
+            const desiredCalls = Math.floor((limit * (scenarioKey === 'low' ? 25 : scenarioKey === 'high' ? 75 : 45)) / 100 / Math.max(1, avgTokens));
+            const synthLogs = synthesizeMonthToDateLogs(Math.max(50, desiredCalls), 'all', 'all');
+            const used = synthLogs.length * avgTokens;
+            const percentage = Math.min(100, Math.round((used / limit) * 100));
+
+            // 세션 로그를 시나리오에 맞게 교체하고, 현재 기간 기준으로 usageData 갱신
+            const newSessionLogs = state.sessionLogsByScenario?.[scenarioKey] || state.sessionLogs;
+            const now = new Date(state.sessionNow);
+            const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+            const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
+            let from = new Date(0);
+            if (state.selectedPeriod === '1일') from = startOfDay(now);
+            else if (state.selectedPeriod === '7일') { const s = startOfDay(now); s.setDate(s.getDate() - 6); from = s; }
+            else if (state.selectedPeriod === '30일') from = startOfMonth(now);
+            else { const s = new Date(startOfDay(now)); s.setMonth(s.getMonth() - 11); s.setDate(1); from = s; }
+            const baseLogs = newSessionLogs.filter(l => {
+                const t = new Date(l.callAt);
+                return t >= from && t <= now;
+            });
+            const usageData = bucketUsageSeries(state.selectedPeriod, baseLogs, state.sessionNow);
+            const statsBase = computeStatsFromLogs(newSessionLogs, state.sessionNow);
+            const stats = {
+                ...statsBase,
+                // 상단 바(합성 MTD)와 카드의 '이번 달'을 일치시킴
+                month: { ...statsBase.month, value: synthLogs.length },
+            };
+
+            return {
+                datasetScenario: scenarioKey,
+                syntheticMtdLogs: synthLogs,
+                sessionLogs: newSessionLogs,
+                usageLogs: baseLogs,
+                usageData,
+                stats,
+                planUsageData: {
+                    ...state.planUsageData,
+                    current: {
+                        ...state.planUsageData.current,
+                        tokens: {
+                            ...state.planUsageData.current.tokens,
+                            used,
+                            limit,
+                            percentage,
+                        },
+                        requests: {
+                            ...state.planUsageData.current.requests,
+                            count: synthLogs.length,
+                        },
+                    },
+                },
+            };
+        });
+    },
+
+    setChartType: (chartType) => set({ chartType }),
     setPeriod: (period) => {
-        set({
-            selectedPeriod: period,
-            isLoading: true
+        console.debug('[Store] setPeriod ->', period);
+        set((state) => {
+            // 세션 고정 로그에서 기간만 필터링
+            const now = new Date();
+            const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+            const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
+            let from = new Date(0);
+            if (period === '1일') from = startOfDay(now);
+            else if (period === '7일') { const s = startOfDay(now); s.setDate(s.getDate() - 6); from = s; }
+            else if (period === '30일') from = startOfMonth(now);
+            else { const s = new Date(startOfDay(now)); s.setMonth(s.getMonth() - 11); s.setDate(1); from = s; }
+            const baseLogs = state.sessionLogs.filter(l => new Date(l.callAt) >= from && new Date(l.callAt) <= now);
+            const avgTokens = state.planUsageData.current.requests.avgTokensPerRequest || 20;
+            const limit = state.planUsageData.current.tokens.limit || state.currentPlan.limit;
+            const used = state.syntheticMtdLogs.length * avgTokens;
+            const percentage = Math.min(100, Math.round((used / limit) * 100));
+            const effectiveLogs = baseLogs; // 30일도 세션 로그 사용(대량 샘플)
+            const series = bucketUsageSeries(period, effectiveLogs, state.sessionNow);
+            console.debug('[Store] cachedLogs:', effectiveLogs.length, 'series points:', series.length);
+            return {
+                selectedPeriod: period,
+                // 카드 수치(오늘/주/월)는 그래프 기간과 무관하게 세션 고정 로그로 계산
+                stats: (() => {
+                    const b = computeStatsFromLogs(state.sessionLogs, state.sessionNow);
+                    return { ...b, month: { ...b.month, value: state.syntheticMtdLogs.length } };
+                })(),
+                usageData: series,
+                planUsageData: {
+                    ...state.planUsageData,
+                    current: {
+                        ...state.planUsageData.current,
+                        tokens: {
+                            ...state.planUsageData.current.tokens,
+                            used,
+                            limit,
+                            percentage,
+                        },
+                        requests: {
+                            ...state.planUsageData.current.requests,
+                            count: state.syntheticMtdLogs.length,
+                        },
+                    },
+                },
+                isLoading: true,
+            };
         });
 
         // 로딩 시뮬레이션
         setTimeout(() => {
+            console.debug('[Store] setPeriod done -> isLoading=false');
             set({ isLoading: false });
         }, 500);
     },
@@ -98,63 +255,75 @@ export const useDashboardStore = create((set) => ({
         }));
     },
 
-    // 사용량 로그 업데이트
+    // 사용량 로그 업데이트 (세션 캐시 적용)
+    _logCache: {},
     updateUsageLogs: (appId, apiKeyId, period) => {
-        // 전체 선택 시 모든 로그 생성
-        if (appId === 'all' || apiKeyId === 'all') {
-            // 서버 연동 전까지는 빈 배열 유지
-            set({ usageLogs: [] });
-        } else {
-            set({ usageLogs: [] });
-        }
+        set((state) => {
+            // 세션 고정 로그에서 기간/APP/API 키만 필터링
+            const now = new Date();
+            const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+            const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
+            let from = new Date(0);
+            if (period === '1일') from = startOfDay(now);
+            else if (period === '7일') { const s = startOfDay(now); s.setDate(s.getDate() - 6); from = s; }
+            else if (period === '30일') from = startOfMonth(now);
+            else { const s = new Date(startOfDay(now)); s.setMonth(s.getMonth() - 11); s.setDate(1); from = s; }
+            let logs = state.sessionLogs.filter(l => {
+                const t = new Date(l.callAt);
+                if (t < from || t > now) return false;
+                if (appId !== 'all' && l.appId !== appId) return false;
+                if (apiKeyId !== 'all' && l.apiKeyId !== apiKeyId) return false;
+                return true;
+            });
+            const avgTokens = state.planUsageData.current.requests.avgTokensPerRequest || 20;
+            const limit = state.planUsageData.current.tokens.limit || state.currentPlan.limit;
+            const used = state.syntheticMtdLogs.length * avgTokens;
+            const percentage = Math.min(100, Math.round((used / limit) * 100));
+            const effectiveLogs = logs; // 30일도 세션 로그 사용(대량 샘플)
+            return {
+                usageLogs: effectiveLogs,
+                usageData: bucketUsageSeries(state.selectedPeriod, effectiveLogs, state.sessionNow),
+                // 카드 수치는 그래프 기간과 무관하게 세션 고정 로그로 계산
+                stats: computeStatsFromLogs(state.sessionLogs, state.sessionNow),
+                planUsageData: {
+                    ...state.planUsageData,
+                    current: {
+                        ...state.planUsageData.current,
+                        tokens: {
+                            ...state.planUsageData.current.tokens,
+                            used,
+                            limit,
+                            percentage,
+                        },
+                        requests: {
+                            ...state.planUsageData.current.requests,
+                            count: state.syntheticMtdLogs.length,
+                        },
+                    },
+                },
+            };
+        });
     },
 
     // 현재 요금제 정보 (메인페이지 Pricing과 동일)
-    currentPlan: {
-        name: 'Starter',
-        limit: 50000,
-        used: 24500,
-        price: '₩29,900',
-        description: '월 50,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
-        overageRate: 2.0, // 초과분 요금 (1,000 토큰당 ₩2.0)
-        features: [
-            '기본 API & 통계',
-            '광고 제거',
-            '이메일 지원'
-        ]
-    },
+    currentPlan: DEFAULT_PLAN,
 
     // 통합 요금제 사용량 데이터 (모든 대시보드 페이지에서 공통 사용)
     planUsageData: {
-        // 이번 달 실시간 사용량
+        ...PLAN_USAGE_DATA,
         current: {
+            ...PLAN_USAGE_DATA.current,
             tokens: {
-                used: 24500, // 사용된 토큰
-                limit: 50000, // 토큰 한도
-                percentage: Math.round((24500 / 50000) * 100)
+                ...PLAN_USAGE_DATA.current.tokens,
+                used: INITIAL_USED,
+                limit: INITIAL_LIMIT,
+                percentage: INITIAL_PERCENTAGE,
             },
             requests: {
-                count: 1225, // API 호출 횟수 (24500 토큰 ÷ 20 토큰/회 = 1225회)
-                avgTokensPerRequest: 20 // 1회당 평균 토큰 사용량
-            }
+                ...PLAN_USAGE_DATA.current.requests,
+                count: INITIAL_LOGS.length,
+            },
         },
-        // 지난달 사용량
-        lastMonth: {
-            tokens: {
-                used: 18900, // 사용된 토큰
-                limit: 50000 // 토큰 한도 (Starter 기준)
-            },
-            requests: {
-                count: 945, // API 호출 횟수 (18900 토큰 ÷ 20 토큰/회 = 945회)
-                avgTokensPerRequest: 20 // 1회당 평균 토큰 사용량
-            },
-            billing: {
-                overageRate: 2.0, // Starter 기준 (1,000 토큰당 ₩2.0)
-                basePrice: 29900, // Starter 기준
-                overageCost: 0, // 18900 < 50000이므로 초과분 없음
-                totalCost: 29900 // 기본 요금만
-            }
-        }
     },
 
     // 요금제 변경 (메인페이지 Pricing과 동일)
@@ -212,12 +381,31 @@ export const useDashboardStore = create((set) => ({
 
         const newPlanConfig = planConfigs[newPlan];
         if (newPlanConfig) {
-            set(state => ({
-                currentPlan: {
-                    ...state.currentPlan,
-                    ...newPlanConfig
-                }
-            }));
+            set(state => {
+                const used = state.planUsageData.current.tokens.used;
+                const limit = newPlanConfig.limit;
+                const percentage = Math.min(100, Math.round((used / limit) * 100));
+
+                return {
+                    // 플랜 자체 정보 업데이트
+                    currentPlan: {
+                        ...state.currentPlan,
+                        ...newPlanConfig
+                    },
+                    // 사용량 측정 기준(limit/percentage)도 함께 반영
+                    planUsageData: {
+                        ...state.planUsageData,
+                        current: {
+                            ...state.planUsageData.current,
+                            tokens: {
+                                ...state.planUsageData.current.tokens,
+                                limit,
+                                percentage,
+                            }
+                        }
+                    }
+                };
+            });
         }
     },
 
