@@ -4,6 +4,7 @@ import Modal from '../ui/Modal';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { useAuth } from '../../hooks/useAuth';
 import { authAPI } from '../../services/api';
+import { validateUserName } from '../../utils/validators';
 
 export default function DashboardSettings() {
     const {
@@ -147,8 +148,6 @@ export default function DashboardSettings() {
         e.preventDefault();
         console.log('이름 변경:', nameForm);
 
-        // 회원가입과 동일한 정규식 적용
-        const nameRegex = /^[가-힣a-zA-Z0-9]{1,30}$/;
         const trimmedName = nameForm.newName.trim();
 
         // 유효성 검사
@@ -157,8 +156,9 @@ export default function DashboardSettings() {
             return;
         }
 
-        if (!nameRegex.test(trimmedName)) {
-            alert('이름은 한글, 영문, 숫자만 1-30자로 입력해주세요. (공백 및 특수문자 불가)');
+        const { isValid, error } = validateUserName(trimmedName);
+        if (!isValid) {
+            alert(error);
             return;
         }
 

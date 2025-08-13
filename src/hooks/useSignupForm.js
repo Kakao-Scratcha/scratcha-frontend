@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authAPI } from '../services/api';
+import { validateEmail, validatePassword, validateUserName } from '../utils/validators';
 
 export function useSignupForm() {
     const [formData, setFormData] = useState({
@@ -30,20 +31,10 @@ export function useSignupForm() {
     const validateField = (field, value) => {
         switch (field) {
             case 'email': {
-                // 완전한 RFC 5322 표준 준수 + 최대 256자
-                const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$|^"[^"]*"@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-                return {
-                    isValid: emailRegex.test(value) && value.length <= 256,
-                    error: emailRegex.test(value) && value.length <= 256 ? '' : '올바른 이메일 형식을 입력해주세요. (최대 256자)'
-                };
+                return validateEmail(value);
             }
             case 'password': {
-                // 모든 문자 허용: 8-64자
-                const passwordRegex = /^.{8,64}$/;
-                return {
-                    isValid: passwordRegex.test(value),
-                    error: passwordRegex.test(value) ? '' : '비밀번호는 8-64자로 입력해주세요.'
-                };
+                return validatePassword(value);
             }
             case 'passwordConfirm': {
                 return {
@@ -52,12 +43,7 @@ export function useSignupForm() {
                 };
             }
             case 'userName': {
-                // 1-30자, 한글/영문/숫자만, 공백제거, 특수문자 불가
-                const nameRegex = /^[가-힣a-zA-Z0-9]{1,30}$/;
-                return {
-                    isValid: nameRegex.test(value.trim()),
-                    error: nameRegex.test(value.trim()) ? '' : '이름은 한글, 영문, 숫자만 1-30자로 입력해주세요. (공백 및 특수문자 불가)'
-                };
+                return validateUserName(value);
             }
             default:
                 return { isValid: false, error: '' };
