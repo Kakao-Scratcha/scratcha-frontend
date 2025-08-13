@@ -27,9 +27,6 @@ export const authAPI = {
     // 회원가입
     signup: (userData) => apiClient.post('/api/dashboard/users/signup', userData),
 
-    // 로그아웃
-    logout: () => apiClient.post('/api/dashboard/auth/logout'),
-
     // 사용자 정보 조회
     getProfile: () => {
         console.log('📞 getProfile API 호출');

@@ -311,15 +311,6 @@ export const useAuthStore = create(
                             만료여부: tokenInfo.isExpired
                         });
                     }
-
-                    // 백엔드 API 호출 시도 (구현되지 않았을 수 있음)
-                    try {
-                        await authAPI.logout();
-                        console.log('✅ 백엔드 로그아웃 성공');
-                    } catch (logoutError) {
-                        console.log('⚠️ 백엔드 로그아웃 API 미구현 또는 실패:', logoutError.message);
-                        // 백엔드 로그아웃 실패해도 프론트엔드에서는 로그아웃 처리
-                    }
                 } catch (error) {
                     console.log('⚠️ 로그아웃 중 오류:', error.message);
                 } finally {
@@ -332,6 +323,14 @@ export const useAuthStore = create(
                         error: null,
                         lastActivity: null,
                     });
+
+                    // 로컬스토리지의 persist 데이터 제거 (토큰/유저 정보 포함)
+                    try {
+                        localStorage.removeItem('auth-storage');
+                        console.log('🧹 로컬스토리지 auth-storage 키 제거 완료');
+                    } catch (e) {
+                        console.log('⚠️ 로컬스토리지 제거 중 오류:', e?.message);
+                    }
                     console.log('✅ 프론트엔드 로그아웃 완료');
                 }
             },
