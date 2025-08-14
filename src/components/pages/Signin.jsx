@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
+import FormField from '../forms/FormField';
 import { useAuth } from '../../hooks/useAuth';
 
 
@@ -32,9 +33,9 @@ const EYE_OFF_ICON = (
 const LOGO_LINK = (
     <Link to="/" className="inline-block">
         <img
-            src="/images/scratchalogo_big.png"
+            src="/images/scratchalogo.svg"
             alt="Scratcha"
-            className="h-48 w-auto mx-auto cursor-pointer hover:opacity-80 transition-opacity"
+            className="h-48 w-auto mx-auto cursor-pointer hover:opacity-80 transition-opacity dark:brightness-0 dark:invert"
         />
     </Link>
 );
@@ -58,9 +59,10 @@ export default function Signin() {
         email: '',
         password: ''
     });
-    const [showPassword, setShowPassword] = useState(false);
+    // 로그인 페이지는 비밀번호 표시 토글을 사용하지 않음
+    // 네이티브 검증 사용: 커스텀 에러 상태는 사용하지 않음
 
-    const { login, updateUser, isAuthenticated } = useAuth();
+    const { login, isAuthenticated } = useAuth();
 
     // 리다이렉트된 페이지 정보 가져오기
     const from = location.state?.from?.pathname || '/dashboard';
@@ -94,31 +96,10 @@ export default function Signin() {
             password: e.target.password?.value || ''
         };
 
-
-        // 클라이언트 사이드 유효성 검사
-        const validationErrors = [];
-
-        // 이메일 유효성 검사
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!currentFormData.email) {
-            validationErrors.push('이메일을 입력해주세요.');
-        } else if (!emailRegex.test(currentFormData.email)) {
-            validationErrors.push('올바른 이메일 형식을 입력해주세요.');
-        }
-
-        // 비밀번호 유효성 검사
-        if (!currentFormData.password) {
-            validationErrors.push('비밀번호를 입력해주세요.');
-        } else if (currentFormData.password.length < 8) {
-            validationErrors.push('비밀번호는 최소 8자 이상이어야 합니다.');
-        }
-
-        // 유효성 검사 실패 시
-        if (validationErrors.length > 0) {
-            setErrorMessage('입력하신 정보를 다시 확인해주세요.');
-            setTimeout(() => {
-                setIsErrorModalOpen(true);
-            }, 10);
+        // 네이티브 검증 (required/type=email) 사용하여 말풍선 표시
+        const formEl = e.currentTarget;
+        if (!formEl.checkValidity()) {
+            formEl.reportValidity();
             return;
         }
 
@@ -146,7 +127,7 @@ export default function Signin() {
         } finally {
             setIsLoading(false);
         }
-    }, [login, updateUser]);
+    }, [login]);
 
     const handleSuccess = useCallback(() => {
         setIsSuccessModalOpen(false);
@@ -154,10 +135,7 @@ export default function Signin() {
     }, [navigate, from]);
 
     const handleInputChange = useCallback((field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        setFormData(prev => ({ ...prev, [field]: value }));
     }, []);
 
     // 에러 모달 핸들러들 메모이제이션
@@ -175,19 +153,36 @@ export default function Signin() {
     const successMessage = useMemo(() => "로그인이 완료되었습니다. 대시보드로 이동합니다.", []);
 
     // 비밀번호 토글 핸들러 메모이제이션
-    const handlePasswordToggle = useCallback(() => {
-        setShowPassword(!showPassword);
-    }, [showPassword]);
+    // 비밀번호 토글 (필드 컴포넌트로 대체되어 미사용)
 
     // 이메일 변경 핸들러 메모이제이션
-    const handleEmailChange = useCallback((e) => {
-        handleInputChange('email', e.target.value);
-    }, [handleInputChange]);
+    // 미사용 (FormField onChange 사용)
 
     // 비밀번호 변경 핸들러 메모이제이션
-    const handlePasswordChange = useCallback((e) => {
-        handleInputChange('password', e.target.value);
-    }, [handleInputChange]);
+    // 미사용 (FormField onChange 사용)
+
+    const isSubmitDisabled = isLoading;
+
+    // 네이티브 검증 메시지 (빈칸만 경고)
+    const handleEmailInvalid = useCallback((e) => {
+        const t = e.target;
+        if (t.validity.valueMissing) {
+            t.setCustomValidity('이 입력란을 작성하세요');
+        } else {
+            t.setCustomValidity('');
+        }
+    }, []);
+    const clearCustomValidity = useCallback((e) => {
+        e.target.setCustomValidity('');
+    }, []);
+    const handlePasswordInvalid = useCallback((e) => {
+        const t = e.target;
+        if (t.validity.valueMissing) {
+            t.setCustomValidity('이 입력란을 작성하세요');
+        } else {
+            t.setCustomValidity('');
+        }
+    }, []);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-contain bg-center bg-no-repeat bg-y-center"
@@ -225,54 +220,37 @@ export default function Signin() {
                         action="javascript:void(0)"
                     >
                         {/* 아이디 필드 */}
-                        <div>
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {CHECK_ICON}
-                                아이디(이메일)
-                                <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="email"
-                                name="email"
-                                placeholder="아이디를 입력하세요"
-                                value={formData.email}
-                                onChange={handleEmailChange}
-                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                required
-                            />
-                        </div>
+                        <FormField
+                            id="email"
+                            label={<span className="flex items-center gap-2">{CHECK_ICON} 아이디(이메일)</span>}
+                            type="text"
+                            placeholder="아이디를 입력하세요"
+                            value={formData.email}
+                            name="email"
+                            onChange={(e) => handleInputChange('email', e.target.value)}
+                            onInvalid={handleEmailInvalid}
+                            onInput={clearCustomValidity}
+                            required
+                        />
 
                         {/* 비밀번호 필드 */}
-                        <div>
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {CHECK_ICON}
-                                비밀번호
-                                <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    name="password"
-                                    placeholder="비밀번호를 입력하세요"
-                                    value={formData.password}
-                                    onChange={handlePasswordChange}
-                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                    required
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handlePasswordToggle}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-                                >
-                                    {showPassword ? EYE_OFF_ICON : EYE_ICON}
-                                </button>
-                            </div>
-                        </div>
+                        <FormField
+                            id="password"
+                            label={<span className="flex items-center gap-2">{CHECK_ICON} 비밀번호</span>}
+                            type="password"
+                            placeholder="비밀번호를 입력하세요"
+                            value={formData.password}
+                            name="password"
+                            onChange={(e) => handleInputChange('password', e.target.value)}
+                            onInvalid={handlePasswordInvalid}
+                            onInput={clearCustomValidity}
+                            required
+                        />
 
                         {/* 로그인 버튼 */}
                         <button
                             type="submit"
-                            disabled={isLoading}
+                            disabled={isSubmitDisabled}
                             className="w-full py-3 px-6 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white font-bold rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isLoading ? '로그인 중...' : '로그인'}

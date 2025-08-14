@@ -11,8 +11,10 @@ export default function FormLabel({
             htmlFor={htmlFor}
             className={`block text-xs font-medium text-gray-900 dark:text-gray-100 mb-1 ${className}`}
         >
-            {children}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            <span className="inline-flex items-center gap-1 align-middle">
+                {children}
+                {required && <span className="text-red-500">*</span>}
+            </span>
         </label>
     );
 } 

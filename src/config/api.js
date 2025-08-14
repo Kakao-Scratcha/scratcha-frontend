@@ -2,7 +2,12 @@ import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
 // API 기본 설정 - Docker 환경에서는 항상 환경 변수 사용
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://210.109.81.41:8001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://210.109.80.247:8001';
+
+//서버 - 내꺼
+//http://210.109.81.41:8001
+//서버 - 최신 
+//http://210.109.80.247:8001/
 
 // axios 인스턴스 생성
 const apiClient = axios.create({

@@ -30,6 +30,7 @@ export default function FormField({
                 password={password}
                 isValid={isValid}
                 disabled={disabled}
+                required={required}
                 {...props}
             />
         </div>

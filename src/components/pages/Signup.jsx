@@ -16,9 +16,9 @@ const backgroundStyle = {
 const LOGO_LINK = (
     <Link to="/" className="inline-block">
         <img
-            src="/images/scratchalogo_big.png"
+            src="/images/scratchalogo.svg"
             alt="Scratcha"
-            className="h-20 w-auto mx-auto cursor-pointer hover:opacity-80 transition-opacity"
+            className="h-20 w-auto mx-auto cursor-pointer hover:opacity-80 transition-opacity dark:brightness-0 dark:invert"
         />
     </Link>
 );
