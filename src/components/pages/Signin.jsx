@@ -167,7 +167,7 @@ export default function Signin() {
     const handleEmailInvalid = useCallback((e) => {
         const t = e.target;
         if (t.validity.valueMissing) {
-            t.setCustomValidity('이 입력란을 작성하세요');
+            t.setCustomValidity('이 입력란을 작성하세요.');
         } else {
             t.setCustomValidity('');
         }
@@ -178,7 +178,7 @@ export default function Signin() {
     const handlePasswordInvalid = useCallback((e) => {
         const t = e.target;
         if (t.validity.valueMissing) {
-            t.setCustomValidity('이 입력란을 작성하세요');
+            t.setCustomValidity('이 입력란을 작성하세요.');
         } else {
             t.setCustomValidity('');
         }

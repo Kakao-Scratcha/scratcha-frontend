@@ -1,6 +1,7 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useSignupForm } from '../../hooks/useSignupForm';
+import { useAuth } from '../../hooks/useAuth';
 import FormField from '../forms/FormField';
 import SignupButton from '../forms/SignupButton';
 import SuccessModal from '../ui/SuccessModal';
@@ -47,6 +48,14 @@ export default function Signup() {
         setSuccessModal,
         setErrorModal
     } = useSignupForm();
+
+    const { isAuthenticated } = useAuth();
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/');
+        }
+    }, [isAuthenticated, navigate]);
 
     // 모달 핸들러들 메모이제이션
     const handleSuccessClose = useCallback(() => {
@@ -118,11 +127,11 @@ export default function Signup() {
                     )}
 
                     {/* 회원가입 폼 */}
-                    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                    <form className="space-y-4" onSubmit={(e) => e.preventDefault()} novalidate>
                         <FormField
                             id="email"
                             label="이메일 (아이디)"
-                            type="email"
+                            type="text"
                             placeholder="이메일을 입력하세요"
                             required={true}
                             value={formData.email}
