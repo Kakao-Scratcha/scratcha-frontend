@@ -24,7 +24,7 @@ const PRICING_DATA = {
         {
             name: "Starter",
             price: "₩ 29,900",
-            description: "월 50,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩ 2.0",
+            description: "월 50,000 토큰 제공",
             features: [
                 "기본 API & 통계",
                 "광고 제거",
@@ -36,7 +36,7 @@ const PRICING_DATA = {
         {
             name: "Pro",
             price: "₩ 79,900",
-            description: "월 200,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩ 2.0",
+            description: "월 200,000 토큰 제공",
             features: [
                 "Starter의 모든 혜택",
                 "커스텀 UI 스킨 지원",
@@ -72,7 +72,7 @@ const PRICING_DATA = {
             },
             {
                 question: "청구는 어떻게 되나요?",
-                answer: "이용한 토큰 수에 따라 매월 말에 청구서가 발송됩니다."
+                answer: "이용 전 원하는 만큼 토큰을 선결제해 사용하실 수 있으며,\n모두 소진 시 추가로 결제하여 구매하실 수 있습니다."
             },
             {
                 question: "기술 지원을 받을 수 있나요?",
@@ -197,7 +197,7 @@ export default function Pricing() {
                                     <h3 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 text-center">
                                         {item.question}
                                     </h3>
-                                    <p className="text-lg text-gray-600 dark:text-gray-300 text-left leading-relaxed max-w-md mx-auto">
+                                    <p className="text-lg text-gray-600 dark:text-gray-300 text-left leading-relaxed max-w-md mx-auto whitespace-pre-line">
                                         {item.answer}
                                     </p>
                                 </div>
