@@ -14,8 +14,12 @@ export default function FormField({
     isValid,
     disabled = false,
     className = "",
+    enableValidation = false,
     ...props
 }) {
+    // 로그인 페이지에서만 required 전달 (enableValidation이 true인 경우)
+    const shouldPassRequired = required && enableValidation;
+
     return (
         <div className={`mb-4 ${className}`}>
             <FormLabel htmlFor={id} required={required}>
@@ -30,6 +34,7 @@ export default function FormField({
                 password={password}
                 isValid={isValid}
                 disabled={disabled}
+                required={shouldPassRequired}
                 {...props}
             />
         </div>

@@ -216,7 +216,6 @@ export default function Signin() {
                     <form
                         className="space-y-6"
                         onSubmit={handleSubmit}
-                        noValidate
                         action="javascript:void(0)"
                     >
                         {/* 아이디 필드 */}
@@ -230,7 +229,8 @@ export default function Signin() {
                             onChange={(e) => handleInputChange('email', e.target.value)}
                             onInvalid={handleEmailInvalid}
                             onInput={clearCustomValidity}
-                            required
+                            required={true}
+                            enableValidation={true}
                         />
 
                         {/* 비밀번호 필드 */}
@@ -244,7 +244,8 @@ export default function Signin() {
                             onChange={(e) => handleInputChange('password', e.target.value)}
                             onInvalid={handlePasswordInvalid}
                             onInput={clearCustomValidity}
-                            required
+                            required={true}
+                            enableValidation={true}
                         />
 
                         {/* 로그인 버튼 */}
