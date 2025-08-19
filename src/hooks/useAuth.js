@@ -18,7 +18,6 @@ export const useAuth = () => {
         logout,
         getProfile,
         updateUser,
-        refreshToken,
         updateActivity,
         checkSessionExpiry,
         hasPermission,
@@ -155,7 +154,7 @@ export const useAuth = () => {
         } catch (error) {
             console.log('⚠️ 토큰 자동 갱신 실패 (백엔드 미구현):', error.message);
         }
-    }, [isAuthenticated, token, refreshToken]);
+    }, [isAuthenticated, token]);
 
     useEffect(() => {
         if (!isAuthenticated) return;
@@ -184,7 +183,6 @@ export const useAuth = () => {
 
         // 확장된 액션
         updateUser,
-        refreshToken,
         updateActivity,
         checkSessionExpiry,
         hasPermission,

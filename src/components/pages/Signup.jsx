@@ -127,7 +127,7 @@ export default function Signup() {
                     )}
 
                     {/* 회원가입 폼 */}
-                    <form className="space-y-4" onSubmit={(e) => e.preventDefault()} novalidate>
+                    <form className="space-y-4" onSubmit={(e) => e.preventDefault()} noValidate>
                         <FormField
                             id="email"
                             label="이메일 (아이디)"

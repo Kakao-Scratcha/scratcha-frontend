@@ -1,9 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ThemeProvider from './components/ThemeProvider';
-import AuthProvider from './components/AuthProvider';
 import ProtectedRoute from './components/ProtectedRoute';
-import PublicRoute from './components/PublicRoute';
 import Layout from './components/Layout';
 import MainPage from './components/pages/MainPage';
 import Dashboard from './components/Dashboard';
@@ -22,28 +20,26 @@ import NotFound from './components/pages/NotFound';
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<MainPage />} />
-              <Route path="overview" element={<Overview />} />
-              <Route path="pricing" element={<Pricing />} />
-              <Route path="demo" element={<Demo />} />
-            </Route>
-            <Route path="dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
-              <Route index element={<DashboardOverview />} />
-              <Route path="settings" element={<DashboardSettings />} />
-              <Route path="usage" element={<DashboardUsage />} />
-              <Route path="billing" element={<DashboardBilling />} />
-              <Route path="app" element={<DashboardApp />} />
-            </Route>
-            <Route path="signin" element={<PublicRoute><Signin /></PublicRoute>} />
-            <Route path="signup" element={<PublicRoute><Signup /></PublicRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<MainPage />} />
+            <Route path="overview" element={<Overview />} />
+            <Route path="pricing" element={<Pricing />} />
+            <Route path="demo" element={<Demo />} />
+          </Route>
+          <Route path="dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
+            <Route index element={<DashboardOverview />} />
+            <Route path="settings" element={<DashboardSettings />} />
+            <Route path="usage" element={<DashboardUsage />} />
+            <Route path="billing" element={<DashboardBilling />} />
+            <Route path="app" element={<DashboardApp />} />
+          </Route>
+          <Route path="signin" element={<Signin />} />
+          <Route path="signup" element={<Signup />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
     </ThemeProvider>
   );
 }
