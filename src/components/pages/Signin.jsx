@@ -4,10 +4,12 @@ import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
 import FormField from '../forms/FormField';
 import { useAuth } from '../../hooks/useAuth';
+import signinBackground from '@/assets/images/signin-background.png';
+import logo from '@/assets/images/scratchalogo.svg';
 
 
 // 배경 스타일 상수 (재렌더링 시 새 객체 생성 방지)
-const backgroundStyle = { backgroundImage: 'url(/images/signin-background.png)' };
+const backgroundStyle = { backgroundImage: `url(${signinBackground})` };
 
 // SVG 아이콘들을 JSX 상수로 분리 (재렌더링 방지)
 const CHECK_ICON = (
@@ -33,7 +35,7 @@ const EYE_OFF_ICON = (
 const LOGO_LINK = (
     <Link to="/" className="inline-block">
         <img
-            src="/images/scratchalogo.svg"
+            src={logo}
             alt="Scratcha"
             className="h-48 w-auto mx-auto cursor-pointer hover:opacity-80 transition-opacity dark:brightness-0 dark:invert"
         />

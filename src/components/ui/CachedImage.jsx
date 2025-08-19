@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useImageCache } from '../../hooks/useImageCache';
+import placeholder from '@/assets/images/placeholder.svg';
 
 const CachedImage = ({
     src,
-    fallbackSrc = '/images/placeholder.svg',
+    fallbackSrc = placeholder,
     alt = '',
     className = '',
     showCacheIndicator = false,

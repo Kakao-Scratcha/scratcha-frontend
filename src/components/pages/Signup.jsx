@@ -6,10 +6,12 @@ import FormField from '../forms/FormField';
 import SignupButton from '../forms/SignupButton';
 import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
+import signupBackground from '@/assets/images/signup-background.png';
+import logo from '@/assets/images/scratchalogo.svg';
 
 // 배경 스타일 상수 (재렌더링 방지)
 const backgroundStyle = {
-    backgroundImage: 'url(/images/signup-background.png)',
+    backgroundImage: `url(${signupBackground})`,
     backgroundSize: 'cover'
 };
 
@@ -17,7 +19,7 @@ const backgroundStyle = {
 const LOGO_LINK = (
     <Link to="/" className="inline-block">
         <img
-            src="/images/scratchalogo.svg"
+            src={logo}
             alt="Scratcha"
             className="h-20 w-auto mx-auto cursor-pointer hover:opacity-80 transition-opacity dark:brightness-0 dark:invert"
         />

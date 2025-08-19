@@ -4,6 +4,10 @@ import Chart from '../ui/Chart';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from '../../utils/chartImports';
 import { useDashboardStore } from '../../stores/dashboardStore';
+import greenCheckIcon from '@/assets/images/green_check_icon.png';
+import blueCheckIcon from '@/assets/images/blue_check_icon.png';
+import yellowAlertIcon from '@/assets/images/yellow_alert_icon.png';
+import redFailIcon from '@/assets/images/red_fail_icon.png';
 
 export default function DashboardOverview() {
     // Typography scale (dashboard-wide consistency)
@@ -29,10 +33,10 @@ export default function DashboardOverview() {
     const { sessionLogs } = useDashboardStore();
     const avgTokens = planUsageData.current?.requests?.avgTokensPerRequest || 20;
     const ICONS = {
-        success: '/images/green_check_icon.png',
-        info: '/images/blue_check_icon.png',
-        warning: '/images/yellow_alert_icon.png',
-        error: '/images/red_fail_icon.png',
+        success: greenCheckIcon,
+        info: blueCheckIcon,
+        warning: yellowAlertIcon,
+        error: redFailIcon,
     };
     const formatTimeAgo = (iso) => {
         if (!iso) return '-';

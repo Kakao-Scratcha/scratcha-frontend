@@ -1,22 +1,38 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export default function Modal({ isOpen, onClose, title, children, hideClose = false, centerTitle = false, borderless = false, titleClassName = 'text-xl', headerClassName = 'p-6', bodyClassName = 'p-6' }) {
-    // ESC 키로 모달 닫기
+    const modalRef = useRef(null);
+
+    // ESC 키로 모달 닫기 및 키보드 트랩
     useEffect(() => {
-        const handleEscape = (e) => {
+        const handleKeyDown = (e) => {
             if (e.key === 'Escape') {
                 onClose();
+            }
+
+            // 모달이 열려있을 때만 키보드 이벤트 처리
+            if (isOpen) {
+                // Enter 키가 모달 외부로 전파되는 것을 방지
+                if (e.key === 'Enter' && !modalRef.current?.contains(e.target)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }
         };
 
         if (isOpen) {
-            document.addEventListener('keydown', handleEscape);
+            document.addEventListener('keydown', handleKeyDown, true); // capture phase에서 처리
             // 모달 열릴 때 body 스크롤 방지
             document.body.style.overflow = 'hidden';
+
+            // 모달에 포커스 설정
+            if (modalRef.current) {
+                modalRef.current.focus();
+            }
         }
 
         return () => {
-            document.removeEventListener('keydown', handleEscape);
+            document.removeEventListener('keydown', handleKeyDown, true);
             // 모달 닫힐 때 body 스크롤 복원
             document.body.style.overflow = 'unset';
         };
@@ -33,7 +49,17 @@ export default function Modal({ isOpen, onClose, title, children, hideClose = fa
             ></div>
 
             {/* 모달 컨텐츠 */}
-            <div className={`relative rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 border theme-modal-border ${borderless ? '' : 'border'}`}>
+            <div
+                ref={modalRef}
+                tabIndex={-1}
+                className={`relative rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 border theme-modal-border ${borderless ? '' : 'border'}`}
+                onKeyDown={(e) => {
+                    // 모달 내부에서 Enter 키 처리
+                    if (e.key === 'Enter') {
+                        e.stopPropagation();
+                    }
+                }}
+            >
                 {/* 헤더 */}
                 <div className={`flex items-center ${centerTitle ? 'justify-center' : 'justify-between'} ${headerClassName} ${borderless ? '' : 'border-b theme-modal-border'}`}>
                     <h2 className={`${titleClassName} font-semibold text-gray-900 dark:text-white`}>{title}</h2>

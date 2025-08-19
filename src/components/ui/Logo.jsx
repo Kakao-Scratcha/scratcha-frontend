@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import logo from '@/assets/images/scratchalogo.svg';
 
 export default function Logo({ className = "" }) {
     return (
@@ -8,7 +9,7 @@ export default function Logo({ className = "" }) {
             className={`flex items-center px-4 py-2 transition-opacity duration-200 bg-transparent hover:opacity-80 ${className}`}
         >
             <img
-                src="/images/scratchalogo.svg"
+                src={logo}
                 alt="Scratcha"
                 className="h-12 w-auto dark:brightness-0 dark:invert"
             />

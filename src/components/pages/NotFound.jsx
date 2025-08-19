@@ -6,7 +6,7 @@ const NotFound = () => {
     const { isDark, toggle } = useDarkModeStore();
 
     return (
-        <div className="min-h-screen flex items-center justify-center relative theme-layout-dark">
+        <div className="min-h-screen flex items-center justify-center relative theme-layout">
             {/* 다크모드 토글 버튼 */}
             <button
                 onClick={toggle}
