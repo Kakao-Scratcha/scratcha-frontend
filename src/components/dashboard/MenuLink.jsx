@@ -8,7 +8,7 @@ export default function MenuLink({ item, isActive }) {
             to={item.path}
             className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition ${isActive
                 ? 'bg-blue-600 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                : 'theme-text-secondary hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
         >
             {item.icon}

@@ -264,8 +264,8 @@ export default function DashboardSettings() {
                 {/* APP 설정 + My Scratcha 설정 (2컬럼) */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* 좌측: APP 설정 */}
-                    <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">APP 설정</h3>
+                    <div className="p-6 rounded-lg theme-card">
+                        <h3 className="text-xl font-semibold theme-text-primary mb-6">APP 설정</h3>
                         <div className="space-y-3">
                             {isAppsLoading && (
                                 <div className="text-center py-6">
@@ -282,11 +282,11 @@ export default function DashboardSettings() {
                                     onClick={() => selectApp(selectedAppId === app.id ? null : app.id)}
                                     className={`p-4 rounded-lg border cursor-pointer transition-all ${selectedAppId === app.id
                                         ? 'border-blue-600 dark:border-blue-500 bg-blue-100 dark:bg-blue-900/20'
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-300'
+                                        : 'theme-card hover:border-blue-400 dark:hover:border-blue-300'
                                         }`}
                                 >
                                     <div className="flex items-center justify-between mb-2">
-                                        <h5 className="font-medium text-gray-900 dark:text-white">{app.name}</h5>
+                                        <h5 className="font-medium theme-text-primary">{app.name}</h5>
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${app.status === 'active'
                                             ? 'bg-green-100 text-green-800'
                                             : 'bg-gray-100 text-gray-800'
@@ -294,7 +294,7 @@ export default function DashboardSettings() {
                                             {app.status === 'active' ? '활성' : '비활성'}
                                         </span>
                                     </div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{app.description}</p>
+                                    <p className="text-sm theme-text-secondary mb-2">{app.description}</p>
                                     <div className="space-y-2">
                                         <div className="text-xs text-gray-600 dark:text-gray-400">
                                             <span className="font-medium">현재 설정:</span> {getSettingsText(app)}
@@ -310,10 +310,10 @@ export default function DashboardSettings() {
                     </div>
 
                     {/* 우측: My Scratcha 설정 */}
-                    <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 flex flex-col min-h-[420px]">
+                    <div className="p-6 rounded-lg theme-card flex flex-col min-h-[420px]">
                         {selectedApp && (
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">My Scratcha 설정</h3>
+                                <h3 className="text-xl font-semibold theme-text-primary">My Scratcha 설정</h3>
                                 <button
                                     onClick={handleApplySettings}
                                     disabled={!hasTempSettings}
@@ -334,7 +334,7 @@ export default function DashboardSettings() {
                                     {/* APP 캡차 서비스 모델 설정 */}
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                                            <label className="block text-sm font-medium theme-text-primary">
                                                 APP 캡차 서비스 모델
                                             </label>
                                             <div className="relative group">
@@ -350,13 +350,13 @@ export default function DashboardSettings() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-2">
+                                        <p className="text-sm theme-text-secondary mt-1 mb-2">
                                             캡차 검증에 사용할 AI 모델을 선택하세요
                                         </p>
                                         <select
                                             value={currentSettings.model || selectedApp.settings.model}
                                             onChange={(e) => handleAppSettingChange('model', e.target.value)}
-                                            className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${changedModel
+                                            className={`w-full px-3 py-2 theme-input focus:outline-none focus:ring-2 ${changedModel
                                                 ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                                 : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
                                                 }`}
@@ -372,7 +372,7 @@ export default function DashboardSettings() {
                                     {/* 노이즈 강도 설정 */}
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                                            <label className="block text-sm font-medium theme-text-primary">
                                                 노이즈 강도
                                             </label>
                                             <div className="relative group">
@@ -388,13 +388,13 @@ export default function DashboardSettings() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-2">
+                                        <p className="text-sm theme-text-secondary mt-1 mb-2">
                                             캡차 이미지에 적용할 노이즈 강도를 설정하세요
                                         </p>
                                         <select
                                             value={currentSettings.noiseLevel || selectedApp.settings.noiseLevel}
                                             onChange={(e) => handleAppSettingChange('noiseLevel', e.target.value)}
-                                            className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${changedNoise
+                                            className={`w-full px-3 py-2 theme-input focus:outline-none focus:ring-2 ${changedNoise
                                                 ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                                 : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
                                                 }`}
@@ -410,7 +410,7 @@ export default function DashboardSettings() {
                                     {/* 휴리스틱 강도 설정 */}
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                                            <label className="block text-sm font-medium theme-text-primary">
                                                 휴리스틱 강도
                                             </label>
 
@@ -427,13 +427,13 @@ export default function DashboardSettings() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-2">
+                                        <p className="text-sm theme-text-secondary mt-1 mb-2">
                                             캡차 검증에 사용할 휴리스틱 알고리즘의 강도를 설정하세요
                                         </p>
                                         <select
                                             value={currentSettings.heuristicLevel || selectedApp.settings.heuristicLevel}
                                             onChange={(e) => handleAppSettingChange('heuristicLevel', e.target.value)}
-                                            className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${changedHeuristic
+                                            className={`w-full px-3 py-2 theme-input focus:outline-none focus:ring-2 ${changedHeuristic
                                                 ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                                 : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
                                                 }`}
@@ -478,15 +478,15 @@ export default function DashboardSettings() {
                 </div>
 
                 {/* 회원 설정 */}
-                <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">회원 설정</h3>
+                <div className="p-6 rounded-lg theme-card">
+                    <h3 className="text-xl font-semibold theme-text-primary mb-6">회원 설정</h3>
 
                     <div className="space-y-4">
                         {/* 이름 변경 */}
-                        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div className="flex items-center justify-between p-4 theme-layout-secondary rounded-lg">
                             <div>
-                                <h4 className="font-medium text-gray-900 dark:text-white">회원 정보 수정</h4>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">현재 이름 : {getServerUserName(user) || '설정되지 않음'}</p>
+                                <h4 className="font-medium theme-text-primary">회원 정보 수정</h4>
+                                <p className="text-sm theme-text-secondary">현재 이름 : {getServerUserName(user) || '설정되지 않음'}</p>
                             </div>
                             <button
                                 onClick={() => {
@@ -515,10 +515,10 @@ export default function DashboardSettings() {
                         </div> */}
 
                         {/* 회원 탈퇴 */}
-                        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div className="flex items-center justify-between p-4 theme-layout-secondary rounded-lg">
                             <div>
-                                <h4 className="font-medium text-gray-900 dark:text-white">회원 탈퇴</h4>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">계정을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다</p>
+                                <h4 className="font-medium theme-text-primary">회원 탈퇴</h4>
+                                <p className="text-sm theme-text-secondary">계정을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다</p>
                             </div>
                             <button
                                 onClick={() => setIsDeleteModalOpen(true)}

@@ -82,10 +82,10 @@ export default function Signup() {
             {/* 좌측 영역 - 배경 이미지와 텍스트 (절대 위치로 상단 고정) */}
             <div className="hidden lg:block absolute top-8 left-1/3 transform -translate-x-1/2">
                 <div className="text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
                         지금 바로 가입하세요!
                     </h1>
-                    <p className="text-4xl text-gray-600 dark:text-gray-300 mb-8">
+                    <p className="text-4xl text-gray-600 mb-8">
                         새로운 CAPTCHA를 체험해보세요
                     </p>
                 </div>

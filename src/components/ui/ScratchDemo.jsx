@@ -7,13 +7,13 @@ export default function ScratchDemo({
     onScratchEnd
 }) {
     return (
-        <div className="p-8 rounded-2xl border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 ">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+        <div className="p-8 rounded-2xl theme-card">
+            <h2 className="text-2xl font-bold theme-text-primary mb-6 text-center">
                 스크래치 캡차 체험
             </h2>
 
             <div className="mb-6">
-                <div className="relative w-full h-64 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
+                <div className="relative w-full h-64 theme-layout-secondary rounded-lg overflow-hidden">
                     {/* Scratch Area */}
                     <div
                         className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center"
@@ -31,7 +31,7 @@ export default function ScratchDemo({
 
                     {/* Scratch Overlay */}
                     <div
-                        className="absolute inset-0 bg-gray-800 dark:bg-gray-900 cursor-crosshair"
+                        className="absolute inset-0 theme-layout-dark cursor-crosshair"
                         onMouseDown={onScratchStart}
                         onMouseMove={onScratchMove}
                         onMouseUp={onScratchEnd}
@@ -46,13 +46,13 @@ export default function ScratchDemo({
 
             {/* Progress */}
             <div className="mb-6">
-                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <div className="flex justify-between text-sm theme-text-secondary mb-2">
                     <span>진행률</span>
                     <span>{scratchProgress}%</span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div className="w-full theme-layout-secondary rounded-full h-2">
                     <div
-                        className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all duration-300"
+                        className="theme-blue-accent h-2 rounded-full transition-all duration-300"
                         style={{ width: `${scratchProgress}%` }}
                     />
                 </div>

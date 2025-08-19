@@ -9,11 +9,11 @@ export default function StatCard({
     color = 'blue'
 }) {
     const colorClasses = {
-        blue: 'bg-blue-500',
-        green: 'bg-green-500',
-        purple: 'bg-purple-500',
-        yellow: 'bg-yellow-500',
-        red: 'bg-red-500'
+        blue: 'theme-stat-icon-blue',
+        green: 'theme-stat-icon-green',
+        purple: 'theme-stat-icon-purple',
+        yellow: 'theme-stat-icon-yellow',
+        red: 'theme-stat-icon-red'
     };
 
     const changeColorClasses = {
@@ -23,11 +23,11 @@ export default function StatCard({
     };
 
     return (
-        <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 ">
+        <div className="p-6 rounded-lg theme-card">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">{title}</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+                    <p className="text-sm theme-text-secondary">{title}</p>
+                    <p className="text-2xl font-bold theme-text-primary">{value}</p>
                 </div>
                 <div className={`w-12 h-12 ${colorClasses[color]} rounded-lg flex items-center justify-center`}>
                     {icon}

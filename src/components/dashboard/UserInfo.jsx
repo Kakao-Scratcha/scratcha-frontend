@@ -16,8 +16,8 @@ export default function UserInfo() {
 
     return (
         <div className="mb-8">
-            <div className="font-semibold text-gray-900 dark:text-gray-100 break-all">{userEmail}</div>
-            <div className="text-gray-600 dark:text-gray-400 text-sm">
+            <div className="font-semibold theme-text-primary break-all">{userEmail}</div>
+            <div className="theme-text-secondary text-sm">
                 {userPlan ? `${userPlan} · ${userName}` : userName}
             </div>
         </div>

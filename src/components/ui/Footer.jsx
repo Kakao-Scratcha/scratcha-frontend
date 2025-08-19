@@ -4,18 +4,18 @@ import SocialLinks from './SocialLinks';
 
 export default function Footer() {
     return (
-        <footer className="w-full pt-12 pb-8 mt-12 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+        <footer className="w-full pt-12 pb-8 mt-12 theme-footer">
             <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row md:justify-between gap-12">
                 {/* 좌측: 로고, 소셜 */}
                 <div className="flex flex-col gap-4 min-w-[180px] text-left">
-                    <div className="font-bold text-xl text-gray-900 dark:text-white">
+                    <div className="font-bold text-xl theme-text-primary">
                         SCRATCHA
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                    <p className="text-sm theme-text-secondary">
                         더 쉽고, 더 안전하고, 더 강력한 사용자 인증
                     </p>
                     <SocialLinks />
-                    <span className="text-xs mt-4 text-gray-500 dark:text-gray-400">
+                    <span className="text-xs mt-4 theme-text-tertiary">
                         © 2025 SCRATCHA. All rights reserved.
                     </span>
                 </div>

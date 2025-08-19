@@ -115,19 +115,19 @@ export default function DashboardUsage() {
         >
             <div className="space-y-6">
                 {/* 필터 섹션 */}
-                <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    <h3 className={`${T.sectionTitle} text-gray-900 dark:text-white mb-4`}>필터 설정</h3>
+                <div className="p-6 rounded-lg theme-card">
+                    <h3 className={`${T.sectionTitle} theme-text-primary mb-4`}>필터 설정</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         {/* APP 선택 */}
                         <div>
-                            <label className={`${T.label} font-medium text-gray-900 dark:text-white mb-2`}>
+                            <label className={`${T.label} font-medium theme-text-primary mb-2`}>
                                 APP 선택
                             </label>
                             <select
                                 value={selectedAppId}
                                 onChange={(e) => setSelectedAppId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                                className="w-full px-3 py-2 theme-input focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                             >
                                 <option value="all">전체</option>
                                 {apps.map((app) => (
@@ -140,13 +140,13 @@ export default function DashboardUsage() {
 
                         {/* API 키 선택 */}
                         <div>
-                            <label className={`${T.label} font-medium text-gray-900 dark:text-white mb-2`}>
+                            <label className={`${T.label} font-medium theme-text-primary mb-2`}>
                                 API 키 선택
                             </label>
                             <select
                                 value={selectedApiKeyId}
                                 onChange={(e) => setSelectedApiKeyId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                                className="w-full px-3 py-2 theme-input focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                             >
                                 <option value="all">전체</option>
                                 {appApiKeys.map((key) => (
@@ -159,13 +159,13 @@ export default function DashboardUsage() {
 
                         {/* 기간 선택 */}
                         <div>
-                            <label className={`${T.label} font-medium text-gray-900 dark:text-white mb-2`}>
+                            <label className={`${T.label} font-medium theme-text-primary mb-2`}>
                                 기간 선택
                             </label>
                             <select
                                 value={selectedPeriod}
                                 onChange={(e) => setSelectedPeriod(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                                className="w-full px-3 py-2 theme-input focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                             >
                                 {periodOptions.map((period) => (
                                     <option key={period} value={period}>
@@ -177,15 +177,15 @@ export default function DashboardUsage() {
 
                         {/* 뷰 모드 선택 */}
                         <div>
-                            <label className={`${T.label} font-medium text-gray-900 dark:text-white mb-2`}>
+                            <label className={`${T.label} font-medium theme-text-primary mb-2`}>
                                 표시 모드
                             </label>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setViewMode('graph')}
                                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${viewMode === 'graph'
-                                        ? 'bg-blue-600 dark:bg-blue-500 text-white'
-                                        : 'border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+                                        ? 'theme-button-primary'
+                                        : 'theme-button-secondary'
                                         }`}
                                 >
                                     그래프
@@ -193,8 +193,8 @@ export default function DashboardUsage() {
                                 <button
                                     onClick={() => setViewMode('table')}
                                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${viewMode === 'table'
-                                        ? 'bg-blue-600 dark:bg-blue-500 text-white'
-                                        : 'border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+                                        ? 'theme-button-primary'
+                                        : 'theme-button-secondary'
                                         }`}
                                 >
                                     로그
@@ -204,32 +204,32 @@ export default function DashboardUsage() {
                     </div>
 
                     {/* 선택된 정보 표시 */}
-                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="mt-4 p-4 theme-layout-secondary rounded-lg">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                             <div>
-                                <span className="font-medium text-gray-900 dark:text-white">선택된 APP:</span>
-                                <span className="ml-2 text-gray-600 dark:text-gray-400">{selectedAppId === 'all' ? '전체' : selectedApp?.name}</span>
+                                <span className="font-medium theme-text-primary">선택된 APP:</span>
+                                <span className="ml-2 theme-text-secondary">{selectedAppId === 'all' ? '전체' : selectedApp?.name}</span>
                             </div>
                             <div>
-                                <span className="font-medium text-gray-900 dark:text-white">선택된 API 키:</span>
-                                <span className="ml-2 text-gray-600 dark:text-gray-400">{selectedApiKeyId === 'all' ? '전체' : selectedApiKey?.name}</span>
+                                <span className="font-medium theme-text-primary">선택된 API 키:</span>
+                                <span className="ml-2 theme-text-secondary">{selectedApiKeyId === 'all' ? '전체' : selectedApiKey?.name}</span>
                             </div>
                             <div>
-                                <span className="font-medium text-gray-900 dark:text-white">기간:</span>
-                                <span className="ml-2 text-gray-600 dark:text-gray-400">{selectedPeriod}</span>
+                                <span className="font-medium theme-text-primary">기간:</span>
+                                <span className="ml-2 theme-text-secondary">{selectedPeriod}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* 데이터 표시 섹션 */}
-                <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <div className="p-6 rounded-lg theme-card">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className={`${T.sectionTitle} text-gray-900 dark:text-white`}>사용량 데이터</h3>
+                        <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량 데이터</h3>
                         {isLoading && (
                             <div className="flex items-center gap-2">
                                 <LoadingSpinner />
-                                <span className="text-sm text-gray-600 dark:text-gray-400">데이터를 불러오는 중...</span>
+                                <span className="text-sm theme-text-secondary">데이터를 불러오는 중...</span>
                             </div>
                         )}
                     </div>
@@ -291,27 +291,27 @@ export default function DashboardUsage() {
                                     <Table>
                                         <TableHead>
                                             <TableRow>
-                                                <TableHeader className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">번호</TableHeader>
-                                                <TableHeader className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">APP 이름</TableHeader>
-                                                <TableHeader className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">API 키</TableHeader>
-                                                <TableHeader className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">호출 시간</TableHeader>
-                                                <TableHeader className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">호출 결과</TableHeader>
-                                                <TableHeader className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">응답시간</TableHeader>
+                                                <TableHeader className="text-left py-3 px-4 font-medium theme-text-primary">번호</TableHeader>
+                                                <TableHeader className="text-left py-3 px-4 font-medium theme-text-primary">APP 이름</TableHeader>
+                                                <TableHeader className="text-left py-3 px-4 font-medium theme-text-primary">API 키</TableHeader>
+                                                <TableHeader className="text-left py-3 px-4 font-medium theme-text-primary">호출 시간</TableHeader>
+                                                <TableHeader className="text-left py-3 px-4 font-medium theme-text-primary">호출 결과</TableHeader>
+                                                <TableHeader className="text-left py-3 px-4 font-medium theme-text-primary">응답시간</TableHeader>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
                                             {currentLogs.map((log) => (
-                                                <TableRow key={`${log.id}-${log.callAt}-${log.apiKey}`} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                    <TableCell className="text-left py-3 px-4 text-gray-900 dark:text-white">{log.id}</TableCell>
-                                                    <TableCell className="text-left py-3 px-4 text-gray-900 dark:text-white">{log.appName}</TableCell>
-                                                    <TableCell className="text-left py-3 px-4 text-gray-900 dark:text-white font-mono text-sm">
+                                                <TableRow key={`${log.id}-${log.callAt}-${log.apiKey}`} className="theme-table-row hover:theme-hover-bg">
+                                                    <TableCell className="text-left py-3 px-4 theme-text-primary">{log.id}</TableCell>
+                                                    <TableCell className="text-left py-3 px-4 theme-text-primary">{log.appName}</TableCell>
+                                                    <TableCell className="text-left py-3 px-4 theme-text-primary font-mono text-sm">
                                                         {maskApiKey(log.apiKey)}
                                                     </TableCell>
-                                                    <TableCell className="text-left py-3 px-4 text-gray-900 dark:text-white text-sm">{log.callTime}</TableCell>
+                                                    <TableCell className="text-left py-3 px-4 theme-text-primary text-sm">{log.callTime}</TableCell>
                                                     <TableCell className={`text-left py-3 px-4 font-medium ${getResultColor(log.result)}`}>
                                                         {log.result}
                                                     </TableCell>
-                                                    <TableCell className="text-left py-3 px-4 text-gray-900 dark:text-white">{log.responseTime}ms</TableCell>
+                                                    <TableCell className="text-left py-3 px-4 theme-text-primary">{log.responseTime}ms</TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -322,7 +322,7 @@ export default function DashboardUsage() {
                             {/* 페이징 네비게이션 */}
                             {viewMode === 'table' && !isLoading && totalPages > 1 && (
                                 <div className="flex items-center justify-between mt-6">
-                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    <div className="text-sm theme-text-secondary">
                                         총 {usageLogs.length}개 항목 중 {startIndex + 1}-{Math.min(endIndex, usageLogs.length)}개 표시
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -331,7 +331,7 @@ export default function DashboardUsage() {
                                             disabled={currentPage === 1}
                                             className={`px-3 py-1 rounded-lg text-sm font-medium transition ${currentPage === 1
                                                 ? 'text-gray-400 cursor-not-allowed'
-                                                : 'text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+                                                : 'theme-text-primary hover:theme-hover-bg'
                                                 }`}
                                         >
                                             이전
@@ -354,8 +354,8 @@ export default function DashboardUsage() {
                                                     key={pageNum}
                                                     onClick={() => setCurrentPage(pageNum)}
                                                     className={`px-3 py-1 rounded-lg text-sm font-medium transition ${currentPage === pageNum
-                                                        ? 'bg-blue-600 dark:bg-blue-500 text-white'
-                                                        : 'text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+                                                        ? 'theme-button-primary'
+                                                        : 'theme-text-primary hover:theme-hover-bg'
                                                         }`}
                                                 >
                                                     {pageNum}
@@ -368,7 +368,7 @@ export default function DashboardUsage() {
                                             disabled={currentPage === totalPages}
                                             className={`px-3 py-1 rounded-lg text-sm font-medium transition ${currentPage === totalPages
                                                 ? 'text-gray-400 cursor-not-allowed'
-                                                : 'text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+                                                : 'theme-text-primary hover:theme-hover-bg'
                                                 }`}
                                         >
                                             다음

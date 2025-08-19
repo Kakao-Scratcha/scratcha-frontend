@@ -144,17 +144,17 @@ export default function DashboardOverview() {
         >
             <div className="space-y-6">
                 {/* 현재 요금제 (타이틀 제거, 스타일 업그레이드) */}
-                <div className="p-5 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <div className="p-5 rounded-lg theme-card">
                     <div className="flex items-center justify-between">
                         <div>
                             <div className="flex items-center gap-2">
-                                <p className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">{currentPlan.name}</p>
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${usageColor === 'green' ? 'bg-green-500' : usageColor === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'}`}>
+                                <p className="text-2xl md:text-3xl font-bold theme-text-primary">{currentPlan.name}</p>
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${usageColor === 'green' ? 'theme-usage-green' : usageColor === 'yellow' ? 'theme-usage-yellow' : 'theme-usage-red'}`}>
                                     {usagePercent}%
                                 </span>
                             </div>
-                            <p className="text-base text-gray-600 dark:text-gray-400">{currentPlan.description}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{currentPlan.price}</p>
+                            <p className="text-base theme-text-secondary">{currentPlan.description}</p>
+                            <p className="text-sm theme-text-secondary mt-1">{currentPlan.price}</p>
                             {overageCost > 0 && (
                                 <div className="mt-2 p-2 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded text-xs">
                                     <p className="text-red-700 dark:text-red-300 font-medium">초과분 요금: ₩{overageCost.toLocaleString()}</p>
@@ -165,9 +165,9 @@ export default function DashboardOverview() {
                             )}
                         </div>
                         <div className="text-right">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">토큰 사용량</p>
-                            <p className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400">{planUsageData.current.tokens.used.toLocaleString()}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">/ {planUsageData.current.tokens.limit.toLocaleString()} 토큰</p>
+                            <p className="text-sm theme-text-secondary">토큰 사용량</p>
+                            <p className="text-3xl md:text-4xl font-bold theme-blue-accent">{planUsageData.current.tokens.used.toLocaleString()}</p>
+                            <p className="text-sm theme-text-secondary">/ {planUsageData.current.tokens.limit.toLocaleString()} 토큰</p>
                             <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
                                 API 호출: {planUsageData.current.requests.count.toLocaleString()}회 (평균 {planUsageData.current.requests.avgTokensPerRequest}토큰/회)
                             </p>
@@ -178,9 +178,9 @@ export default function DashboardOverview() {
                             )}
                         </div>
                     </div>
-                    <div className="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                    <div className="mt-3 w-full theme-progress-bg rounded-full h-3">
                         <div
-                            className={`h-3 rounded-full transition-all duration-300 ${usageColor === 'green' ? 'bg-green-500' : usageColor === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
+                            className={`h-3 rounded-full transition-all duration-300 ${usageColor === 'green' ? 'theme-usage-green' : usageColor === 'yellow' ? 'theme-usage-yellow' : 'theme-usage-red'
                                 }`}
                             style={{ width: `${Math.min(usagePercent, 100)}%` }}
                         />
@@ -189,55 +189,55 @@ export default function DashboardOverview() {
 
                 {/* 전체 사용량 (경고 아이콘 제거, 중앙 정렬, 변화율 확대) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-5 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-center">
-                        <h3 className={`${T.cardTitle} text-gray-900 dark:text-white mb-1`}>오늘 사용량</h3>
-                        <p className="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400">{stats.today.value.toLocaleString()}</p>
+                    <div className="p-5 rounded-lg theme-card text-center">
+                        <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>오늘 사용량</h3>
+                        <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{stats.today.value.toLocaleString()}</p>
                         <div className="mt-2 inline-flex items-center gap-2 justify-center">
                             {stats.today.change >= 0 ? (
                                 <>
-                                    <svg className="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                    <span className="text-lg md:text-xl font-bold text-green-600">+{stats.today.change}%</span>
+                                    <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
+                                    <span className="text-lg md:text-xl font-bold theme-success">+{stats.today.change}%</span>
                                 </>
                             ) : (
                                 <>
-                                    <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                    <span className="text-lg md:text-xl font-bold text-red-600">-{Math.abs(stats.today.change)}%</span>
+                                    <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                    <span className="text-lg md:text-xl font-bold theme-error">-{Math.abs(stats.today.change)}%</span>
                                 </>
                             )}
                         </div>
                     </div>
 
-                    <div className="p-5 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-center">
-                        <h3 className={`${T.cardTitle} text-gray-900 dark:text-white mb-1`}>이번 주</h3>
-                        <p className="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400">{stats.week.value.toLocaleString()}</p>
+                    <div className="p-5 rounded-lg theme-card text-center">
+                        <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>이번 주</h3>
+                        <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{stats.week.value.toLocaleString()}</p>
                         <div className="mt-2 inline-flex items-center gap-2 justify-center">
                             {stats.week.change >= 0 ? (
                                 <>
-                                    <svg className="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                    <span className="text-lg md:text-xl font-bold text-green-600">+{stats.week.change}%</span>
+                                    <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
+                                    <span className="text-lg md:text-xl font-bold theme-success">+{stats.week.change}%</span>
                                 </>
                             ) : (
                                 <>
-                                    <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                    <span className="text-lg md:text-xl font-bold text-red-600">-{Math.abs(stats.week.change)}%</span>
+                                    <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                    <span className="text-lg md:text-xl font-bold theme-error">-{Math.abs(stats.week.change)}%</span>
                                 </>
                             )}
                         </div>
                     </div>
 
-                    <div className="p-5 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-center">
-                        <h3 className={`${T.cardTitle} text-gray-900 dark:text-white mb-1`}>이번 달</h3>
-                        <p className="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400">{stats.month.value.toLocaleString()}</p>
+                    <div className="p-5 rounded-lg theme-card text-center">
+                        <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>이번 달</h3>
+                        <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{stats.month.value.toLocaleString()}</p>
                         <div className="mt-2 inline-flex items-center gap-2 justify-center">
                             {stats.month.change >= 0 ? (
                                 <>
-                                    <svg className="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                    <span className="text-lg md:text-xl font-bold text-green-600">+{stats.month.change}%</span>
+                                    <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
+                                    <span className="text-lg md:text-xl font-bold theme-success">+{stats.month.change}%</span>
                                 </>
                             ) : (
                                 <>
-                                    <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                    <span className="text-lg md:text-xl font-bold text-red-600">-{Math.abs(stats.month.change)}%</span>
+                                    <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                    <span className="text-lg md:text-xl font-bold theme-error">-{Math.abs(stats.month.change)}%</span>
                                 </>
                             )}
                         </div>
@@ -245,12 +245,12 @@ export default function DashboardOverview() {
                 </div>
 
                 {/* 사용량 그래프 */}
-                <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <div className="p-6 rounded-lg theme-card">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
-                            <h3 className={`${T.sectionTitle} text-gray-900 dark:text-white`}>사용량 추이</h3>
+                            <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량 추이</h3>
                             {!isLoading && (
-                                <span className={`${T.label} text-gray-600 dark:text-gray-400`}>{rangeLabel}</span>
+                                <span className={`${T.label} theme-text-secondary`}>{rangeLabel}</span>
                             )}
                             {/* 테스트용 데이터셋 드롭다운 */}
                             <DatasetSelector />
@@ -262,8 +262,8 @@ export default function DashboardOverview() {
                                     onClick={() => setPeriod(period)}
                                     disabled={isLoading}
                                     className={`px-3 py-1 rounded-lg text-sm font-medium transition ${selectedPeriod === period
-                                        ? 'bg-blue-600 dark:bg-blue-500 text-white'
-                                        : 'border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+                                        ? 'theme-button-primary'
+                                        : 'theme-button-secondary'
                                         } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                     {period}
@@ -314,48 +314,48 @@ export default function DashboardOverview() {
                 </div>
 
                 {/* 최근 활동 */}
-                <div className="p-6 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    <h3 className={`${T.sectionTitle} text-gray-900 dark:text-white mb-4`}>최근 활동</h3>
+                <div className="p-6 rounded-lg theme-card">
+                    <h3 className={`${T.sectionTitle} theme-text-primary mb-4`}>최근 활동</h3>
                     <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                         <li className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <img src={ICONS.success} alt="성공" className="w-7 h-7 rounded-full" />
                                 <div>
-                                    <p className="font-semibold text-gray-900 dark:text-white">API 호출 성공</p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatTimeAgo(activity.lastSuccess?.callAt)}</p>
+                                    <p className="font-semibold theme-text-primary">API 호출 성공</p>
+                                    <p className="text-sm theme-text-secondary">{formatTimeAgo(activity.lastSuccess?.callAt)}</p>
                                 </div>
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">총 {activity.totalSuccess.toLocaleString()}회 ({(activity.totalSuccess * avgTokens).toLocaleString()} 토큰)</div>
+                            <div className="text-sm theme-text-secondary">총 {activity.totalSuccess.toLocaleString()}회 ({(activity.totalSuccess * avgTokens).toLocaleString()} 토큰)</div>
                         </li>
                         <li className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <img src={ICONS.info} alt="검증성공" className="w-7 h-7 rounded-full" />
                                 <div>
-                                    <p className="font-semibold text-gray-900 dark:text-white">CAPTCHA 검증 성공</p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatTimeAgo(activity.lastSucc24?.callAt)}</p>
+                                    <p className="font-semibold theme-text-primary">CAPTCHA 검증 성공</p>
+                                    <p className="text-sm theme-text-secondary">{formatTimeAgo(activity.lastSucc24?.callAt)}</p>
                                 </div>
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">총 {activity.succ24Count.toLocaleString()}회 ({(activity.succ24Count * avgTokens).toLocaleString()} 토큰)</div>
+                            <div className="text-sm theme-text-secondary">총 {activity.succ24Count.toLocaleString()}회 ({(activity.succ24Count * avgTokens).toLocaleString()} 토큰)</div>
                         </li>
                         <li className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <img src={ICONS.error} alt="실패" className="w-7 h-7 rounded-full" />
                                 <div>
-                                    <p className="font-semibold text-gray-900 dark:text-white">CAPTCHA 검증 실패</p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatTimeAgo(activity.lastFail?.callAt)}</p>
+                                    <p className="font-semibold theme-text-primary">CAPTCHA 검증 실패</p>
+                                    <p className="text-sm theme-text-secondary">{formatTimeAgo(activity.lastFail?.callAt)}</p>
                                 </div>
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">총 {activity.totalFail.toLocaleString()}회 ({(activity.totalFail * avgTokens).toLocaleString()} 토큰)</div>
+                            <div className="text-sm theme-text-secondary">총 {activity.totalFail.toLocaleString()}회 ({(activity.totalFail * avgTokens).toLocaleString()} 토큰)</div>
                         </li>
                         <li className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <img src={ICONS.warning} alt="경고" className="w-7 h-7 rounded-full" />
                                 <div>
-                                    <p className="font-semibold text-gray-900 dark:text-white">토큰 사용량 경고</p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatTimeAgo(new Date().toISOString())}</p>
+                                    <p className="font-semibold theme-text-primary">토큰 사용량 경고</p>
+                                    <p className="text-sm theme-text-secondary">{formatTimeAgo(new Date().toISOString())}</p>
                                 </div>
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">{(planUsageData.current?.tokens?.percentage || 0)}% 도달</div>
+                            <div className="text-sm theme-text-secondary">{(planUsageData.current?.tokens?.percentage || 0)}% 도달</div>
                         </li>
                     </ul>
                 </div>
@@ -373,7 +373,7 @@ function DatasetSelector() {
                 console.log('[Overview] datasetScenario ->', e.target.value);
                 setDatasetScenario(e.target.value);
             }}
-            className="ml-2 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="ml-2 px-2 py-1 theme-input rounded text-sm"
             title="테스트 데이터셋 선택"
         >
             <option value="low">Low (~30%)</option>

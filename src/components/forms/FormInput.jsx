@@ -18,11 +18,11 @@ export default function FormInput({
     // 아웃라인 색상 결정 (메모이제이션으로 재렌더링 방지)
     const outlineColor = useMemo(() => {
         if (error) {
-            return 'border-red-500 focus:ring-red-500'; // 에러 시 빨간색
+            return 'theme-input-border-error focus:ring-red-500'; // 에러 시 빨간색
         } else if (isValid && value && value.trim() !== '') {
-            return 'border-green-500 focus:ring-green-500'; // 검증 성공 시 초록색
+            return 'theme-input-border-success focus:ring-green-500'; // 검증 성공 시 초록색
         } else {
-            return 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400'; // 기본
+            return 'theme-input-border focus:ring-blue-500 dark:focus:ring-blue-400'; // 기본
         }
     }, [error, isValid, value]);
 
@@ -45,7 +45,7 @@ export default function FormInput({
     return (
         <div className="flex flex-col gap-1">
             {label && (
-                <label className="text-xs text-gray-900 dark:text-white font-medium" htmlFor={id}>
+                <label className="text-xs theme-text-primary font-medium" htmlFor={id}>
                     {label}
                 </label>
             )}
@@ -58,7 +58,7 @@ export default function FormInput({
                     disabled={disabled}
                     onCopy={handleCopy}
                     onCut={handleCopy}
-                    className={`rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 border-2 ${outlineColor} text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-colors w-full ${isPasswordField ? 'pr-10' : ''} ${className}`}
+                    className={`rounded-md px-3 py-2 text-sm theme-input ${outlineColor} focus:outline-none focus:ring-2 disabled:opacity-50 transition-colors w-full ${isPasswordField ? 'pr-10' : ''} ${className}`}
                     {...props}
                 />
                 {isPasswordField && (

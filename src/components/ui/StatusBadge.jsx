@@ -9,27 +9,27 @@ export default function StatusBadge({
     const statusConfig = {
         active: {
             label: '활성',
-            color: 'bg-green-100 text-green-800 border-green-200',
+            color: 'theme-badge-active',
             icon: '●'
         },
         inactive: {
             label: '비활성',
-            color: 'bg-gray-100 text-gray-800 border-gray-200',
+            color: 'theme-badge-inactive',
             icon: '○'
         },
         pending: {
             label: '대기중',
-            color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+            color: 'theme-badge-pending',
             icon: '◐'
         },
         error: {
             label: '오류',
-            color: 'bg-red-100 text-red-800 border-red-200',
+            color: 'theme-badge-error',
             icon: '✕'
         },
         success: {
             label: '성공',
-            color: 'bg-green-100 text-green-800 border-green-200',
+            color: 'theme-badge-success',
             icon: '✓'
         }
     };

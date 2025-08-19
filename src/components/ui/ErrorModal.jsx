@@ -25,7 +25,7 @@ export default function ErrorModal({
                 </div>
 
                 {/* 메시지 */}
-                <p className="text-lg text-gray-900 dark:text-white mb-6">
+                <p className="text-lg theme-text-primary mb-6">
                     {message}
                 </p>
 

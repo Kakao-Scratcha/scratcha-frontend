@@ -44,28 +44,28 @@ export default function MainPage() {
     }, [navigate, isAuthenticated]);
 
     return (
-        <div className="min-h-screen bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+        <div className="min-h-screen theme-layout">
             {/* 히어로 섹션 */}
             <section className="relative overflow-hidden py-24">
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="text-left max-w-4xl mx-auto">
-                        <h1 className="text-5xl md:text-7xl font-bold mb-6 text-gray-900 dark:text-white">
+                        <h1 className="text-5xl md:text-7xl font-bold mb-6 theme-text-primary">
                             SCRATCHA.
                         </h1>
-                        <p className="text-xl md:text-2xl mb-8 max-w-3xl text-gray-600 dark:text-gray-300">
+                        <p className="text-xl md:text-2xl mb-8 max-w-3xl theme-text-secondary">
                             Scratch는 이미지를 긁어 확인하고 정답을 맞추는 2단계 인증으로,<br />
                             기존 CAPTCHA를 뛰어넘는 강력한 보안을 제공합니다
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-start">
                             <button
                                 onClick={handleDemoClick}
-                                className="px-8 py-4 font-bold rounded-lg text-lg hover:opacity-90 transition bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
+                                className="px-8 py-4 font-bold rounded-lg text-lg hover:opacity-90 transition bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white"
                             >
                                 데모 체험하기 →
                             </button>
                             <button
                                 onClick={handleFreeStartClick}
-                                className="px-8 py-4 border font-bold rounded-lg text-lg hover:opacity-90 transition border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                className="px-8 py-4 border font-bold rounded-lg text-lg hover:opacity-90 transition theme-button-secondary"
                             >
                                 무료로 시작하기 →
                             </button>
@@ -145,41 +145,41 @@ export default function MainPage() {
             </section>
 
             {/* 주요 기능 섹션 */}
-            <section className="py-24 bg-white dark:bg-gray-800">
+            <section className="py-24 theme-layout">
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
                         <div className="text-center p-6">
-                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-red-600">
+                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 theme-ai-block-icon">
                                 {AI_BLOCK_ICON}
                             </div>
-                            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+                            <h3 className="text-xl font-bold mb-2 theme-text-primary">
                                 AI 차단 특화
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-300">
+                            <p className="theme-text-secondary">
                                 최신 이미지 언어 모델도<br />
                                 해결할 수 없는 보안 구조
                             </p>
                         </div>
                         <div className="text-center p-6">
-                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-yellow-500">
+                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 theme-speed-icon">
                                 {SPEED_ICON}
                             </div>
-                            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+                            <h3 className="text-xl font-bold mb-2 theme-text-primary">
                                 초고속 인증
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-300">
+                            <p className="theme-text-secondary">
                                 평균 1.2초 응답으로<br />
                                 사용자 이탈률 감소
                             </p>
                         </div>
                         <div className="text-center p-6">
-                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-green-600">
+                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 theme-security-icon">
                                 {SECURITY_ICON}
                             </div>
-                            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+                            <h3 className="text-xl font-bold mb-2 theme-text-primary">
                                 높은 정확도
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-300">
+                            <p className="theme-text-secondary">
                                 99.8% 봇 차단.<br />
                                 실제 사용자만 접근 허용
                             </p>

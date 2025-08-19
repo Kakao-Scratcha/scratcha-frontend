@@ -38,7 +38,7 @@ export default function Dropdown({
             </div>
 
             {isOpen && (
-                <div className={`absolute z-50 ${positionClasses[position]} min-w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1`}>
+                <div className={`absolute z-50 ${positionClasses[position]} min-w-48 theme-card rounded-lg shadow-lg py-1`}>
                     {children}
                 </div>
             )}
@@ -55,7 +55,7 @@ export function DropdownItem({
     return (
         <div
             onClick={() => !disabled && onClick?.()}
-            className={`px-4 py-2 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+            className={`px-4 py-2 text-sm theme-dropdown-item cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
         >
             {children}
         </div>
@@ -63,5 +63,5 @@ export function DropdownItem({
 }
 
 export function DropdownDivider() {
-    return <div className="border-t border-gray-200 dark:border-gray-700 my-1" />;
+    return <div className="theme-dropdown-divider my-1" />;
 } 

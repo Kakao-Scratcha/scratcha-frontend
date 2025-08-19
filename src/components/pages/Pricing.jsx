@@ -102,16 +102,16 @@ export default function Pricing() {
                 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4';
 
     return (
-        <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+        <div className="min-h-screen theme-layout">
             {/* Hero + Pricing Cards Section */}
             <section className="py-24">
                 <div className="max-w-7xl mx-auto px-4">
                     {/* Hero */}
                     <div className="text-center">
-                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+                        <h1 className="text-4xl md:text-5xl font-bold theme-text-primary mb-6">
                             {title}
                         </h1>
-                        <div className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+                        <div className="text-xl md:text-2xl theme-text-secondary mb-8 max-w-3xl mx-auto">
                             {subtitle.map((line, index) => (
                                 <p key={index} className={index > 0 ? 'mt-2' : ''}>
                                     {line}
@@ -128,32 +128,32 @@ export default function Pricing() {
                         {plans.map((plan, index) => (
                             <div
                                 key={index}
-                                className={`p-8 rounded-2xl border-2 transition-all duration-300 hover:shadow-xl flex flex-col bg-white dark:bg-gray-800 ${plan.popular
-                                    ? 'border-blue-600 dark:border-blue-500 relative'
-                                    : 'border-gray-200 dark:border-gray-700'
+                                className={`p-8 rounded-2xl border-2 transition-all duration-300 hover:shadow-xl flex flex-col theme-card ${plan.popular
+                                    ? 'theme-popular-border relative'
+                                    : ''
                                     }`}
                             >
                                 {plan.popular && (
-                                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 dark:bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-bold">
+                                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 theme-popular-badge text-white px-4 py-1 rounded-full text-sm font-bold">
                                         인기
                                     </div>
                                 )}
 
                                 <div className="text-center mb-8">
-                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                    <h3 className="text-2xl font-bold theme-text-primary mb-2">
                                         {plan.name}
                                     </h3>
                                     <div className="mb-4">
-                                        <span className="text-4xl font-bold text-blue-600 dark:text-blue-400">
+                                        <span className="text-4xl font-bold theme-blue-accent">
                                             {plan.price}
                                         </span>
                                         {plan.period && (
-                                            <span className="text-lg text-gray-600 dark:text-gray-400">
+                                            <span className="text-lg theme-text-secondary">
                                                 /{plan.period}
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-gray-600 dark:text-gray-300 h-12 flex items-start leading-6">
+                                    <p className="theme-text-secondary h-12 flex items-start leading-6">
                                         {plan.description}
                                     </p>
                                 </div>
@@ -161,10 +161,10 @@ export default function Pricing() {
                                 <ul className="space-y-4 mb-8 flex-grow">
                                     {plan.features.map((feature, featureIndex) => (
                                         <li key={featureIndex} className="flex items-center">
-                                            <svg className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <svg className="w-5 h-5 theme-success mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                             </svg>
-                                            <span className="text-gray-900 dark:text-white">{feature}</span>
+                                            <span className="theme-text-primary">{feature}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -188,16 +188,16 @@ export default function Pricing() {
             <section className="py-24">
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-24">
+                        <h2 className="text-3xl md:text-4xl font-bold theme-text-primary mb-24">
                             {faq.title}
                         </h2>
                         <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto`}>
                             {faq.questions.map((item, index) => (
                                 <div key={index}>
-                                    <h3 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+                                    <h3 className="text-2xl md:text-3xl font-bold theme-text-primary mb-4 text-center">
                                         {item.question}
                                     </h3>
-                                    <p className="text-lg text-gray-600 dark:text-gray-300 text-left leading-relaxed max-w-md mx-auto whitespace-pre-line">
+                                    <p className="text-lg theme-text-secondary text-left leading-relaxed max-w-md mx-auto whitespace-pre-line">
                                         {item.answer}
                                     </p>
                                 </div>

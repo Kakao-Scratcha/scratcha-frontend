@@ -14,9 +14,9 @@ export default function Button({
     const getVariantClasses = (variant) => {
         switch (variant) {
             case "primary":
-                return "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600";
+                return "theme-button-primary focus:ring-blue-500";
             case "secondary":
-                return "bg-gray-100 text-gray-900 border border-gray-300 hover:bg-gray-200 focus:ring-gray-500 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700";
+                return "theme-button-secondary focus:ring-gray-500";
             case "danger":
                 return "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500";
             case "success":

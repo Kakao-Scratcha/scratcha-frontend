@@ -6,11 +6,11 @@ const NotFound = () => {
     const { isDark, toggle } = useDarkModeStore();
 
     return (
-        <div className="min-h-screen flex items-center justify-center relative bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+        <div className="min-h-screen flex items-center justify-center relative theme-layout-dark">
             {/* 다크모드 토글 버튼 */}
             <button
                 onClick={toggle}
-                className="absolute top-6 right-6 p-3 rounded-lg transition-all duration-200 hover:scale-110 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="absolute top-6 right-6 p-3 rounded-lg transition-all duration-200 hover:scale-110 theme-button-secondary"
                 title={isDark ? '라이트모드로 전환' : '다크모드로 전환'}
             >
                 {isDark ? (
@@ -26,13 +26,13 @@ const NotFound = () => {
 
             <div className="text-center px-4">
                 <div className="mb-8">
-                    <h1 className="text-9xl font-bold mb-4 text-blue-600 dark:text-blue-400">
+                    <h1 className="text-9xl font-bold mb-4 theme-blue-accent">
                         404
                     </h1>
-                    <h2 className="text-3xl font-semibold mb-4 text-gray-900 dark:text-white">
+                    <h2 className="text-3xl font-semibold mb-4 theme-text-primary">
                         페이지를 찾을 수 없습니다
                     </h2>
-                    <p className="text-lg mb-8 text-gray-600 dark:text-gray-400">
+                    <p className="text-lg mb-8 theme-text-secondary">
                         요청하신 페이지가 존재하지 않거나 이동되었을 수 있습니다.
                     </p>
                 </div>
@@ -40,33 +40,10 @@ const NotFound = () => {
                 <div className="space-y-4">
                     <Link
                         to="/"
-                        className="inline-block px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
+                        className="inline-block px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105 theme-button-primary"
                     >
                         홈으로 돌아가기
                     </Link>
-                </div>
-            </div>
-
-            {/* 폰트 정보 UI */}
-            <div className="absolute bottom-6 left-6 p-4 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">
-                <div className="text-sm">
-                    <div className="font-bold mb-2">현재 폰트 정보</div>
-                    <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
-                        <div>폰트 패밀리: <span className="font-medium">Noto Sans KR</span></div>
-                        <div>폰트 웨이트: <span className="font-medium">400 (Regular)</span></div>
-                        <div>폰트 스타일: <span className="font-medium">Normal</span></div>
-                        <div>폰트 디스플레이: <span className="font-medium">Swap</span></div>
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                        <div className="text-xs text-gray-600 dark:text-gray-400">
-                            <div>사용 가능한 웨이트:</div>
-                            <div className="font-light">Light (300)</div>
-                            <div className="font-normal">Regular (400)</div>
-                            <div className="font-medium">Medium (500)</div>
-                            <div className="font-semibold">SemiBold (600)</div>
-                            <div className="font-bold">Bold (700)</div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

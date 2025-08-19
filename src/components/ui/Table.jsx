@@ -33,7 +33,7 @@ export function TableBody({ children, className = "" }) {
 export function TableRow({ children, className = "", onClick }) {
     return (
         <tr
-            className={`border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 ${onClick ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700' : ''} ${className} transition-colors`}
+            className={`theme-table-row ${onClick ? 'cursor-pointer' : ''} ${className}`}
             onClick={onClick}
         >
             {children}
@@ -50,7 +50,7 @@ export function TableHeader({ children, className = "", align = "left" }) {
 
     return (
         <th 
-            className={`py-3 px-4 font-medium text-gray-900 dark:text-white ${alignClasses[align]} ${className}`}
+            className={`py-3 px-4 font-medium theme-text-primary ${alignClasses[align]} ${className}`}
         >
             {children}
         </th>
@@ -66,7 +66,7 @@ export function TableCell({ children, className = "", align = "left" }) {
 
     return (
         <td 
-            className={`py-3 px-4 text-gray-900 dark:text-white ${alignClasses[align]} ${className}`}
+            className={`py-3 px-4 theme-text-primary ${alignClasses[align]} ${className}`}
         >
             {children}
         </td>

@@ -11,9 +11,9 @@ export default function DashboardLayout({
             {/* 헤더 */}
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
-                    <div className="h-6 w-px bg-gray-200 dark:bg-gray-700"></div>
-                    <p className="text-gray-600 dark:text-gray-400 text-lg">{subtitle}</p>
+                    <h1 className="text-2xl font-bold theme-text-primary">{title}</h1>
+                    <div className="h-6 w-px theme-bg-gray-200"></div>
+                    <p className="theme-text-secondary text-lg">{subtitle}</p>
                 </div>
                 {headerRight}
             </div>

@@ -2,18 +2,18 @@ import React from 'react';
 
 export default function Overview() {
     return (
-        <div className="min-h-screen bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+        <div className="min-h-screen theme-layout">
             {/* Hero Section */}
             <section className="py-24">
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="text-left max-w-4xl mx-auto">
-                        <h1 className="text-5xl md:text-7xl font-bold mb-6 text-gray-900 dark:text-white">
+                        <h1 className="text-5xl md:text-7xl font-bold mb-6 theme-text-primary">
                             긁고 맞춰보세요.
                         </h1>
-                        <h2 className="text-2xl md:text-3xl font-bold mb-8 text-gray-900 dark:text-white">
+                        <h2 className="text-2xl md:text-3xl font-bold mb-8 theme-text-primary">
                             AI가 뚫을 수 없는 새로운 CAPTCHA.
                         </h2>
-                        <p className="text-lg text-gray-600 dark:text-gray-300 mb-12 text-left">
+                        <p className="text-lg theme-text-secondary mb-12 text-left">
                             Scratcha는 이미지를 긁어 숨겨진 그림을 확인하고, 정답을 맞추는 2단계 인증 방식으로<br />
                             기존 문자 입력·그림 클릭 CAPTCHA보다 빠르고 안전한 보안을 제공합니다.
                         </p>
@@ -22,34 +22,34 @@ export default function Overview() {
                     {/* Stats Section */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto mt-16">
                         <div className="text-center">
-                            <div className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                            <div className="text-3xl md:text-4xl font-bold theme-text-primary mb-2">
                                 99.8%
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                            <div className="text-sm theme-text-secondary">
                                 AI 봇 차단률
                             </div>
                         </div>
                         <div className="text-center">
-                            <div className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                            <div className="text-3xl md:text-4xl font-bold theme-text-primary mb-2">
                                 3.2초
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                            <div className="text-sm theme-text-secondary">
                                 평균 인증 소요시간
                             </div>
                         </div>
                         <div className="text-center">
-                            <div className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                            <div className="text-3xl md:text-4xl font-bold theme-text-primary mb-2">
                                 50M+
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                            <div className="text-sm theme-text-secondary">
                                 연간 처리 요청수
                             </div>
                         </div>
                         <div className="text-center">
-                            <div className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                            <div className="text-3xl md:text-4xl font-bold theme-text-primary mb-2">
                                 24/7
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                            <div className="text-sm theme-text-secondary">
                                 실시간 모니터링 지원
                             </div>
                         </div>
@@ -58,38 +58,38 @@ export default function Overview() {
             </section>
 
             {/* Features Section */}
-            <section className="py-24 bg-white dark:bg-gray-800">
+            <section className="py-24 theme-layout">
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-8">
+                        <h2 className="text-3xl md:text-4xl font-bold theme-text-primary mb-8">
                             주요 특징
                         </h2>
                     </div>
                     <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
                         <div className="text-center p-4">
-                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-red-600">
+                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 theme-ai-block-icon">
                                 <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+                            <h3 className="text-xl font-bold mb-2 theme-text-primary">
                                 AI 차단 특화
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-300">
+                            <p className="theme-text-secondary">
                                 스크래치 + 정답 선택 2단계 인증으로<br />
                                 AI 공격을 효과적으로 방어합니다.
                             </p>
                         </div>
                         <div className="text-center p-4">
-                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-yellow-500">
+                            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 theme-speed-icon">
                                 <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+                            <h3 className="text-xl font-bold mb-2 theme-text-primary">
                                 초고속 인증
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-300">
+                            <p className="theme-text-secondary">
                                 평균 d.d초 이내 인증 완료<br />
                                 사용자 이탈률을 최소화합니다.
                             </p>
@@ -100,10 +100,10 @@ export default function Overview() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+                            <h3 className="text-xl font-bold mb-2 theme-text-primary">
                                 직관적 & 재미있는 UX
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-300">
+                            <p className="theme-text-secondary">
                                 긁고 확인하고 맞추는 간단한 인증<br />
                                 사용자의 거부감을 줄입니다.
                             </p>
@@ -125,10 +125,10 @@ export default function Overview() {
                                     />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+                            <h3 className="text-xl font-bold mb-2 theme-text-primary">
                                 반응형 디자인
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-300">
+                            <p className="theme-text-secondary">
                                 모바일, 데스크톱 어디서든<br />
                                 동일한 경험을 제공합니다.
                             </p>
@@ -150,10 +150,10 @@ export default function Overview() {
                                     />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+                            <h3 className="text-xl font-bold mb-2 theme-text-primary">
                                 쉬운 API 연동
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-300">
+                            <p className="theme-text-secondary">
                                 간단한 코드로 기존 웹사이트에<br />
                                 빠르게 적용할 수 있습니다.
                             </p>
@@ -164,10 +164,10 @@ export default function Overview() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+                            <h3 className="text-xl font-bold mb-2 theme-text-primary">
                                 실시간 분석
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-300">
+                            <p className="theme-text-secondary">
                                 인증 결과와 트래픽 데이터를<br />
                                 대시보드에서 한눈에 확인하세요
                             </p>

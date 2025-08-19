@@ -12,7 +12,7 @@ export default function Navigation({ isMobile = false }) {
 
     if (isMobile) {
         return (
-            <nav className="flex gap-4 font-medium text-gray-900 dark:text-white text-sm">
+            <nav className="flex gap-4 font-medium theme-text-primary text-sm">
                 <Link to="/overview" className={baseClasses} onClick={handleClick}>개요</Link>
                 <Link to="/pricing" className={baseClasses} onClick={handleClick}>요금제</Link>
                 <Link to="/demo" className={baseClasses} onClick={handleClick}>데모</Link>
@@ -24,7 +24,7 @@ export default function Navigation({ isMobile = false }) {
     }
 
     return (
-        <nav className="flex gap-8 md:gap-10 font-medium text-gray-900 dark:text-white text-base md:text-lg">
+        <nav className="flex gap-8 md:gap-10 font-medium theme-text-primary text-base md:text-lg">
             <Link
                 to="/overview"
                 className={baseClasses}

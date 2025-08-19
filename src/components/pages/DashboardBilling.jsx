@@ -116,12 +116,12 @@ export default function DashboardBilling() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* 요금제 정보 */}
                         <div className="lg:col-span-2">
-                            <div className="p-6 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="p-6 theme-card rounded-lg">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{currentPlan.name}</h4>
-                                    <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{currentPlan.price}</span>
+                                    <h4 className="text-lg font-semibold theme-text-primary">{currentPlan.name}</h4>
+                                    <span className="text-2xl font-bold theme-text-primary">{currentPlan.price}</span>
                                 </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{currentPlan.description}</p>
+                                <p className="text-sm theme-text-secondary mb-4">{currentPlan.description}</p>
 
                                 {/* 사용량 진행률 */}
                                 <div className="mb-4">
@@ -301,17 +301,17 @@ export default function DashboardBilling() {
                                 onClick={() => setSelectedPlan(plan.name)}
                                 className={`p-4 rounded-lg border cursor-pointer transition-all ${selectedPlan === plan.name
                                     ? 'border-blue-600 dark:border-blue-500 bg-blue-100 dark:bg-blue-900/20'
-                                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-300'
+                                    : 'theme-card hover:border-blue-400 dark:hover:border-blue-300'
                                     }`}
                             >
                                 <div className="flex items-center justify-between mb-2">
-                                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">{plan.name}</h4>
+                                    <h4 className="font-semibold theme-text-primary">{plan.name}</h4>
                                     <div className="text-right">
-                                        <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{plan.price}</div>
-                                        <div className="text-sm text-gray-600 dark:text-gray-400">{plan.period}</div>
+                                        <div className="text-lg font-bold theme-text-primary">{plan.price}</div>
+                                        <div className="text-sm theme-text-secondary">{plan.period}</div>
                                     </div>
                                 </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{plan.description}</p>
+                                <p className="text-sm theme-text-secondary mb-3">{plan.description}</p>
                                 <ul className="space-y-1">
                                     {plan.features.map((feature, index) => (
                                         <li key={index} className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
