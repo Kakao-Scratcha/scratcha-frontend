@@ -247,8 +247,7 @@ export default function DashboardSettings() {
     };
 
     // 설정 상태 텍스트 생성 (원본 설정 기준)
-    const getSettingsText = (app) => {
-        // const model = modelOptions.find(opt => opt.value === app.settings.model)?.label.split(' ')[0] || app.settings.model;
+    const getSettingsText = (app) => {        // const model = modelOptions.find(opt => opt.value === app.settings.model)?.label.split(' ')[0] || app.settings.model;
         return `노이즈: ${app.settings.noiseLevel}`;
     };
 
