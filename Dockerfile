@@ -12,7 +12,7 @@ COPY . .
 #내꺼
 #ARG VITE_API_URL=http://210.109.81.41:8001
 #서버 테스트용
-#ARG VITE_API_URL=http://210.109.80.247:8001
+ARG VITE_API_URL=http://210.109.80.247:8001
 #ENV VITE_API_URL=$VITE_API_URL
 # docker build --build-arg VITE_API_URL=http://your-cloud-api-url:8001 -t leekyz/scratcha-frontend:latest .
 

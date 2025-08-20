@@ -83,17 +83,17 @@ export default function DashboardSettings() {
     } : {};
 
     // 변경된 필드 하이라이트 감지
-    const changedModel = !!(selectedApp && tempSettings[selectedApp.id]?.model !== undefined && tempSettings[selectedApp.id]?.model !== selectedApp.settings.model);
+    // const changedModel = !!(selectedApp && tempSettings[selectedApp.id]?.model !== undefined && tempSettings[selectedApp.id]?.model !== selectedApp.settings.model);
     const changedNoise = !!(selectedApp && tempSettings[selectedApp.id]?.noiseLevel !== undefined && tempSettings[selectedApp.id]?.noiseLevel !== selectedApp.settings.noiseLevel);
-    const changedHeuristic = !!(selectedApp && tempSettings[selectedApp.id]?.heuristicLevel !== undefined && tempSettings[selectedApp.id]?.heuristicLevel !== selectedApp.settings.heuristicLevel);
+    // const changedHeuristic = !!(selectedApp && tempSettings[selectedApp.id]?.heuristicLevel !== undefined && tempSettings[selectedApp.id]?.heuristicLevel !== selectedApp.settings.heuristicLevel);
 
     // 서비스 설정 옵션
-    const modelOptions = [
-        { value: 'gpt-4', label: 'GPT-4 (고성능)' },
-        { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (균형)' },
-        { value: 'claude-3', label: 'Claude-3 (안정성)' },
-        { value: 'custom', label: '커스텀 모델' }
-    ];
+    // const modelOptions = [
+    //     { value: 'gpt-4', label: 'GPT-4 (고성능)' },
+    //     { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (균형)' },
+    //     { value: 'claude-3', label: 'Claude-3 (안정성)' },
+    //     { value: 'custom', label: '커스텀 모델' }
+    // ];
 
     const noiseLevelOptions = [
         { value: '상', label: '상 (높은 노이즈)' },
@@ -101,12 +101,12 @@ export default function DashboardSettings() {
         { value: '하', label: '하 (낮은 노이즈)' }
     ];
 
-    const heuristicLevelOptions = [
-        { value: '상', label: '상 (높은 휴리스틱)' },
-        { value: '중', label: '중 (보통 휴리스틱)' },
-        { value: '하', label: '하 (낮은 휴리스틱)' },
-        { value: '없음', label: '없음 (휴리스틱 비활성화)' }
-    ];
+    // const heuristicLevelOptions = [
+    //     { value: '상', label: '상 (높은 휴리스틱)' },
+    //     { value: '중', label: '중 (보통 휴리스틱)' },
+    //     { value: '하', label: '하 (낮은 휴리스틱)' },
+    //     { value: '없음', label: '없음 (휴리스틱 비활성화)' }
+    // ];
 
     // 설정 적용 처리
     const handleApplySettings = () => {
@@ -248,8 +248,8 @@ export default function DashboardSettings() {
 
     // 설정 상태 텍스트 생성 (원본 설정 기준)
     const getSettingsText = (app) => {
-        const model = modelOptions.find(opt => opt.value === app.settings.model)?.label.split(' ')[0] || app.settings.model;
-        return `${model} | 노이즈: ${app.settings.noiseLevel} | 휴리스틱: ${app.settings.heuristicLevel}`;
+        // const model = modelOptions.find(opt => opt.value === app.settings.model)?.label.split(' ')[0] || app.settings.model;
+        return `노이즈: ${app.settings.noiseLevel}`;
     };
 
     // 임시 설정이 있는지 확인
@@ -331,8 +331,8 @@ export default function DashboardSettings() {
                                 {/* 변경 경고는 하단으로 이동 */}
 
                                 <div className="space-y-6">
-                                    {/* APP 캡차 서비스 모델 설정 */}
-                                    <div>
+                                    {/* APP 캡차 서비스 모델 설정 - 임시 주석 처리 */}
+                                    {/* <div>
                                         <div className="flex items-center gap-2">
                                             <label className="block text-sm font-medium theme-text-primary">
                                                 APP 캡차 서비스 모델
@@ -367,7 +367,7 @@ export default function DashboardSettings() {
                                                 </option>
                                             ))}
                                         </select>
-                                    </div>
+                                    </div> */}
 
                                     {/* 노이즈 강도 설정 */}
                                     <div>
@@ -407,8 +407,8 @@ export default function DashboardSettings() {
                                         </select>
                                     </div>
 
-                                    {/* 휴리스틱 강도 설정 */}
-                                    <div>
+                                    {/* 휴리스틱 강도 설정 - 임시 주석 처리 */}
+                                    {/* <div>
                                         <div className="flex items-center gap-2">
                                             <label className="block text-sm font-medium theme-text-primary">
                                                 휴리스틱 강도
@@ -444,7 +444,7 @@ export default function DashboardSettings() {
                                                 </option>
                                             ))}
                                         </select>
-                                    </div>
+                                    </div> */}
 
                                     {hasTempSettings && (
                                         <div className="mt-6 p-3 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2">
