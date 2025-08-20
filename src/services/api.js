@@ -3,26 +3,17 @@ import { useAuthStore } from '../stores/authStore';
 
 // 인증 관련 API
 export const authAPI = {
-    // 로그인 (OAuth2 형식)
+    // 로그인
     login: (credentials) => {
         console.log('📤 로그인 API 요청 데이터:', credentials);
 
-        const formData = new URLSearchParams();
-        formData.append('grant_type', '');
-        formData.append('username', credentials.email); // email을 username으로 전송
-        formData.append('password', credentials.password);
-        formData.append('scope', '');
-        formData.append('client_id', '');
-        formData.append('client_secret', '');
-
-        console.log('📋 OAuth2 형식으로 변환된 데이터:', formData.toString());
-
-        return apiClient.post('/api/dashboard/auth/login', formData, {
+        return apiClient.post('/api/dashboard/auth/login', credentials, {
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/json',
             },
         });
     },
+
 
     // 회원가입
     signup: (userData) => apiClient.post('/api/dashboard/users/signup', userData),
