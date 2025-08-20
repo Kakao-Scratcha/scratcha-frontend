@@ -260,6 +260,60 @@ export default function DashboardApp() {
         return key.substring(0, 8) + '...' + key.substring(key.length - 4);
     };
 
+    // HTTP 환경에서 사용할 fallback 복사 함수
+    const copyToClipboardFallback = async (text) => {
+        console.log('🔄 Fallback 복사 방법 시도...');
+
+        try {
+            // 방법 1: document.execCommand 사용 (구형 브라우저 지원)
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+
+            if (successful) {
+                console.log('✅ Fallback 복사 성공 (execCommand)');
+                return;
+            } else {
+                throw new Error('execCommand 실패');
+            }
+        } catch (error) {
+            console.error('❌ Fallback 복사 실패:', error);
+
+            // 방법 2: 사용자에게 수동 복사 안내
+            const message = `API 키를 수동으로 복사해주세요:\n\n${text}`;
+            alert(message);
+
+            // 방법 3: 선택 가능한 텍스트로 표시
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'fixed';
+            tempDiv.style.top = '50%';
+            tempDiv.style.left = '50%';
+            tempDiv.style.transform = 'translate(-50%, -50%)';
+            tempDiv.style.background = 'white';
+            tempDiv.style.padding = '20px';
+            tempDiv.style.border = '2px solid #ccc';
+            tempDiv.style.borderRadius = '8px';
+            tempDiv.style.zIndex = '9999';
+            tempDiv.innerHTML = `
+                <h3>API 키 복사</h3>
+                <p>아래 텍스트를 선택하여 복사하세요:</p>
+                <textarea readonly style="width: 100%; height: 60px; margin: 10px 0;">${text}</textarea>
+                <button onclick="this.parentElement.remove()" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">닫기</button>
+            `;
+            document.body.appendChild(tempDiv);
+
+            throw new Error('수동 복사 안내 표시됨');
+        }
+    };
+
     // 초기 데이터 로드
     useEffect(() => {
         let isMounted = true; // 컴포넌트 마운트 상태 추적
@@ -483,10 +537,38 @@ export default function DashboardApp() {
                                                                 </button>
                                                                 <button
                                                                     onClick={async () => {
+                                                                        console.log('🔍 API 키 복사 시도:', {
+                                                                            apiKeyId: apiKey.id,
+                                                                            apiKeyName: apiKey.name,
+                                                                            apiKeyValue: apiKey.key,
+                                                                            apiKeyLength: apiKey.key?.length,
+                                                                            protocol: window.location.protocol,
+                                                                            isSecure: window.location.protocol === 'https:'
+                                                                        });
+
                                                                         try {
-                                                                            await navigator.clipboard.writeText(apiKey.key);
+                                                                            console.log('📋 클립보드 복사 시작...');
+
+                                                                            // HTTPS 환경에서는 Clipboard API 사용
+                                                                            if (window.location.protocol === 'https:') {
+                                                                                await navigator.clipboard.writeText(apiKey.key);
+                                                                                console.log('✅ HTTPS - Clipboard API 복사 성공');
+                                                                            } else {
+                                                                                // HTTP 환경에서는 fallback 방법 사용
+                                                                                console.log('🌐 HTTP 환경 - fallback 방법 사용');
+                                                                                await copyToClipboardFallback(apiKey.key);
+                                                                            }
+
                                                                             alert('API 키가 복사되었습니다.');
-                                                                        } catch {
+                                                                        } catch (error) {
+                                                                            console.error('❌ 클립보드 복사 실패:', {
+                                                                                error: error.message,
+                                                                                errorName: error.name,
+                                                                                errorStack: error.stack,
+                                                                                clipboardSupported: !!navigator.clipboard,
+                                                                                writeTextSupported: !!navigator.clipboard?.writeText,
+                                                                                protocol: window.location.protocol
+                                                                            });
                                                                             alert('복사에 실패했습니다.');
                                                                         }
                                                                     }}
