@@ -1,13 +1,26 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
-// API 기본 설정 - Docker 환경에서는 항상 환경 변수 사용
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://210.109.80.247:8001';
+// 쿠버네티스 환경에서 동적 API URL 설정
+const getApiBaseUrl = () => {
+    // 1. 환경 변수 우선 (배포 시 설정)
+    if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL;
+    }
 
-//서버 - 내꺼
-//http://210.109.81.41:8001
-//서버 - 최신 
-//http://210.109.80.247:8001/
+    // 2. 개발 환경에서 동적 감지
+    if (import.meta.env.DEV) {
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname;
+        const port = '8001';
+        return `${protocol}//${hostname}:${port}`;
+    }
+
+    // 3. 프로덕션에서 상대 경로 사용
+    return '/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // axios 인스턴스 생성
 const apiClient = axios.create({
@@ -84,16 +97,6 @@ apiClient.interceptors.response.use(
             data: error.response?.data,
             headers: error.response?.headers
         });
-
-        // 401 에러는 로그인 실패일 수도 있으므로 자동 로그아웃하지 않음
-        // 개별 함수에서 필요한 경우에만 로그아웃 처리
-        if (error.response?.status === 401) {
-            console.log('🔒 401 인증 오류 - 자동 로그아웃하지 않음 (로그인 실패일 수 있음)');
-        } else if (error.response?.status === 403) {
-            console.log('🔒 403 Forbidden - 토큰은 있지만 권한 없음');
-        } else if (error.response?.status === 404) {
-            console.log('🔍 404 Not Found - API 엔드포인트 미구현');
-        }
 
         return Promise.reject(error);
     }

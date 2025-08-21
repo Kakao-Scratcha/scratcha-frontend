@@ -32,12 +32,33 @@ npm run preview
 
 ## 환경 변수 / 설정
 
-- API 베이스 URL: `src/config/api.js`
-  - `import.meta.env.VITE_API_URL`가 우선 사용되며, 미설정 시 `http://210.109.81.41:8001`로 폴백됩니다.
-- 개발 서버 프록시: `vite.config.js`
-  - `/api` → `http://localhost:8001`로 프록시 설정되어 있습니다.
-- Docker 빌드: `Dockerfile`
-  - `ARG VITE_API_URL`로 빌드 타임 API URL 주입 가능 (기본값: `http://210.109.81.41:8001`).
+### 동적 API URL 설정
+
+- **위치**: `src/config/api.js`
+- **동작 방식**:
+  1. `import.meta.env.VITE_API_URL` 환경 변수 우선 사용
+  2. 개발 환경: `http://localhost:8001` 자동 연결
+  3. 프로덕션: `/api` 상대 경로 사용
+
+### 환경 변수 설정 방법
+
+```bash
+# 개발 환경
+VITE_API_URL=http://localhost:8001
+
+# 프로덕션 환경
+VITE_API_URL=http://your-backend-server:8001
+
+# 쿠버네티스 환경
+VITE_API_URL=http://backend-service:8001
+```
+
+### Docker 빌드
+
+```bash
+# Dockerfile에서 빌드 시 환경 변수 주입
+docker build --build-arg VITE_API_URL=http://your-api-server:8001 -t your-image .
+```
 
 권장 Node.js 버전: 20.x
 
@@ -56,27 +77,27 @@ frontend/
 │   │   ├── Layout.jsx
 │   │   ├── ProtectedRoute.jsx
 │   │   └── ThemeProvider.jsx
-│   ├── config/               # 환경/클라이언트 설정 (axios 인스턴스 등)
-│   │   └── api.js
-│   ├── hooks/                # 커스텀 훅 (인증, 이미지 캐싱 등)
+│   ├── config/               # 환경/클라이언트 설정
+│   │   └── api.js            # 동적 API URL 설정
+│   ├── hooks/                # 커스텀 훅
 │   ├── services/             # API 서비스 래퍼
 │   │   └── api.js
 │   ├── stores/               # Zustand 전역 상태
 │   │   ├── authStore.js
 │   │   ├── darkModeStore.js
-│   │   ├── dashboardStore.js
-│   │   └── (themeStore.js 제거됨)
+│   │   └── dashboardStore.js
 │   ├── utils/                # 유틸리티
 │   │   └── chartImports.js
 │   ├── App.jsx               # 라우팅 엔트리
 │   ├── main.jsx              # React 엔트리
 │   └── global.css            # 전역 스타일
 ├── public/                   # 정적 파일
-├── vite.config.js            # Vite 설정 (프록시/청크 분리 등)
+├── vite.config.js            # Vite 설정 (최적화됨)
 ├── eslint.config.js          # ESLint 설정
+├── nginx.conf                # Nginx 설정 (프로덕션)
 ├── Dockerfile                # 컨테이너 빌드
-├── docker-compose.yml        # 배포/개발 구성 예시
-└── index.html
+├── docker-compose.yml        # 배포/개발 구성
+└── index.html                # HTML 템플릿
 ```
 
 ## 라우팅
@@ -90,28 +111,115 @@ frontend/
 
 ## 상태 관리 (Zustand)
 
-- `authStore.js`: 토큰/사용자/세션 유틸 포함, 로그인/로그아웃/프로필 로드 제공
-- `dashboardStore.js`: 앱/키/사용량/통계 상태 관리 (실제 API 연동 기반)
-- `darkModeStore.js`: 다크모드 상태 (themeStore 제거됨)
+- `authStore.js`: 토큰/사용자/세션 관리, 로그인/로그아웃/프로필 로드
+- `dashboardStore.js`: 앱/키/사용량/통계 상태 관리 (실제 API 연동)
+- `darkModeStore.js`: 다크모드 상태 관리
 
-개발 모드/더미 데이터는 제거되었으며, 모든 기능은 실제 API 기준으로 동작합니다.
+모든 기능은 실제 API 기준으로 동작하며, 더미 데이터는 제거되었습니다.
 
 ## API 서비스 개요
 
-- 위치: `src/services/api.js`
-- 인증: `/api/dashboard/auth/*`, 사용자: `/api/dashboard/users/*`
-- 애플리케이션: `/api/dashboard/application/*`, API 키: `/api/dashboard/api-key/*`
-- 대시보드: `/dashboard/*` (필요 시 확장)
+- **위치**: `src/services/api.js`
+- **인증**: `/api/dashboard/auth/*`
+- **사용자**: `/api/dashboard/users/*`
+- **애플리케이션**: `/api/dashboard/applications/*`
+- **API 키**: `/api/dashboard/api-keys/*`
+- **대시보드**: `/dashboard/*`
 
 axios 인스턴스(`src/config/api.js`)는 요청/응답 인터셉터로 토큰 부착과 로깅을 처리합니다.
 
+## 쿠버네티스 지원
+
+### ConfigMap 설정
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+data:
+  VITE_API_URL: "http://backend-service:8001"
+```
+
+### Deployment 환경 변수
+
+```yaml
+env:
+  - name: VITE_API_URL
+    valueFrom:
+      configMapKeyRef:
+        name: frontend-config
+        key: VITE_API_URL
+```
+
+### Nginx 설정
+
+- **SPA 라우팅**: 모든 요청을 `index.html`로 리다이렉트
+- **정적 파일 캐싱**: 1년간 캐싱
+- **보안 헤더**: XSS, CSRF 방지
+- **Gzip 압축**: 성능 최적화
+- **헬스체크**: `/health` 엔드포인트
+
 ## 빌드/배포
 
-- 프로덕션 빌드: `npm run build` → 산출물 `dist/`
-- Docker
-  - `Dockerfile`로 빌드 시 `VITE_API_URL` 전달 가능
-  - Nginx로 정적 파일 서빙 (`nginx.conf`)
-- 개발 서버 프록시로 백엔드와 연동 (`vite.config.js`)
+### 로컬 빌드
+
+```bash
+npm run build  # dist/ 폴더 생성
+```
+
+### Docker 빌드
+
+```bash
+# 기본 빌드
+docker build -t scratcha-frontend .
+
+# 환경 변수와 함께 빌드
+docker build --build-arg VITE_API_URL=http://your-api:8001 -t scratcha-frontend .
+```
+
+### Docker 실행
+
+```bash
+# 기본 실행
+docker run -d -p 3000:80 scratcha-frontend
+
+# 환경 변수와 함께 실행
+docker run -d -p 3000:80 -e VITE_API_URL=http://your-api:8001 scratcha-frontend
+```
+
+### 쿠버네티스 배포
+
+```bash
+kubectl apply -f k8s-configmap.yaml
+kubectl apply -f k8s-deployment.yaml
+kubectl apply -f k8s-service.yaml
+kubectl apply -f k8s-ingress.yaml
+```
+
+## 개발 가이드
+
+### 환경 변수 설정
+
+1. 프로젝트 루트에 `.env.development` 파일 생성
+2. `VITE_API_URL=http://localhost:8001` 설정
+3. 개발 서버 재시작
+
+### API 연결 테스트
+
+브라우저 개발자 도구 콘솔에서:
+
+```javascript
+// 환경 변수 확인
+console.log("API URL:", import.meta.env.VITE_API_URL);
+
+// API 요청 테스트
+fetch("/api/dashboard/auth/login", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email: "test", password: "test" }),
+});
+```
 
 ## 라이선스
 
