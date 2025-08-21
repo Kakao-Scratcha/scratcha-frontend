@@ -3,8 +3,17 @@ import { useAuthStore } from '../stores/authStore';
 
 // 쿠버네티스 환경에서 동적 API URL 설정
 const getApiBaseUrl = () => {
+    console.log('🔧 getApiBaseUrl 함수 실행');
+    console.log('🔧 환경변수 확인:', {
+        VITE_API_URL: import.meta.env.VITE_API_URL,
+        MODE: import.meta.env.MODE,
+        DEV: import.meta.env.DEV,
+        PROD: import.meta.env.PROD
+    });
+
     // 1. 환경 변수 우선 (배포 시 설정)
-    if (import.meta.env.VITE_API_URL) {
+    if (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL !== 'undefined') {
+        console.log('✅ 환경변수 사용:', import.meta.env.VITE_API_URL);
         return import.meta.env.VITE_API_URL;
     }
 
@@ -13,10 +22,13 @@ const getApiBaseUrl = () => {
         const protocol = window.location.protocol;
         const hostname = window.location.hostname;
         const port = '8001';
-        return `${protocol}//${hostname}:${port}`;
+        const url = `${protocol}//${hostname}:${port}`;
+        console.log('⚠️ 동적 감지 사용:', url);
+        return url;
     }
 
     // 3. 프로덕션에서 상대 경로 사용
+    console.log('⚠️ 상대 경로 사용: /api');
     return '/api';
 };
 

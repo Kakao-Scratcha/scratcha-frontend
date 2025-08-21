@@ -399,7 +399,7 @@ export const useDashboardStore = create((set) => ({
                 name: 'Starter',
                 limit: 50000,
                 price: '₩29,900',
-                description: '월 50,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
+                description: '월 50,000 토큰 제공',
                 overageRate: 2.0,
                 features: [
                     '기본 API & 통계',
@@ -411,7 +411,7 @@ export const useDashboardStore = create((set) => ({
                 name: 'Pro',
                 limit: 200000,
                 price: '₩79,900',
-                description: '월 200,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
+                description: '월 200,000 토큰 제공',
                 overageRate: 2.0,
                 features: [
                     'Starter의 모든 혜택',

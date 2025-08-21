@@ -6,31 +6,29 @@ export const authAPI = {
     // 로그인
     login: (credentials) => {
         console.log('📤 로그인 API 요청 데이터:', credentials);
-
-        return apiClient.post('/api/dashboard/auth/login', credentials, {
+        return apiClient.post('/dashboard/auth/login', credentials, {
             headers: {
                 'Content-Type': 'application/json',
             },
         });
     },
 
-
     // 회원가입
-    signup: (userData) => apiClient.post('/api/dashboard/users/signup', userData),
+    signup: (userData) => apiClient.post('/dashboard/users/signup', userData),
 
     // 사용자 정보 조회
     getProfile: () => {
         console.log('📞 getProfile API 호출');
-        return apiClient.get('/api/dashboard/users/me');
+        return apiClient.get('/dashboard/users/me');
     },
 
     // 사용자 정보 업데이트
-    updateProfile: (data) => apiClient.patch('/api/dashboard/users/me', data),
+    updateProfile: (data) => apiClient.patch('/dashboard/users/me', data),
 
     // 사용자 이름 변경
     updateUsername: (newUsername) => {
         console.log('📞 updateUsername API 호출:', { newUsername });
-        return apiClient.patch('/api/dashboard/users/me', {
+        return apiClient.patch('/dashboard/users/me', {
             userName: newUsername
         });
     },
@@ -38,11 +36,11 @@ export const authAPI = {
     // 회원 탈퇴 (계정 소프트 삭제)
     deleteAccount: () => {
         console.log('📞 deleteAccount API 호출');
-        return apiClient.delete('/api/dashboard/users/me');
+        return apiClient.delete('/dashboard/users/me');
     },
 
     // 사용자 삭제
-    deleteUser: () => apiClient.delete('/api/dashboard/users/me'),
+    deleteUser: () => apiClient.delete('/dashboard/users/me'),
 };
 
 // 애플리케이션 관련 API
@@ -50,49 +48,49 @@ export const applicationAPI = {
     // 모든 애플리케이션 조회
     getAllApplications: () => {
         console.log('📱 애플리케이션 목록 조회 API 호출');
-        return apiClient.get('/api/dashboard/applications/all');
+        return apiClient.get('/dashboard/applications/all');
     },
 
     // 애플리케이션 생성
     createApplication: (data) => {
         console.log('📱 애플리케이션 생성 API 호출:', data);
-        return apiClient.post('/api/dashboard/applications/', data);
+        return apiClient.post('/dashboard/applications/', data);
     },
 
     // 특정 애플리케이션 조회
     getApplicationById: (appId) => {
         console.log('📱 애플리케이션 조회 API 호출:', appId);
-        return apiClient.get(`/api/dashboard/applications/${appId}`);
+        return apiClient.get(`/dashboard/applications/${appId}`);
     },
 
     // 애플리케이션 업데이트
     updateApplication: (appId, data) => {
         console.log('📱 애플리케이션 업데이트 API 호출:', { appId, data });
-        return apiClient.put(`/api/dashboard/applications/${appId}`, data);
+        return apiClient.put(`/dashboard/applications/${appId}`, data);
     },
 
     // 애플리케이션 삭제
     deleteApplication: (appId) => {
         console.log('📱 애플리케이션 삭제 API 호출:', appId);
-        return apiClient.delete(`/api/dashboard/applications/${appId}`);
+        return apiClient.delete(`/dashboard/applications/${appId}`);
     },
 
     // API 키 생성
     createApiKey: (appId, data) => {
         console.log('🔑 API 키 생성 API 호출:', { appId, data });
-        return apiClient.post(`/api/dashboard/api-keys/?appId=${appId}&expiresPolicy=0`, data);
+        return apiClient.post(`/dashboard/api-keys/?appId=${appId}&expiresPolicy=0`, data);
     },
 
     // API 키 삭제
     deleteApiKey: (keyId) => {
         console.log('🔑 API 키 삭제 API 호출:', { keyId });
-        return apiClient.delete(`/api/dashboard/api-keys/${keyId}`);
+        return apiClient.delete(`/dashboard/api-keys/${keyId}`);
     },
 
     // API 키 활성화/비활성화
     toggleApiKeyStatus: (keyId, isActive) => {
         const action = isActive ? 'activate' : 'deactivate';
-        const endpoint = `/api/dashboard/api-keys/${keyId}/${action}`;
+        const endpoint = `/dashboard/api-keys/${keyId}/${action}`;
         const baseURL = apiClient.defaults.baseURL || '';
         const token = useAuthStore.getState().token || '';
         const authHeader = token && token.startsWith('Bearer ') ? token : (token ? `Bearer ${token}` : '');

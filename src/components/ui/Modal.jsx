@@ -25,10 +25,10 @@ export default function Modal({ isOpen, onClose, title, children, hideClose = fa
             // 모달 열릴 때 body 스크롤 방지
             document.body.style.overflow = 'hidden';
 
-            // 모달에 포커스 설정
-            if (modalRef.current) {
-                modalRef.current.focus();
-            }
+            // 모달에 포커스 설정 제거 - 입력 필드가 포커스를 가져갈 수 있도록
+            // if (modalRef.current) {
+            //     modalRef.current.focus();
+            // }
         }
 
         return () => {
@@ -42,22 +42,30 @@ export default function Modal({ isOpen, onClose, title, children, hideClose = fa
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-            {/* 배경 오버레이 */}
+            {/* 배경 오버레이 - 포커스 방지 */}
             <div
                 className="absolute inset-0 theme-modal-overlay"
                 onClick={onClose}
+                onMouseDown={(e) => e.preventDefault()}  // 포커스 방지
+                tabIndex={-1}  // 포커스 불가능
+                style={{ outline: 'none' }}  // 외곽선 제거
             ></div>
 
-            {/* 모달 컨텐츠 */}
+            {/* 모달 컨텐츠 - 포커스 방지 */}
             <div
                 ref={modalRef}
-                tabIndex={-1}
+                tabIndex={-1}  // 포커스 불가능하게 유지
                 className={`relative rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 border theme-modal-border ${borderless ? '' : 'border'}`}
                 onKeyDown={(e) => {
                     // 모달 내부에서 Enter 키 처리
                     if (e.key === 'Enter') {
                         e.stopPropagation();
                     }
+                }}
+                onFocus={(e) => {
+                    // 모달 컨텐츠가 포커스를 받으려고 할 때 방지
+                    e.preventDefault();
+                    e.stopPropagation();
                 }}
             >
                 {/* 헤더 */}
