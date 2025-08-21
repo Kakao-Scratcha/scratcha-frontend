@@ -1,6 +1,8 @@
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import mainSelectImage from '../../assets/images/main-select.png';
+import mainScratchaImage from '../../assets/images/main-scratcha.png';
 
 // SVG 아이콘들을 상수로 분리 (재렌더링 방지)
 const ARROW_ICON = (
@@ -99,8 +101,12 @@ export default function MainPage() {
                         <div className="flex flex-col md:flex-row items-center justify-center gap-8 mb-8">
                             <div className="flex-1">
                                 <div className="text-center mb-4">
-                                    <div className="w-[400px] h-[200px] bg-gray-200 dark:bg-gray-700 rounded-lg mx-auto flex items-center justify-center">
-                                        <span className="text-gray-500 dark:text-gray-400 text-5xl">X</span>
+                                    <div className="w-[400px] h-[400px] bg-gray-200 dark:bg-gray-700 rounded-lg mx-auto flex items-center justify-center">
+                                        <img
+                                            src={mainScratchaImage}
+                                            alt="스크래치 캡차 스크래치"
+                                            className="w-full h-full object-cover"
+                                        />
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-center gap-3">
@@ -119,9 +125,12 @@ export default function MainPage() {
 
                             <div className="flex-1">
                                 <div className="text-center mb-4">
-                                    <div className="w-[400px] h-[200px] bg-gray-200 dark:bg-gray-700 rounded-lg mx-auto flex items-center justify-center">
-                                        <span className="text-gray-500 dark:text-gray-400 text-5xl">X</span>
-                                    </div>
+                                    <div className="w-[400px] h-[400px] bg-white dark:bg-black rounded-lg mx-auto flex items-center justify-center">
+                                        <img
+                                            src={mainSelectImage}
+                                            alt="스크래치 캡차 정답선택"
+                                            className="w-full object-cover"
+                                        /></div>
                                 </div>
                                 <div className="flex items-center justify-center gap-3">
                                     <div className="w-10 h-10 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center">
