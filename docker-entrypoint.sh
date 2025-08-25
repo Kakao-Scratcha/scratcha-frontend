@@ -2,7 +2,7 @@
 
 # Set default environment variables
 if [ -z "$VITE_API_URL" ]; then
-    export VITE_API_URL="https://210.109.80.247:8001"
+    export VITE_API_URL="http://210.109.80.247:8001"
 fi
 
 if [ -z "$ENVIRONMENT" ]; then
@@ -24,11 +24,11 @@ if [[ "$VITE_API_URL" == *"svc.cluster.local"* ]]; then
     sed -i "s|resolver 10.96.0.10 valid=30s;|resolver $DNS_SERVER valid=30s;|g" /etc/nginx/nginx.conf
     
     # Update nginx proxy settings
-    sed -i "s|https://210.109.80.247:8001|$VITE_API_URL|g" /etc/nginx/nginx.conf
+    sed -i "s|http://210.109.80.247:8001|$VITE_API_URL|g" /etc/nginx/nginx.conf
     echo "Kubernetes internal service proxy configured: $VITE_API_URL"
 else
     # External service configuration
-    sed -i "s|https://210.109.80.247:8001|$VITE_API_URL|g" /etc/nginx/nginx.conf
+    sed -i "s|http://210.109.80.247:8001|$VITE_API_URL|g" /etc/nginx/nginx.conf
 fi
 
 # Start nginx
