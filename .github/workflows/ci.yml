@@ -1,0 +1,151 @@
+name: CI/CD Frontend
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  # develop 브랜치용 VM 배포 잡
+  deploy-to-vm:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    env:
+      SERVICE_NAME: front
+      REGISTRY: ${{ secrets.KCR_REGISTRY_URL }}
+      IMAGE_NAME: ${{ secrets.KCR_FRONTEND_DEV_IMAGE_NAME }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Build application
+        run: npm run build
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Kakao Cloud Registry
+        run: |
+          echo "${{ secrets.KCR_PASSWORD }}" | docker login ${{ secrets.KCR_REGISTRY_URL }} -u "${{ secrets.KCR_USER }}" --password-stdin
+
+      - name: Build & Push Docker Image
+        run: |
+          IMAGE_TAG="$(date +%Y%m%d%H%M%S)-${{ github.sha }}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
+
+          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$IMAGE_TAG .
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$IMAGE_TAG
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$IMAGE_TAG ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Set up SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy to Frontend VM via Bastion
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          set -x
+          mkdir -p ~/.ssh
+          ssh-keyscan -v -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>&1
+
+          # 로컬 셸의 $IMAGE_TAG (GITHUB_ENV로 주입됨)를 사용
+          ssh -v -o StrictHostKeyChecking=no -p "$SSH_PORT" "$SSH_USERNAME@$SSH_HOST" \
+            "echo '${{ secrets.KCR_PASSWORD }}' | docker login '${{ secrets.KCR_REGISTRY_URL }}' -u '${{ secrets.KCR_USER }}' --password-stdin && \
+             docker stop scratcha_frontend || true && \
+             docker rm scratcha_frontend || true && \
+             docker container prune -f || true && \
+             sudo lsof -ti:80 | xargs sudo kill -9 || true && \
+             sleep 2 && \
+             docker pull '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}' && \
+             docker run -d --name scratcha_frontend --restart=unless-stopped -p 80:80 '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}'" 2>&1
+
+  # main 브랜치용 ArgoCD 배포 잡 (기존과 동일)
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    env:
+      SERVICE_NAME: front
+      # 시크릿 → 셸 env 매핑 (디버깅/사용 편의를 위해)
+      KCR_REGISTRY_URL: ${{ secrets.KCR_REGISTRY_URL }}
+      KCR_IMAGE_NAME: ${{ secrets.KCR_IMAGE_NAME }}
+      # (선택) 환경 시크릿을 쓰는 경우 활성화
+      # environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Build application
+        run: npm run build
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Kakao Cloud Registry
+        run: |
+          echo "${{ secrets.KCR_PASSWORD }}" | docker login ${{ secrets.KCR_REGISTRY_URL }} -u "${{ secrets.KCR_USER }}" --password-stdin
+
+      - name: Build & Push Docker Image
+        run: |
+          IMAGE_TAG="$(date +%Y%m%d%H%M%S)-${{ github.sha }}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
+
+          docker build -t ${{ secrets.KCR_REGISTRY_URL }}/${{ secrets.KCR_IMAGE_NAME }}:$IMAGE_TAG .
+          docker push ${{ secrets.KCR_REGISTRY_URL }}/${{ secrets.KCR_IMAGE_NAME }}:$IMAGE_TAG
+          docker tag ${{ secrets.KCR_REGISTRY_URL }}/${{ secrets.KCR_IMAGE_NAME }}:$IMAGE_TAG ${{ secrets.KCR_REGISTRY_URL }}/${{ secrets.KCR_IMAGE_NAME }}:latest
+          docker push ${{ secrets.KCR_REGISTRY_URL }}/${{ secrets.KCR_IMAGE_NAME }}:latest
+
+      - name: Checkout test Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.REPO_NAME }}
+          token: ${{ secrets.REPO_TOKEN }}
+          path: ${{ secrets.REPO_PATH }}
+
+      - name: Update values.yaml
+        run: |
+          sed -i "s|tag:.*|tag: \"${IMAGE_TAG}\"|" "${{ secrets.REPO_PATH }}/${{ secrets.HELM_CHART_PATH }}/values.yaml"
+
+      - name: Commit & Push changes
+        run: |
+          cd "${{ secrets.REPO_PATH }}"
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add "${{ secrets.HELM_CHART_PATH }}/values.yaml"
+          git commit -m "Update frontend image tag to ${IMAGE_TAG}" || echo "No changes to commit"
+          git push origin main

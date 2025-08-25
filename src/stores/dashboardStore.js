@@ -1,7 +1,5 @@
 import { create } from 'zustand';
 import {
-    DUMMY_APPS,
-    DUMMY_API_KEYS,
     DEFAULT_PLAN,
     PLAN_USAGE_DATA,
     // generateUsageLogs,
@@ -21,7 +19,7 @@ const INITIAL_PERIOD = '전체';
 // 경계값 시나리오 중 하나를 매 새로고침마다 랜덤 선택: low/mid/high
 const DATASET_KEYS = ['low', 'mid', 'high'];
 const INITIAL_SCENARIO = DATASET_KEYS[Math.floor(Math.random() * DATASET_KEYS.length)];
-const INITIAL_LOGS = getStableSessionLogs('all', 'all', 365);
+const INITIAL_LOGS = getStableSessionLogs(365);
 const SCENARIO_LOGS = {
     low: LOG_DATASETS.low || INITIAL_LOGS,
     mid: LOG_DATASETS.mid || INITIAL_LOGS,
@@ -30,7 +28,7 @@ const SCENARIO_LOGS = {
 const INITIAL_AVG_TOKENS = (PLAN_USAGE_DATA.current?.requests?.avgTokensPerRequest) || 20;
 const INITIAL_LIMIT = (PLAN_USAGE_DATA.current?.tokens?.limit) || DEFAULT_PLAN.limit;
 // 월별(MTD) 기준 사용량 집계
-const INITIAL_MTD_LOGS = getMonthToDateLogs('all', 'all');
+const INITIAL_MTD_LOGS = getMonthToDateLogs();
 const INITIAL_USED = INITIAL_MTD_LOGS.length * INITIAL_AVG_TOKENS;
 const INITIAL_PERCENTAGE = Math.min(100, Math.round((INITIAL_USED / INITIAL_LIMIT) * 100));
 
@@ -49,26 +47,9 @@ export const useDashboardStore = create((set) => ({
     sessionNow: new Date().toISOString(),
     // 월 기준 임계값 확인용 합성 로그 (이번 달)
     syntheticMtdLogs: INITIAL_MTD_LOGS,
-    apps: DUMMY_APPS.map((app) => ({
-        id: app.id,
-        name: app.name,
-        description: app.description || '',
-        status: app.status || 'active',
-        // Settings/Usage defaults to satisfy settings page
-        settings: app.settings || {
-            model: 'gpt-4',
-            noiseLevel: '중',
-            heuristicLevel: '중',
-        },
-        usage: app.usage || {
-            today: 0,
-            week: 0,
-            month: 0,
-        },
-        createdAt: app.createdAt || new Date().toISOString().split('T')[0],
-    })),
+    apps: [], // 실제 API에서 가져올 예정
     selectedAppId: null,
-    apiKeys: DUMMY_API_KEYS,
+    apiKeys: [], // 실제 API에서 가져올 예정
     usageLogs: INITIAL_LOGS,
     isAppsLoading: false,
 
@@ -132,7 +113,7 @@ export const useDashboardStore = create((set) => ({
             const limit = state.planUsageData.current.tokens.limit || state.currentPlan.limit;
             // 개요 요금제 퍼센트는 항상 "이번달(MTD)" 기준 - 목표 퍼센트에 맞춰 합성 로그 생성
             const desiredCalls = Math.floor((limit * (scenarioKey === 'low' ? 25 : scenarioKey === 'high' ? 75 : 45)) / 100 / Math.max(1, avgTokens));
-            const synthLogs = synthesizeMonthToDateLogs(Math.max(50, desiredCalls), 'all', 'all');
+            const synthLogs = synthesizeMonthToDateLogs(Math.max(50, desiredCalls));
             const used = synthLogs.length * avgTokens;
             const percentage = Math.min(100, Math.round((used / limit) * 100));
 

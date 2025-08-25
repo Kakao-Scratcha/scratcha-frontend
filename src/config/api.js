@@ -109,7 +109,7 @@ const createApiClient = async () => {
                 }
 
                 config.headers.Authorization = authHeader;
-                console.log('✅ Authorization 헤더 설정:', authHeader.substring(0, 50) + '...');
+                console.log('✅ Authorization 헤더 설정:', authHeader);
             } else {
                 console.log('⚠️ 토큰이 없어 Authorization 헤더를 설정하지 않음');
             }

@@ -1,8 +1,6 @@
 // 사전 생성된 로그 데이터셋 (저장형)
 // - 생성 시점에 고정된 데이터를 사용하여, 런타임 무작위 생성 없이 일관된 결과 제공
 
-import { DUMMY_APPS, DUMMY_API_KEYS } from './dashboardDummy';
-
 // 간단한 시간 포맷 유틸
 const toISO = (d) => new Date(d).toISOString();
 const toKR = (d) => new Date(d).toLocaleString('ko-KR');
@@ -14,10 +12,6 @@ function buildLogs(totalCount, daysRange = 365) {
     const results = ['성공', '성공', '성공', '실패', '타임아웃', '인증오류'];
 
     for (let i = 0; i < totalCount; i++) {
-        const app = DUMMY_APPS[i % DUMMY_APPS.length];
-        const appKeys = DUMMY_API_KEYS.filter((k) => k.appId === app.id);
-        const key = appKeys.length ? appKeys[i % appKeys.length] : DUMMY_API_KEYS[0];
-
         // 균등 분포: 최근 daysRange일 구간에 고르게 분포
         const minutesStep = Math.floor((daysRange * 24 * 60) / Math.max(1, totalCount));
         const minutesAgo = minutesStep * i;
@@ -31,10 +25,10 @@ function buildLogs(totalCount, daysRange = 365) {
 
         logs.push({
             id: i + 1,
-            appId: app.id,
-            appName: app.name,
-            apiKeyId: key.id,
-            apiKey: key.key,
+            appId: 1, // 기본값
+            appName: 'Default App', // 기본값
+            apiKeyId: 1, // 기본값
+            apiKey: 'default-key', // 기본값
             callTime: toKR(when),
             callAt: toISO(when),
             result,
