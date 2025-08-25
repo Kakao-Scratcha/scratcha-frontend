@@ -28,10 +28,6 @@ export default function DashboardUsage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
 
-    // 선택된 APP과 API 키
-    const selectedApp = selectedAppId === 'all' ? null : apps.find(app => app.id === selectedAppId);
-    const selectedApiKey = selectedApiKeyId === 'all' ? null : apiKeys.find(key => key.id === selectedApiKeyId);
-
     // 선택된 APP의 API 키들 (전체 선택 시 모든 API 키)
     const appApiKeys = selectedAppId === 'all' ? apiKeys : apiKeys.filter(key => key.appId === selectedAppId);
 
@@ -80,28 +76,6 @@ export default function DashboardUsage() {
     const maskApiKey = (key) => {
         if (!key) return '';
         return key.substring(0, 8) + '...' + key.substring(key.length - 4);
-    };
-
-    // 기간별 X축 라벨 포맷터
-    const xTickFormatter = (value) => {
-        if (selectedPeriod === '1일') {
-            // 'HH:00' → 'H시'
-            const hh = parseInt(String(value).split(':')[0], 10);
-            if (!Number.isNaN(hh)) return `${hh}시`;
-            return value;
-        }
-        if (selectedPeriod === '7일' || selectedPeriod === '30일') {
-            const m = value.match(/(\d+)월\s+(\d+)일/);
-            if (m) return `${m[2]}일`;
-            const parts = value.split('-');
-            if (parts.length === 3) return `${parseInt(parts[2], 10)}일`;
-            return value;
-        }
-        const m = value.match(/(\d+)년\s+(\d+)월/);
-        if (m) return `${m[2]}월`;
-        const parts = value.split('-');
-        if (parts.length === 2) return `${parseInt(parts[1], 10)}월`;
-        return value;
     };
 
     return (
@@ -169,8 +143,8 @@ export default function DashboardUsage() {
                                 <button
                                     onClick={() => setViewMode('graph')}
                                     className={`flex-1 px-3 py-2 text-sm font-medium rounded-l-md border ${viewMode === 'graph'
-                                            ? 'bg-blue-600 text-white border-blue-600'
-                                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                                         }`}
                                 >
                                     그래프
@@ -178,8 +152,8 @@ export default function DashboardUsage() {
                                 <button
                                     onClick={() => setViewMode('table')}
                                     className={`flex-1 px-3 py-2 text-sm font-medium rounded-r-md border ${viewMode === 'table'
-                                            ? 'bg-blue-600 text-white border-blue-600'
-                                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                                         }`}
                                 >
                                     테이블
