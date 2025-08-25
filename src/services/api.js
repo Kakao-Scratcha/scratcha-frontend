@@ -112,14 +112,33 @@ export const userAPI = {
 
 // 대시보드 관련 API
 export const dashboardAPI = {
-    // 대시보드 통계
+    // 기존 API 유지
     getStats: () => apiClient.get('/dashboard/stats'),
-
-    // 사용량 통계
     getUsage: (period) => apiClient.get(`/dashboard/usage?period=${period}`),
-
-    // 최근 활동
     getRecentActivity: () => apiClient.get('/dashboard/activity'),
+
+    // 로그 API 추가
+    getLogs: (params = {}) => {
+        const { keyId, skip = 0, limit = 100 } = params;
+        const queryParams = new URLSearchParams();
+
+        if (keyId) queryParams.append('keyId', keyId);
+        queryParams.append('skip', skip);
+        queryParams.append('limit', limit);
+
+        console.log('📊 로그 조회 API 호출:', { keyId, skip, limit });
+        return apiClient.get(`/dashboard/usage-stats/logs?${queryParams.toString()}`);
+    },
+
+    // 전체 로그 조회
+    getAllLogs: (skip = 0, limit = 100) => {
+        return dashboardAPI.getLogs({ skip, limit });
+    },
+
+    // 특정 API 키 로그 조회
+    getLogsByKeyId: (keyId, skip = 0, limit = 100) => {
+        return dashboardAPI.getLogs({ keyId, skip, limit });
+    },
 };
 
 // 설정 관련 API
