@@ -105,7 +105,7 @@ export default function DashboardOverview() {
             return `${fmtMD(now)} 00:00 ~ 현재`;
         }
         if (selectedPeriod === '7일') {
-            const s = startOfDay(new Date(now));
+            const s = startOfDay(now);
             s.setDate(s.getDate() - 6);
             return `${fmtMD(s)} ~ ${fmtMD(now)}`;
         }
@@ -139,6 +139,16 @@ export default function DashboardOverview() {
         if (parts.length === 2) return `${parseInt(parts[1], 10)}월`;
         return value;
     };
+
+    if (isLoading) {
+        return (
+            <DashboardLayout>
+                <div className="flex justify-center items-center h-64">
+                    <LoadingSpinner />
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout
@@ -385,5 +395,3 @@ function DatasetSelector() {
         </select>
     );
 }
-
-// ChartTypeSelector 및 ChartBody 롤백 (차트 타입 고정: Line)

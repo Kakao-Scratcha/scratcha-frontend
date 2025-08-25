@@ -1,38 +1,30 @@
 #!/bin/sh
 
-# Set default environment variables
-if [ -z "$VITE_API_URL" ]; then
-    export VITE_API_URL="http://210.109.80.247:8001"
-fi
+echo "🚀 Frontend starting..."
 
-if [ -z "$ENVIRONMENT" ]; then
-    export ENVIRONMENT="production"
-fi
+# 기본 환경변수 설정
+export VITE_API_URL=${VITE_API_URL:-"http://10.0.129.24:8001"}
+export ENVIRONMENT=${ENVIRONMENT:-"production"}
 
-if [ -z "$DNS_SERVER" ]; then
-    export DNS_SERVER="10.96.0.10"
-fi
+echo "📊 Configuration:"
+echo "   API URL: $VITE_API_URL"
+echo "   Environment: $ENVIRONMENT"
 
-echo "Frontend starting..."
-echo "API URL: $VITE_API_URL"
-echo "Environment: $ENVIRONMENT"
-echo "DNS Server: $DNS_SERVER"
-
-# Kubernetes environment DNS configuration
-if [[ "$VITE_API_URL" == *"svc.cluster.local"* ]]; then
-    # Update DNS resolver in nginx config
-    sed -i "s|resolver 10.96.0.10 valid=30s;|resolver $DNS_SERVER valid=30s;|g" /etc/nginx/nginx.conf
-    
-    # Update nginx proxy settings
-    sed -i "s|http://210.109.80.247:8001|$VITE_API_URL|g" /etc/nginx/nginx.conf
-    echo "Kubernetes internal service proxy configured: $VITE_API_URL"
+# nginx 설정 업데이트 (간단하게)
+if echo "$VITE_API_URL" | grep -q "svc.cluster.local"; then
+    echo "🔧 Kubernetes internal service detected"
+    # 내부 서비스는 nginx 프록시 사용
+    sed -i "s|set \$backend_server \"[^\"]*\"|set \$backend_server \"$VITE_API_URL\"|g" /etc/nginx/nginx.conf
 else
-    # External service configuration
-    sed -i "s|http://210.109.80.247:8001|$VITE_API_URL|g" /etc/nginx/nginx.conf
-
-    # /api/config의 $api_url 변수 업데이트
-    sed -i "s|set \$api_url \"[^\"]*\"|set \$api_url \"$VITE_API_URL/api\"|g" /etc/nginx/nginx.conf
+    echo "🔧 External service configuration"
+    # 외부 서비스 설정
+    sed -i "s|set \$backend_server \"[^\"]*\"|set \$backend_server \"$VITE_API_URL\"|g" /etc/nginx/nginx.conf
 fi
 
-# Start nginx
+# 환경 이름 업데이트
+sed -i "s|set \$env_name \"[^\"]*\"|set \$env_name \"$ENVIRONMENT\"|g" /etc/nginx/nginx.conf
+
+echo "✅ Configuration updated"
+echo "🚀 Starting nginx..."
+
 exec nginx -g "daemon off;"
