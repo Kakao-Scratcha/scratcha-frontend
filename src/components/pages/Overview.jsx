@@ -66,7 +66,7 @@ export default function Overview() {
                         </h2>
                     </div>
                     <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                        <div className="text-center p-4">
+                        <div className="text-center p-3">
                             <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 theme-ai-block-icon">
                                 <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -80,7 +80,7 @@ export default function Overview() {
                                 AI 공격을 효과적으로 방어합니다.
                             </p>
                         </div>
-                        <div className="text-center p-4">
+                        <div className="text-center p-3">
                             <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 theme-speed-icon">
                                 <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -94,7 +94,7 @@ export default function Overview() {
                                 사용자 이탈률을 최소화합니다.
                             </p>
                         </div>
-                        <div className="text-center p-4">
+                        <div className="text-center p-3">
                             <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-purple-600">
                                 <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -108,7 +108,7 @@ export default function Overview() {
                                 사용자의 거부감을 줄입니다.
                             </p>
                         </div>
-                        <div className="text-center p-4">
+                        <div className="text-center p-3">
                             <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-teal-500">
                                 <svg
                                     className="w-12 h-12 text-white"
@@ -133,7 +133,7 @@ export default function Overview() {
                                 동일한 경험을 제공합니다.
                             </p>
                         </div>
-                        <div className="text-center p-4">
+                        <div className="text-center p-3">
                             <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-orange-500">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -158,7 +158,7 @@ export default function Overview() {
                                 빠르게 적용할 수 있습니다.
                             </p>
                         </div>
-                        <div className="text-center p-4">
+                        <div className="text-center p-3">
                             <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-blue-600">
                                 <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
