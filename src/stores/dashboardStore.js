@@ -173,11 +173,15 @@ export const useDashboardStore = create((set) => ({
             // 세션 고정 로그에서 기간만 필터링
             const now = new Date();
             const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
-            const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
             let from = new Date(0);
             if (period === '1일') from = startOfDay(now);
             else if (period === '7일') { const s = startOfDay(now); s.setDate(s.getDate() - 6); from = s; }
-            else if (period === '30일') from = startOfMonth(now);
+            else if (period === '30일') {
+                // 30일 전부터 오늘까지 (차트용)
+                const s = startOfDay(now);
+                s.setDate(s.getDate() - 29);
+                from = s;
+            }
             else { const s = new Date(startOfDay(now)); s.setMonth(s.getMonth() - 11); s.setDate(1); from = s; }
             const baseLogs = state.sessionLogs.filter(l => new Date(l.callAt) >= from && new Date(l.callAt) <= now);
             const avgTokens = state.planUsageData.current.requests.avgTokensPerRequest || 20;
