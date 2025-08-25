@@ -245,4 +245,92 @@ export const computeStatsFromLogs = (logs, anchorNow) => {
     };
 };
 
+// 로그 생성 함수들
+export const generateUsageLogs = (scenario = 'mid') => {
+    const scenarios = {
+        low: { min: 10, max: 50, count: 100 },
+        mid: { min: 30, max: 150, count: 300 },
+        high: { min: 80, max: 300, count: 500 }
+    };
+
+    const config = scenarios[scenario] || scenarios.mid;
+    const logs = [];
+    const now = new Date();
+
+    for (let i = 0; i < config.count; i++) {
+        const time = new Date(now.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000);
+        logs.push({
+            id: i + 1,
+            appName: '테스트 앱',
+            key: 'test-key-' + Math.random().toString(36).substr(2, 8),
+            date: time.toISOString(),
+            result: Math.random() > 0.1 ? 'success' : 'failed',
+            latency: Math.floor(Math.random() * 200) + 50
+        });
+    }
+
+    return logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+};
+
+export const getMonthToDateLogs = (scenario = 'mid') => {
+    const scenarios = {
+        low: { min: 5, max: 20, count: 50 },
+        mid: { min: 15, max: 60, count: 150 },
+        high: { min: 40, max: 120, count: 250 }
+    };
+
+    const config = scenarios[scenario] || scenarios.mid;
+    const logs = [];
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    for (let i = 0; i < config.count; i++) {
+        const time = new Date(startOfMonth.getTime() + Math.random() * (now.getTime() - startOfMonth.getTime()));
+        logs.push({
+            id: i + 1,
+            appName: '테스트 앱',
+            key: 'test-key-' + Math.random().toString(36).substr(2, 8),
+            date: time.toISOString(),
+            result: Math.random() > 0.1 ? 'success' : 'failed',
+            latency: Math.floor(Math.random() * 200) + 50
+        });
+    }
+
+    return logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+};
+
+export const synthesizeMonthToDateLogs = (scenario = 'mid') => {
+    return getMonthToDateLogs(scenario);
+};
+
+export const getStableSessionLogs = (scenario = 'mid') => {
+    const scenarios = {
+        low: { successRate: 0.95, count: 80 },
+        mid: { successRate: 0.90, count: 200 },
+        high: { successRate: 0.85, count: 350 }
+    };
+
+    const config = scenarios[scenario] || scenarios.mid;
+    const logs = [];
+    const now = new Date();
+    const results = ['성공', '실패', '타임아웃', '인증오류'];
+
+    for (let i = 0; i < config.count; i++) {
+        const time = new Date(now.getTime() - Math.random() * 24 * 60 * 60 * 1000);
+        const isSuccess = Math.random() < config.successRate;
+        const result = isSuccess ? '성공' : results[Math.floor(Math.random() * 3) + 1];
+
+        logs.push({
+            id: i + 1,
+            appName: '테스트 앱',
+            key: 'test-key-' + Math.random().toString(36).substr(2, 8),
+            callAt: time.toISOString(),
+            result: result,
+            latency: Math.floor(Math.random() * 200) + 50
+        });
+    }
+
+    return logs.sort((a, b) => new Date(b.callAt) - new Date(a.callAt));
+};
+
 

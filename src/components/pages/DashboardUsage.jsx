@@ -18,6 +18,7 @@ export default function DashboardUsage() {
         usageLogs,
         usageData,
         setPeriod: setGlobalPeriod,
+        updateUsageLogs,
     } = useDashboardStore();
 
     const [selectedAppId, setSelectedAppId] = useState('all');
@@ -43,12 +44,13 @@ export default function DashboardUsage() {
 
         // 실제 API에서 로그 데이터를 가져와야 함
         // TODO: API 호출 구현
+        // updateUsageLogs(newLogs);
 
         // 로딩 시뮬레이션
         setTimeout(() => {
             setIsLoading(false);
         }, 500);
-    }, [selectedAppId, selectedApiKeyId, selectedPeriod, setGlobalPeriod]);
+    }, [selectedAppId, selectedApiKeyId, selectedPeriod, setGlobalPeriod, updateUsageLogs]);
 
     // 페이징 계산
     const totalPages = Math.ceil(usageLogs.length / itemsPerPage);

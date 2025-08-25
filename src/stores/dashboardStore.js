@@ -4,7 +4,10 @@ import {
     PLAN_USAGE_DATA,
     bucketUsageSeries,
     computeStatsFromLogs,
+    generateUsageLogs,
+    getStableSessionLogs,
 } from '../data/dashboardDummy';
+import { LOG_DATASETS, DEFAULT_DATASET } from '../data/logDatasets';
 import { applicationAPI } from '../services/api';
 
 // 초기 상태 준비
@@ -24,8 +27,9 @@ export const useDashboardStore = create((set) => ({
     },
     isLoading: false,
     // 로그 관련 상태 (실제 API에서 가져올 예정)
-    sessionLogs: [],
-    usageLogs: [],
+    sessionLogs: getStableSessionLogs(DEFAULT_DATASET),
+    usageLogs: generateUsageLogs(DEFAULT_DATASET),
+    datasetScenario: DEFAULT_DATASET,
     apps: [], // 실제 API에서 가져올 예정
     selectedAppId: null,
     apiKeys: [], // 실제 API에서 가져올 예정
@@ -95,6 +99,39 @@ export const useDashboardStore = create((set) => ({
 
             return {
                 selectedPeriod: period,
+                usageData: newUsageData,
+                stats: newStats,
+            };
+        });
+    },
+
+    // 데이터셋 시나리오 변경
+    setDatasetScenario: (scenario) => {
+        set((state) => {
+            const dataset = LOG_DATASETS[scenario] || LOG_DATASETS[DEFAULT_DATASET];
+            const newSessionLogs = dataset.sessionLogs;
+            const newUsageLogs = dataset.usageLogs;
+            const newUsageData = bucketUsageSeries(state.selectedPeriod, newSessionLogs);
+            const newStats = computeStatsFromLogs(newSessionLogs);
+
+            return {
+                datasetScenario: scenario,
+                sessionLogs: newSessionLogs,
+                usageLogs: newUsageLogs,
+                usageData: newUsageData,
+                stats: newStats,
+            };
+        });
+    },
+
+    // 사용량 로그 업데이트
+    updateUsageLogs: (logs) => {
+        set((state) => {
+            const newUsageData = bucketUsageSeries(state.selectedPeriod, logs);
+            const newStats = computeStatsFromLogs(logs);
+
+            return {
+                usageLogs: logs,
                 usageData: newUsageData,
                 stats: newStats,
             };
