@@ -8,6 +8,7 @@ import greenCheckIcon from '@/assets/images/green_check_icon.png';
 import blueCheckIcon from '@/assets/images/blue_check_icon.png';
 import yellowAlertIcon from '@/assets/images/yellow_alert_icon.png';
 import redFailIcon from '@/assets/images/red_fail_icon.png';
+// LogsTable import 제거
 
 export default function DashboardOverview() {
     // Typography scale (dashboard-wide consistency)
@@ -372,6 +373,8 @@ export default function DashboardOverview() {
                         </li>
                     </ul>
                 </div>
+
+                {/* 로그 테이블 섹션 제거 */}
             </div>
         </DashboardLayout>
     );
