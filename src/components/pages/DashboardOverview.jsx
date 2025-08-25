@@ -99,7 +99,6 @@ export default function DashboardOverview() {
     const fmtMD = (d) => `${d.getMonth() + 1}월 ${d.getDate()}일`;
     const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
     const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
-    const endOfMonth = (d) => new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
     const now = new Date();
     const rangeLabel = (() => {
         if (selectedPeriod === '1일') {
