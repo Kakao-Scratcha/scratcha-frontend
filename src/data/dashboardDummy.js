@@ -60,112 +60,6 @@ export const generateStats = (period) => {
     };
 };
 
-// 공용 유틸
-const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-// 대용량 로그 풀(모듈 로드 시 1회 생성) - 앱/키 정보 없이 생성
-const buildLogPool = (poolSize = 20000) => {
-    const pool = [];
-    const now = new Date();
-    for (let i = 0; i < poolSize; i++) {
-        const minutesAgo = randInt(0, 365 * 24 * 60);
-        const when = new Date(now.getTime() - minutesAgo * 60000);
-        const results = ['성공', '성공', '성공', '성공', '실패', '타임아웃', '인증오류'];
-        const result = results[randInt(0, results.length - 1)];
-        let responseTime = randInt(100, 400);
-        if (result === '실패') responseTime = randInt(1000, 3000);
-        if (result === '타임아웃') responseTime = randInt(5000, 8000);
-        if (result === '인증오류') responseTime = randInt(50, 250);
-
-        pool.push({
-            id: i + 1,
-            appId: 1, // 기본값
-            appName: 'Default App', // 기본값
-            apiKeyId: 1, // 기본값
-            apiKey: 'default-key', // 기본값
-            callTime: when.toLocaleString('ko-KR'),
-            callAt: when.toISOString(),
-            result,
-            responseTime,
-        });
-    }
-    // 최신순 정렬 유지
-    return pool.sort((a, b) => new Date(b.callAt) - new Date(a.callAt));
-};
-
-const LOG_POOL = buildLogPool(25000);
-
-// 로그 더미(풀에서 꺼내오기 + 랜덤 갯수 선택)
-export const generateUsageLogs = (period) => {
-    const now = new Date();
-    const daysBy = { '1일': 1, '7일': 7, '30일': 30, 전체: 365 };
-    const daysRange = daysBy[period] || daysBy['전체'];
-
-    // 기간 필터
-    const minTime = new Date(now.getTime() - daysRange * 24 * 60 * 60 * 1000);
-    let filtered = LOG_POOL.filter(l => new Date(l.callAt) >= minTime);
-
-    // 랜덤 샘플 사이즈(100~10000)
-    const target = Math.min(filtered.length, randInt(100, 10000));
-    const logs = filtered.slice(0, target);
-
-    return logs.sort((a, b) => new Date(b.callAt) - new Date(a.callAt));
-};
-
-// 현재 월(MTD) 로그 조회: 이번달 1일 00:00 ~ 지금까지
-export const getMonthToDateLogs = () => {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-    let filtered = LOG_POOL.filter(l => new Date(l.callAt) >= monthStart);
-
-    return filtered.sort((a, b) => new Date(b.callAt) - new Date(a.callAt));
-};
-
-// 월별 임계값 시나리오 → 퍼센트 매핑
-export const MONTH_SCENARIO_PERCENT = {
-    low: 25,
-    mid: 45,
-    high: 75,
-};
-
-export const calcMonthTargetCalls = (limit, avgTokens, scenario = 'mid') => {
-    const percent = MONTH_SCENARIO_PERCENT[scenario] ?? 45;
-    const calls = Math.floor((limit * percent) / 100 / Math.max(1, avgTokens));
-    return Math.max(50, calls); // 최소 50콜 보장
-};
-
-// 이번 달 내에서 count 만큼의 로그를 합성 생성
-export const synthesizeMonthToDateLogs = (count) => {
-    const logs = [];
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-    const minutesSpan = Math.max(1, Math.floor((now - monthStart) / 60000));
-    for (let i = 0; i < count; i++) {
-        const minutesAgo = Math.floor((i * minutesSpan) / Math.max(1, count));
-        const when = new Date(now.getTime() - minutesAgo * 60000);
-        logs.push({
-            id: i + 1,
-            appId: 1, // 기본값
-            appName: 'Default App', // 기본값
-            apiKeyId: 1, // 기본값
-            apiKey: 'default-key', // 기본값
-            callTime: when.toLocaleString('ko-KR'),
-            callAt: when.toISOString(),
-            result: '성공',
-            responseTime: 200,
-        });
-    }
-    return logs.sort((a, b) => new Date(b.callAt) - new Date(a.callAt));
-};
-
-// 세션 고정 로그 대량 조회(무작위 샘플 없음): 최근 days일 범위에서 필터링만 수행
-export const getStableSessionLogs = (days = 365) => {
-    const now = new Date();
-    const from = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-    let filtered = LOG_POOL.filter(l => new Date(l.callAt) >= from && new Date(l.callAt) <= now);
-    return filtered.sort((a, b) => new Date(b.callAt) - new Date(a.callAt));
-};
-
 // 플랜/사용량 더미
 export const DEFAULT_PLAN = {
     name: 'Starter',
@@ -225,7 +119,6 @@ export const bucketUsageSeries = (period, logs, anchorNow) => {
         const d = new Date(startOfMonth(now));
         d.setMonth(d.getMonth() - 11); // 최근 12개월 포함
         rangeStart = d;
-        // rangeEnd = endOfMonth(now);
     }
 
     // 카운트 적재 (범위 내 데이터만)
