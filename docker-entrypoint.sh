@@ -2,7 +2,7 @@
 
 # Set default environment variables
 if [ -z "$VITE_API_URL" ]; then
-    export VITE_API_URL="https://210.109.80.247:8001"
+    export VITE_API_URL="http://210.109.80.247:8001"
 fi
 
 if [ -z "$ENVIRONMENT" ]; then
@@ -29,6 +29,9 @@ if [[ "$VITE_API_URL" == *"svc.cluster.local"* ]]; then
 else
     # External service configuration
     sed -i "s|http://210.109.80.247:8001|$VITE_API_URL|g" /etc/nginx/nginx.conf
+
+    # /api/config의 $api_url 변수 업데이트
+    sed -i "s|set \$api_url \"[^\"]*\"|set \$api_url \"$VITE_API_URL/api\"|g" /etc/nginx/nginx.conf
 fi
 
 # Start nginx
