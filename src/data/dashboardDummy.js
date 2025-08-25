@@ -217,8 +217,9 @@ export const bucketUsageSeries = (period, logs, anchorNow) => {
         d.setDate(d.getDate() - 6); // 7일 전 00:00 ~ 지금
         rangeStart = d;
     } else if (period === '30일') {
-        rangeStart = startOfMonth(now); // 이번달 1일 00:00 ~ 지금
-        // rangeEnd = endOfMonth(now); // 라벨은 월말까지, 데이터는 지금까지 → 0으로 채워짐
+        const d = new Date(startOfDay(now));
+        d.setDate(d.getDate() - 29); // 30일 전 00:00 ~ 지금
+        rangeStart = d;
     } else {
         // 전체: 1년 전 월의 1일 00:00 ~ 이번달까지
         const d = new Date(startOfMonth(now));
@@ -258,10 +259,10 @@ export const bucketUsageSeries = (period, logs, anchorNow) => {
             keys.push(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`);
         }
     } else if (period === '30일') {
-        const first = new Date(now.getFullYear(), now.getMonth(), 1);
-        const todayDate = now.getDate();
-        for (let day = 1; day <= todayDate; day++) {
-            const d = new Date(first.getFullYear(), first.getMonth(), day);
+        // 30일 전부터 오늘까지
+        for (let i = 29; i >= 0; i--) {
+            const d = new Date(startOfDay(now));
+            d.setDate(d.getDate() - i);
             keys.push(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`);
         }
     } else {
@@ -290,11 +291,8 @@ export const bucketUsageSeries = (period, logs, anchorNow) => {
             return Number.isFinite(hour) && hour > now.getHours();
         }
         if (period === '30일') {
-            const parts = String(key).split('-').map(Number);
-            if (parts.length !== 3) return false;
-            const [, , day] = parts;
-            const today = now.getDate();
-            return day > today;
+            // 30일 전부터 오늘까지이므로 미래 키는 없음
+            return false;
         }
         return false; // 7일/전체는 미래 키 생성 안 함
     };

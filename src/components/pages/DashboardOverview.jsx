@@ -111,9 +111,9 @@ export default function DashboardOverview() {
             return `${fmtMD(s)} ~ ${fmtMD(now)}`;
         }
         if (selectedPeriod === '30일') {
-            const s = startOfMonth(now);
-            const e = endOfMonth(now);
-            return `${fmtMD(s)} ~ ${fmtMD(e)}`;
+            const s = startOfDay(now);
+            s.setDate(s.getDate() - 29);
+            return `${fmtMD(s)} ~ ${fmtMD(now)}`;
         }
         const s = new Date(startOfMonth(now));
         s.setMonth(s.getMonth() - 11);
