@@ -175,16 +175,7 @@ export default function DashboardUsage() {
         ? logs.items
         : usageLogs.slice(startIndex, endIndex);
 
-    // 디버깅: 로그 데이터 확인
-    console.log('📊 테이블 데이터 확인:', {
-        selectedPeriod,
-        viewMode,
-        logsItems: logs.items?.length || 0,
-        usageLogsLength: usageLogs.length,
-        currentLogsLength: currentLogs?.length || 0,
-        logsLoading: logs.loading,
-        isLoading
-    });
+
 
     // 페이지 변경 시 첫 페이지로 이동
     useEffect(() => {

@@ -50,6 +50,14 @@ export const useDashboardStore = create((set, get) => ({
     // 기존 액션들 유지
     setApps: (apps) => set({ apps }),
     setApiKeys: (apiKeys) => set({ apiKeys }),
+    selectApp: (appId) => set({ selectedAppId: appId }),
+    updateAppSettings: (appId, settings) => set((state) => ({
+        apps: state.apps.map(app =>
+            app.id === appId
+                ? { ...app, settings: { ...app.settings, ...settings } }
+                : app
+        )
+    })),
 
     // 로그 관련 액션 추가
     setSelectedKeyId: (keyId) => set({ selectedKeyId: keyId }),
