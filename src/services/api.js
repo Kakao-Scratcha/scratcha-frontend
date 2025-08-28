@@ -129,6 +129,12 @@ export const dashboardAPI = {
         console.log('📊 로그 조회 API 호출:', { keyId, periodType, skip, limit });
         return apiClient.get(`/dashboard/statistics/logs?${queryParams.toString()}`);
     },
+
+    // 통계 요청 API
+    getRequestsStats: (periodType) => {
+        console.log('📊 통계 요청 API 호출:', { periodType });
+        return apiClient.get(`/dashboard/statistics/requests?periodType=${periodType}`);
+    },
 };
 
 // 요금제 관련 API

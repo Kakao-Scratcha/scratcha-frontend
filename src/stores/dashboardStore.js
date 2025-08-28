@@ -41,6 +41,13 @@ export const useDashboardStore = create((set, get) => ({
     },
     selectedKeyId: null, // 선택된 API 키 ID
 
+    // 통계 데이터 상태 추가
+    requestsStats: {
+        daily: { currentCount: 0, previousCount: 0, rate: 0, loading: false, error: null },
+        weekly: { currentCount: 0, previousCount: 0, rate: 0, loading: false, error: null },
+        monthly: { currentCount: 0, previousCount: 0, rate: 0, loading: false, error: null }
+    },
+
     // 기존 액션들 유지
     setApps: (apps) => set({ apps }),
     setApiKeys: (apiKeys) => set({ apiKeys }),
@@ -55,6 +62,66 @@ export const useDashboardStore = create((set, get) => ({
 
     // 로그 관련 액션 추가
     setSelectedKeyId: (keyId) => set({ selectedKeyId: keyId }),
+
+    // 통계 데이터 로드
+    loadRequestsStats: async (periodType) => {
+        console.log('📊 통계 데이터 로드 시작:', periodType);
+
+        set(state => ({
+            requestsStats: {
+                ...state.requestsStats,
+                [periodType]: {
+                    ...state.requestsStats[periodType],
+                    loading: true,
+                    error: null
+                }
+            }
+        }));
+
+        try {
+            const response = await dashboardAPI.getRequestsStats(periodType);
+            console.log('📊 통계 API 응답:', response.data);
+
+            const { currentCount, previousCount, rate } = response.data.data;
+
+            set(state => ({
+                requestsStats: {
+                    ...state.requestsStats,
+                    [periodType]: {
+                        currentCount,
+                        previousCount,
+                        rate,
+                        loading: false,
+                        error: null
+                    }
+                }
+            }));
+
+            console.log('✅ 통계 데이터 로드 완료:', { periodType, currentCount, previousCount, rate });
+        } catch (error) {
+            console.error('❌ 통계 데이터 로드 실패:', error);
+            set(state => ({
+                requestsStats: {
+                    ...state.requestsStats,
+                    [periodType]: {
+                        ...state.requestsStats[periodType],
+                        loading: false,
+                        error: error.message
+                    }
+                }
+            }));
+        }
+    },
+
+    // 모든 통계 데이터 로드
+    loadAllRequestsStats: async () => {
+        console.log('📊 모든 통계 데이터 로드 시작');
+        await Promise.all([
+            get().loadRequestsStats('daily'),
+            get().loadRequestsStats('weekly'),
+            get().loadRequestsStats('monthly')
+        ]);
+    },
 
     // 로그 데이터 로드
     loadLogs: async (params = {}) => {
