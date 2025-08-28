@@ -3,6 +3,7 @@ import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
 import ProgressBar from '../ui/ProgressBar';
 import { useDashboardStore } from '../../stores/dashboardStore';
+import { useAuthStore } from '../../stores/authStore';
 
 export default function DashboardBilling() {
     // Typography scale for consistency
@@ -10,15 +11,109 @@ export default function DashboardBilling() {
         sectionTitle: 'text-xl font-semibold',
         label: 'text-sm'
     };
+
+    const { user } = useAuthStore();
     const {
-        currentPlan,
         planUsageData,
         changePlan,
         calculateOverageCost,
         calculateTotalCost
     } = useDashboardStore();
+
     const [isPlanChangeModalOpen, setIsPlanChangeModalOpen] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState('Starter');
+    const [isLoading, setIsLoading] = useState(false);
+
+    // authStore의 user.plan을 기반으로 요금제 정보 생성
+    const getCurrentPlanInfo = () => {
+        const planName = user?.plan || 'free';
+
+        const planConfigs = {
+            'free': {
+                name: 'Free',
+                limit: 1000,
+                price: '₩0',
+                description: '월 1,000 토큰 무료제공',
+                overageRate: 0,
+                features: ['기본 API 통계', '광고 포함']
+            },
+            'starter': {
+                name: 'Starter',
+                limit: 50000,
+                price: '₩29,900',
+                description: '월 50,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
+                overageRate: 2.0,
+                features: ['기본 API & 통계', '광고 제거', '이메일 지원']
+            },
+            'pro': {
+                name: 'Pro',
+                limit: 200000,
+                price: '₩79,900',
+                description: '월 200,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
+                overageRate: 2.0,
+                features: ['Starter의 모든 혜택', '커스텀 UI 스킨 지원', '고급 분석 리포트']
+            },
+            'enterprise': {
+                name: 'Enterprise',
+                limit: 999999999,
+                price: '맞춤 견적',
+                description: '월 무제한 또는 대규모 토큰 패키지',
+                overageRate: 0,
+                features: ['Pro의 모든 혜택', '전용 인프라/보안 강화', 'SLA 보장', '24/7 모니터링']
+            }
+        };
+
+        return planConfigs[planName] || planConfigs['free'];
+    };
+
+    // 현재 요금제 정보 (authStore 기반)
+    const currentPlanInfo = getCurrentPlanInfo();
+
+
+
+    // 요금제 변경 처리
+    const handlePlanChange = async () => {
+        if (!selectedPlan) {
+            alert('변경할 요금제를 선택해주세요.');
+            return;
+        }
+
+        setIsLoading(true);
+        console.log('🔄 요금제 변경 시작:', selectedPlan);
+
+        try {
+            const result = await changePlan(selectedPlan);
+            console.log('📋 요금제 변경 결과:', result);
+
+            if (result.success) {
+                // 성공 팝업
+                alert(`✅ ${selectedPlan} 요금제로 성공적으로 변경되었습니다!`);
+                console.log('✅ 요금제 변경 성공 팝업 표시');
+            } else {
+                // 실패 팝업
+                const errorMessage = result.error || '요금제 변경에 실패했습니다.';
+                alert(`❌ 요금제 변경 실패: ${errorMessage}`);
+                console.error('❌ 요금제 변경 실패 팝업 표시:', errorMessage);
+            }
+
+            setIsPlanChangeModalOpen(false);
+
+            // 변경 후 상태 확인
+            console.log('✅ 요금제 변경 완료 후 상태 확인:', {
+                selectedPlan,
+                result,
+                currentPlanInfo,
+                userPlan: useAuthStore.getState().user?.plan
+            });
+
+        } catch (error) {
+            console.error('❌ 요금제 변경 중 예외 발생:', error);
+            alert(`❌ 요금제 변경 중 오류가 발생했습니다: ${error.message}`);
+            setIsPlanChangeModalOpen(false);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // 요금제 옵션 (메인페이지 Pricing과 동일)
     const planOptions = [
@@ -85,15 +180,8 @@ export default function DashboardBilling() {
     const lastMonthUsage = planUsageData.lastMonth;
 
     // 초과분 요금 계산 (토큰 기준)
-    const overageCost = calculateOverageCost(realtimeUsage.tokens.used, currentPlan.limit, currentPlan.overageRate);
-    const totalCost = calculateTotalCost(realtimeUsage.tokens.used, currentPlan.limit, currentPlan.price, currentPlan.overageRate);
-
-    // 요금제 변경 처리
-    const handlePlanChange = () => {
-        changePlan(selectedPlan);
-        setIsPlanChangeModalOpen(false);
-        alert(`${selectedPlan} 요금제로 변경되었습니다!`);
-    };
+    const overageCost = calculateOverageCost(realtimeUsage.tokens.used, currentPlanInfo.limit, currentPlanInfo.overageRate);
+    const totalCost = calculateTotalCost(realtimeUsage.tokens.used, currentPlanInfo.limit, currentPlanInfo.price, currentPlanInfo.overageRate);
 
     return (
         <DashboardLayout
@@ -118,10 +206,10 @@ export default function DashboardBilling() {
                         <div className="lg:col-span-2">
                             <div className="p-6 theme-card rounded-lg">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h4 className="text-lg font-semibold theme-text-primary">{currentPlan.name}</h4>
-                                    <span className="text-2xl font-bold theme-text-primary">{currentPlan.price}</span>
+                                    <h4 className="text-lg font-semibold theme-text-primary">{currentPlanInfo.name}</h4>
+                                    <span className="text-2xl font-bold theme-text-primary">{currentPlanInfo.price}</span>
                                 </div>
-                                <p className="text-sm theme-text-secondary mb-4">{currentPlan.description}</p>
+                                <p className="text-sm theme-text-secondary mb-4">{currentPlanInfo.description}</p>
 
                                 {/* 사용량 진행률 */}
                                 <div className="mb-4">
@@ -154,7 +242,7 @@ export default function DashboardBilling() {
                         <div>
                             <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">포함 기능</h4>
                             <ul className="space-y-2">
-                                {currentPlan.features?.map((feature, index) => (
+                                {currentPlanInfo.features?.map((feature, index) => (
                                     <li key={index} className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
                                         <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -207,7 +295,7 @@ export default function DashboardBilling() {
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600 dark:text-gray-400">기본 요금</span>
-                                    <span className="text-gray-900 dark:text-gray-100 font-medium">{currentPlan.price}</span>
+                                    <span className="text-gray-900 dark:text-gray-100 font-medium">{currentPlanInfo.price}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600 dark:text-gray-400">초과 사용량</span>
@@ -217,7 +305,7 @@ export default function DashboardBilling() {
                                 </div>
                                 {overageCost > 0 && (
                                     <div className="text-xs text-gray-600 dark:text-gray-400 bg-red-50 p-2 rounded">
-                                        초과 토큰: {(realtimeUsage.tokens.used - realtimeUsage.tokens.limit).toLocaleString()} 토큰 × ₩{currentPlan.overageRate}/1,000토큰
+                                        초과 토큰: {(realtimeUsage.tokens.used - realtimeUsage.tokens.limit).toLocaleString()} 토큰 × ₩{currentPlanInfo.overageRate}/1,000토큰
                                     </div>
                                 )}
                                 <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
@@ -336,9 +424,13 @@ export default function DashboardBilling() {
                         </button>
                         <button
                             onClick={handlePlanChange}
-                            className="flex-1 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white dark:text-gray-900 rounded-lg font-semibold hover:opacity-90 transition"
+                            disabled={isLoading}
+                            className={`flex-1 px-4 py-2 rounded-lg font-semibold transition ${isLoading
+                                ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-gray-600 dark:text-gray-400'
+                                : 'bg-blue-600 dark:bg-blue-500 text-white dark:text-gray-900 hover:opacity-90'
+                                }`}
                         >
-                            요금제 변경
+                            {isLoading ? '변경 중...' : '요금제 변경'}
                         </button>
                     </div>
                 </div>

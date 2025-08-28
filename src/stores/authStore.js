@@ -78,6 +78,7 @@ export const useAuthStore = create(
             token: null,
             isAuthenticated: false,
             isLoading: false,
+            isPlanChanging: false, // 요금제 변경 전용 로딩 상태 추가
             error: null,
             lastActivity: null, // 마지막 활동 시간
 
@@ -223,8 +224,10 @@ export const useAuthStore = create(
 
                     // 사용자 프로필 정보 가져오기
                     try {
-                        await get().getProfile();
+                        await get().getProfile({ showLoading: true }); // 로그인 시에는 로딩 표시
                         console.log('✅ 사용자 정보 가져오기 완료');
+
+
                     } catch (profileError) {
                         console.error('❌ 사용자 정보 가져오기 실패:', profileError);
                         // 프로필 가져오기 실패해도 로그인은 성공으로 처리
@@ -335,9 +338,14 @@ export const useAuthStore = create(
                 }
             },
 
-            getProfile: async () => {
-                console.log('👤 사용자 프로필 정보 가져오기 시작');
-                set({ isLoading: true });
+            getProfile: async (options = {}) => {
+                const { showLoading = true } = options; // 로딩 상태 표시 여부 옵션
+                console.log('👤 사용자 프로필 정보 가져오기 시작', { showLoading });
+
+                if (showLoading) {
+                    set({ isLoading: true });
+                }
+
                 try {
                     console.log('📡 /api/dashboard/users/me API 호출 중...');
                     const response = await authAPI.getProfile();
@@ -351,6 +359,9 @@ export const useAuthStore = create(
                     });
 
                     console.log('💾 사용자 정보 저장 완료:', response.data);
+
+                    // 사용자 정보를 반환하여 다른 곳에서 사용할 수 있도록 함
+                    return { user: response.data };
                 } catch (error) {
                     console.error('❌ 프로필 정보 가져오기 실패:', error);
                     console.error('❌ 오류 상세:', {
@@ -387,6 +398,9 @@ export const useAuthStore = create(
                             isAuthenticated: false,
                         });
                     }
+
+                    // 에러 발생 시 null 반환
+                    return null;
                 }
             },
 
@@ -483,6 +497,8 @@ export const useAuthStore = create(
                 // 이미 사용자 정보가 있으면 스킵 (중복 호출 방지)
                 if (state.user && state.isAuthenticated) {
                     console.log('✅ 이미 인증된 사용자 정보 존재 - 초기화 스킵');
+
+
                     return;
                 }
 
@@ -495,7 +511,6 @@ export const useAuthStore = create(
                     // 일반 모드: 토큰 유효성 먼저 검증
                     try {
                         console.log('🌐 일반 모드 토큰 유효성 검증');
-                        set({ isLoading: true, isAuthenticated: false }); // 로딩 상태 설정, 인증 상태 초기화
 
                         // JWT 토큰 만료 시간 사전 검증
                         if (!get().validateTokenExpiry(state.token)) {
@@ -505,16 +520,26 @@ export const useAuthStore = create(
                         // 백엔드 API 미구현으로 로컬 검증만 수행
                         console.log('🔍 로컬 JWT 만료시간 검증 완료');
 
-                        // 토큰이 유효하면 사용자 정보 가져오기 (한 번만 호출)
-                        const profileResponse = await authAPI.getProfile();
-                        console.log('✅ 프로필 정보 가져오기 성공:', profileResponse.data);
+                        // 이미 사용자 정보가 있으면 API 호출 스킵
+                        if (state.user && state.isAuthenticated) {
+                            console.log('✅ 이미 사용자 정보 존재 - API 호출 스킵');
+                        } else {
+                            // 사용자 정보가 없으면 API 호출
+                            console.log('📡 사용자 정보 없음 - API 호출 시작');
+                            set({ isLoading: true }); // 로딩 상태만 설정 (인증 상태는 유지)
 
-                        set({
-                            user: profileResponse.data,
-                            isAuthenticated: true,
-                            isLoading: false,
-                            lastActivity: new Date().toISOString(),
-                        });
+                            const profileResponse = await authAPI.getProfile();
+                            console.log('✅ 프로필 정보 가져오기 성공:', profileResponse.data);
+
+                            set({
+                                user: profileResponse.data,
+                                isAuthenticated: true,
+                                isLoading: false,
+                                lastActivity: new Date().toISOString(),
+                            });
+
+
+                        }
 
                         console.log('✅ 토큰 유효성 검증 완료 (로컬 검증)');
                     } catch (error) {
@@ -568,6 +593,7 @@ export const useAuthStore = create(
                     isAuthenticated: state?.isAuthenticated,
                     hasUser: !!state?.user
                 });
+                // 요금제 동기화는 initialize에서 처리하므로 여기서는 제거
             },
         }
     )

@@ -15,8 +15,6 @@ export default function DashboardUsage() {
     const {
         apps,
         apiKeys,
-        usageLogs,
-        usageData,
         setPeriod: setGlobalPeriod,
         // API 로그 관련 상태 추가
         logs,
@@ -53,8 +51,19 @@ export default function DashboardUsage() {
         }
     }, [selectedAppId, appApiKeys, selectedApiKeyId]);
 
-    // 기간 옵션
+    // 기간 옵션 (새로운 API 구조에 맞게 수정)
     const periodOptions = ['전체', '1일', '7일', '30일'];
+
+    // 기간을 periodType으로 변환하는 함수
+    const getPeriodType = (period) => {
+        switch (period) {
+            case '1일': return 'daily';
+            case '7일': return 'weekly';
+            case '30일': return 'monthly';
+            case '전체':
+            default: return 'yearly';
+        }
+    };
 
     // 컴포넌트 마운트 시 애플리케이션 데이터 로드
     useEffect(() => {
@@ -65,10 +74,9 @@ export default function DashboardUsage() {
 
     // API 로그 초기 로드
     useEffect(() => {
-        if (selectedPeriod === '전체') {
-            loadAllLogs(1, itemsPerPage);
-        }
-    }, [itemsPerPage]);
+        const periodType = getPeriodType(selectedPeriod);
+        loadAllLogs(1, itemsPerPage, periodType);
+    }, [itemsPerPage, selectedPeriod]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 필터 변경 시 데이터 업데이트 (기간 변경 시에만)
     useEffect(() => {
@@ -77,41 +85,42 @@ export default function DashboardUsage() {
         // 스토어 기간 동기화
         setGlobalPeriod(selectedPeriod);
 
-        // 전체 기간일 때만 API 로그 로드
-        if (selectedPeriod === '전체') {
-            if (selectedApiKeyId === 'all') {
-                loadAllLogs(1, itemsPerPage);
-            } else {
-                loadLogsByKeyId(selectedApiKeyId, 1, itemsPerPage);
-            }
+        // periodType 변환
+        const periodType = getPeriodType(selectedPeriod);
+
+        // API 로그 로드
+        if (selectedApiKeyId === 'all') {
+            loadAllLogs(1, itemsPerPage, periodType);
+        } else {
+            loadLogsByKeyId(selectedApiKeyId, 1, itemsPerPage, periodType);
         }
 
         // 로딩 시뮬레이션
         setTimeout(() => {
             setIsLoading(false);
         }, 500);
-    }, [selectedPeriod, setGlobalPeriod, loadAllLogs, loadLogsByKeyId, itemsPerPage]);
+    }, [selectedPeriod, selectedApiKeyId, itemsPerPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 필터 변경 시 API 로그 업데이트 (디바운스 적용)
     useEffect(() => {
-        if (selectedPeriod === '전체') {
-            // 디바운스로 중복 API 호출 방지
-            const timeoutId = setTimeout(() => {
-                setIsLoading(true);
+        // 디바운스로 중복 API 호출 방지
+        const timeoutId = setTimeout(() => {
+            setIsLoading(true);
 
-                if (selectedApiKeyId === 'all') {
-                    loadAllLogs(1, itemsPerPage);
-                } else {
-                    loadLogsByKeyId(selectedApiKeyId, 1, itemsPerPage);
-                }
+            const periodType = getPeriodType(selectedPeriod);
 
-                setTimeout(() => {
-                    setIsLoading(false);
-                }, 300);
-            }, 300); // 300ms 디바운스
+            if (selectedApiKeyId === 'all') {
+                loadAllLogs(1, itemsPerPage, periodType);
+            } else {
+                loadLogsByKeyId(selectedApiKeyId, 1, itemsPerPage, periodType);
+            }
 
-            return () => clearTimeout(timeoutId);
-        }
+            setTimeout(() => {
+                setIsLoading(false);
+            }, 300);
+        }, 300); // 300ms 디바운스
+
+        return () => clearTimeout(timeoutId);
     }, [selectedApiKeyId, selectedPeriod, loadAllLogs, loadLogsByKeyId, itemsPerPage]);
 
     // 앱 선택 핸들러 (API 키 자동 필터링)
@@ -155,25 +164,33 @@ export default function DashboardUsage() {
     // 페이지 변경 핸들러
     const handlePageChange = (page) => {
         setCurrentPage(page);
-        if (selectedPeriod === '전체') {
-            changeLogPage(page, itemsPerPage);
-        }
+        const periodType = getPeriodType(selectedPeriod);
+        changeLogPage(page, itemsPerPage, periodType);
     };
 
-    // 페이징 계산 (API 로그 또는 더미 로그)
-    const totalPages = selectedPeriod === '전체'
-        ? Math.ceil((logs.total || 0) / itemsPerPage)
-        : Math.ceil(usageLogs.length / itemsPerPage);
+    // 페이징 계산 (API 로그만 사용)
+    const totalPages = Math.ceil((logs.total || 0) / itemsPerPage);
 
-
-
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
+    // 현재 페이지 상태와 API 응답 페이지 동기화
+    useEffect(() => {
+        if (logs.page && logs.page !== currentPage) {
+            setCurrentPage(logs.page);
+        }
+    }, [logs.page, currentPage]);
 
     // 현재 표시할 로그 데이터
-    const currentLogs = selectedPeriod === '전체'
-        ? logs.items
-        : usageLogs.slice(startIndex, endIndex);
+    const currentLogs = logs.items || [];
+
+    // 디버깅용 로그
+    console.log('🔍 DashboardUsage 렌더링:', {
+        logs,
+        currentLogs,
+        totalPages,
+        itemsPerPage,
+        selectedPeriod,
+        selectedApiKeyId,
+        selectedAppId
+    });
 
 
 
@@ -319,46 +336,27 @@ export default function DashboardUsage() {
                                     <div className="flex justify-between items-center mb-6">
                                         <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량 추이</h3>
                                         <div className="text-sm theme-text-secondary">
-                                            총 {selectedPeriod === '전체' ? logs.total : usageLogs.length}개 로그
+                                            총 {logs.total || 0}개 로그
                                         </div>
                                     </div>
 
-                                    {selectedPeriod === '전체' ? (
-                                        // API 로그 데이터를 그래프로 변환
-                                        logs.items && logs.items.length > 0 ? (
-                                            <Chart
-                                                data={logs.items.map(log => ({
-                                                    date: new Date(log.date).toLocaleDateString('ko-KR'),
-                                                    usage: 1, // 각 로그를 1로 카운트
-                                                    result: log.result
-                                                }))}
-                                                type="line"
-                                                height={400}
-                                                xKey="date"
-                                                yKey="usage"
-                                                color="#3B82F6"
-                                            />
-                                        ) : (
-                                            <div className="flex justify-center items-center h-64 text-gray-500">
-                                                API 로그 데이터가 없습니다.
-                                            </div>
-                                        )
+                                    {logs.items && logs.items.length > 0 ? (
+                                        <Chart
+                                            data={logs.items.map(log => ({
+                                                date: new Date(log.date).toLocaleDateString('ko-KR'),
+                                                usage: 1, // 각 로그를 1로 카운트
+                                                result: log.result
+                                            }))}
+                                            type="line"
+                                            height={400}
+                                            xKey="date"
+                                            yKey="usage"
+                                            color="#3B82F6"
+                                        />
                                     ) : (
-                                        // 더미 데이터 사용 (기존)
-                                        Array.isArray(usageData) && usageData.length > 0 ? (
-                                            <Chart
-                                                data={usageData}
-                                                type="line"
-                                                height={400}
-                                                xKey="date"
-                                                yKey="usage"
-                                                color="#3B82F6"
-                                            />
-                                        ) : (
-                                            <div className="flex justify-center items-center h-64 text-gray-500">
-                                                데이터가 없습니다.
-                                            </div>
-                                        )
+                                        <div className="flex justify-center items-center h-64 text-gray-500">
+                                            API 로그 데이터가 없습니다.
+                                        </div>
                                     )}
                                 </div>
                             )}
@@ -369,10 +367,28 @@ export default function DashboardUsage() {
                                     <div className="flex justify-between items-center mb-6">
                                         <h3 className={`${T.sectionTitle} theme-text-primary`}>로그 상세</h3>
                                         <div className="text-sm theme-text-secondary">
-                                            {selectedPeriod === '전체'
-                                                ? `${(logs.page - 1) * logs.size + 1}-${Math.min(logs.page * logs.size, logs.total)} / ${logs.total}개`
-                                                : `${startIndex + 1}-${Math.min(endIndex, usageLogs.length)} / ${usageLogs.length}개`
-                                            }
+                                            {(() => {
+                                                const total = logs.total || 0;
+                                                const page = logs.page || 1;
+                                                const actualItemsCount = currentLogs.length;
+
+                                                console.log('📊 페이지 정보 계산:', {
+                                                    page,
+                                                    itemsPerPage,
+                                                    total,
+                                                    actualItemsCount
+                                                });
+
+                                                if (total === 0) {
+                                                    return '0개';
+                                                }
+
+                                                // 프론트엔드 페이지 크기(itemsPerPage) 기준으로 계산
+                                                const start = (page - 1) * itemsPerPage + 1;
+                                                const end = Math.min(page * itemsPerPage, total);
+
+                                                return `${start}-${end} / ${total}개`;
+                                            })()}
                                         </div>
                                     </div>
 
@@ -393,25 +409,19 @@ export default function DashboardUsage() {
                                                     <TableRow key={log.id} className="theme-table-row hover:theme-hover-bg">
                                                         <TableCell className="text-left py-3 px-4 theme-text-primary">{log.id}</TableCell>
                                                         <TableCell className="text-left py-3 px-4 theme-text-primary">
-                                                            {selectedPeriod === '전체' ? log.appName : log.appName}
+                                                            {log.appName}
                                                         </TableCell>
                                                         <TableCell className="text-left py-3 px-4 theme-text-primary font-mono text-sm">
-                                                            {selectedPeriod === '전체'
-                                                                ? maskApiKey(log.key)
-                                                                : maskApiKey(log.apiKey)
-                                                            }
+                                                            {maskApiKey(log.key)}
                                                         </TableCell>
                                                         <TableCell className="text-left py-3 px-4 theme-text-primary text-sm">
-                                                            {selectedPeriod === '전체'
-                                                                ? formatDate(log.date)
-                                                                : log.callTime
-                                                            }
+                                                            {formatDate(log.date)}
                                                         </TableCell>
                                                         <TableCell className={`text-left py-3 px-4 font-medium ${getResultColor(log.result)}`}>
                                                             {log.result}
                                                         </TableCell>
                                                         <TableCell className="text-left py-3 px-4 theme-text-primary">
-                                                            {selectedPeriod === '전체' ? `${log.ratency}ms` : `${log.responseTime}ms`}
+                                                            {`${log.ratency}ms`}
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}

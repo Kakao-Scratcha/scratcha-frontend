@@ -15,22 +15,22 @@ export default function LogsTable() {
 
     // 초기 로그 로드
     useEffect(() => {
-        loadAllLogs(1, 10);
-    }, []);
+        loadAllLogs(1, 10, 'yearly');
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // API 키 선택 핸들러
     const handleKeyChange = (keyId) => {
         setSelectedKeyId(keyId);
         if (keyId) {
-            loadLogsByKeyId(keyId, 1, 10);
+            loadLogsByKeyId(keyId, 1, 10, 'yearly');
         } else {
-            loadAllLogs(1, 10);
+            loadAllLogs(1, 10, 'yearly');
         }
     };
 
     // 페이지 변경 핸들러
     const handlePageChange = (page) => {
-        changeLogPage(page, logs.size);
+        changeLogPage(page, logs.size, 'yearly');
     };
 
     // 결과 상태에 따른 스타일 클래스
@@ -189,8 +189,8 @@ export default function LogsTable() {
                                                     key={page}
                                                     onClick={() => handlePageChange(page)}
                                                     className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${page === logs.page
-                                                            ? 'z-10 bg-blue-50 dark:bg-blue-900 border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-300'
-                                                            : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                                        ? 'z-10 bg-blue-50 dark:bg-blue-900 border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-300'
+                                                        : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                                                         }`}
                                                 >
                                                     {page}

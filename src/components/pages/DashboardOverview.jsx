@@ -4,6 +4,7 @@ import Chart from '../ui/Chart';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from '../../utils/chartImports';
 import { useDashboardStore } from '../../stores/dashboardStore';
+import { useAuthStore } from '../../stores/authStore';
 import greenCheckIcon from '@/assets/images/green_check_icon.png';
 import blueCheckIcon from '@/assets/images/blue_check_icon.png';
 import yellowAlertIcon from '@/assets/images/yellow_alert_icon.png';
@@ -18,21 +19,84 @@ export default function DashboardOverview() {
         label: 'text-sm',
         caption: 'text-xs'
     };
+
+    const { user } = useAuthStore();
     const {
         selectedPeriod,
         usageData: chartUsageData,
         stats,
         isLoading,
         setPeriod,
-        currentPlan,
         planUsageData,
         calculateOverageCost,
         calculateTotalCost,
     } = useDashboardStore();
 
-    // 최근 활동 데이터 (세션 로그 기반)
-    const { sessionLogs } = useDashboardStore();
-    const avgTokens = planUsageData.current?.requests?.avgTokensPerRequest || 20;
+    // authStore의 user.plan을 기반으로 요금제 정보 생성
+    const getCurrentPlanInfo = () => {
+        const planName = user?.plan || 'free';
+
+        const planConfigs = {
+            'free': {
+                name: 'Free',
+                limit: 1000,
+                price: '₩0',
+                description: '월 1,000 토큰 무료제공',
+                overageRate: 0,
+                features: ['기본 API 통계', '광고 포함']
+            },
+            'starter': {
+                name: 'Starter',
+                limit: 50000,
+                price: '₩29,900',
+                description: '월 50,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
+                overageRate: 2.0,
+                features: ['기본 API & 통계', '광고 제거', '이메일 지원']
+            },
+            'pro': {
+                name: 'Pro',
+                limit: 200000,
+                price: '₩79,900',
+                description: '월 200,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
+                overageRate: 2.0,
+                features: ['Starter의 모든 혜택', '커스텀 UI 스킨 지원', '고급 분석 리포트']
+            },
+            'enterprise': {
+                name: 'Enterprise',
+                limit: 999999999,
+                price: '맞춤 견적',
+                description: '월 무제한 또는 대규모 토큰 패키지',
+                overageRate: 0,
+                features: ['Pro의 모든 혜택', '전용 인프라/보안 강화', 'SLA 보장', '24/7 모니터링']
+            }
+        };
+
+        return planConfigs[planName] || planConfigs['free'];
+    };
+
+    // 현재 요금제 정보 (authStore 기반)
+    const currentPlanInfo = getCurrentPlanInfo();
+
+    // 요금제 정보가 없는 경우 기본값 사용
+    const safeCurrentPlan = currentPlanInfo || {
+        name: 'Free',
+        price: '₩0',
+        description: '월 1,000 토큰 무료제공',
+        limit: 1000,
+        overageRate: 0,
+        features: ['기본 API 통계', '광고 포함']
+    };
+
+    const safePlanUsageData = planUsageData || {
+        current: {
+            tokens: { used: 0, limit: 1000, percentage: 0 },
+            requests: { count: 0, avgTokensPerRequest: 20 }
+        }
+    };
+
+    // 최근 활동 데이터 (API 로그 기반으로 변경)
+    const { logs } = useDashboardStore();
+    const avgTokens = safePlanUsageData.current?.requests?.avgTokensPerRequest || 20;
     const ICONS = {
         success: greenCheckIcon,
         info: blueCheckIcon,
@@ -51,12 +115,13 @@ export default function DashboardOverview() {
         return `${d}일 전`;
     };
     const activity = useMemo(() => {
-        const byResult = (r) => sessionLogs.filter(l => l.result === r);
+        const logItems = logs?.items || [];
+        const byResult = (r) => logItems.filter(l => l.result === r);
         const successes = byResult('성공');
-        const fails = sessionLogs.filter(l => ['실패', '타임아웃', '인증오류'].includes(l.result));
-        const latest = (arr) => arr.length ? arr.reduce((a, b) => (new Date(a.callAt) > new Date(b.callAt) ? a : b)) : null;
+        const fails = logItems.filter(l => ['실패', '타임아웃', '인증오류'].includes(l.result));
+        const latest = (arr) => arr.length ? arr.reduce((a, b) => (new Date(a.date) > new Date(b.date) ? a : b)) : null;
         const now = Date.now();
-        const succ24 = successes.filter(l => (now - new Date(l.callAt).getTime()) <= 24 * 60 * 60 * 1000);
+        const succ24 = successes.filter(l => (now - new Date(l.date).getTime()) <= 24 * 60 * 60 * 1000);
         return {
             totalSuccess: successes.length,
             lastSuccess: latest(successes),
@@ -65,15 +130,15 @@ export default function DashboardOverview() {
             totalFail: fails.length,
             lastFail: latest(fails),
         };
-    }, [sessionLogs]);
+    }, [logs?.items]);
 
     // 기간 선택 옵션
     const periodOptions = ['전체', '1일', '7일', '30일'];
 
     // 사용률/요금 계산
-    const usagePercent = typeof planUsageData.current.tokens.percentage === 'number'
-        ? planUsageData.current.tokens.percentage
-        : Math.round((planUsageData.current.tokens.used / planUsageData.current.tokens.limit) * 100);
+    const usagePercent = typeof safePlanUsageData.current.tokens.percentage === 'number'
+        ? safePlanUsageData.current.tokens.percentage
+        : Math.round((safePlanUsageData.current.tokens.used / safePlanUsageData.current.tokens.limit) * 100);
     const getUsageColorClass = (p) => {
         if (p < 30) return 'green';
         if (p < 60) return 'yellow';
@@ -93,8 +158,8 @@ export default function DashboardOverview() {
     }, [selectedPeriod, chartUsageData]);
 
     // 초과분 요금 계산 (통합 사용량 데이터 사용)
-    const overageCost = calculateOverageCost(planUsageData.current.tokens.used, currentPlan.limit, currentPlan.overageRate);
-    const totalCost = calculateTotalCost(planUsageData.current.tokens.used, currentPlan.limit, currentPlan.price, currentPlan.overageRate);
+    const overageCost = calculateOverageCost(safePlanUsageData.current.tokens.used, safeCurrentPlan.limit, safeCurrentPlan.overageRate);
+    const totalCost = calculateTotalCost(safePlanUsageData.current.tokens.used, safeCurrentPlan.limit, safeCurrentPlan.price, safeCurrentPlan.overageRate);
 
     // 기간 라벨 및 X축 라벨 포맷터
     const fmtMD = (d) => `${d.getMonth() + 1}월 ${d.getDate()}일`;
@@ -162,28 +227,28 @@ export default function DashboardOverview() {
                     <div className="flex items-center justify-between">
                         <div>
                             <div className="flex items-center gap-2">
-                                <p className="text-2xl md:text-3xl font-bold theme-text-primary">{currentPlan.name}</p>
+                                <p className="text-2xl md:text-3xl font-bold theme-text-primary">{safeCurrentPlan.name}</p>
                                 <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${usageColor === 'green' ? 'theme-usage-green' : usageColor === 'yellow' ? 'theme-usage-yellow' : 'theme-usage-red'}`}>
                                     {usagePercent}%
                                 </span>
                             </div>
-                            <p className="text-base theme-text-secondary">{currentPlan.description}</p>
-                            <p className="text-sm theme-text-secondary mt-1">{currentPlan.price}</p>
+                            <p className="text-base theme-text-secondary">{safeCurrentPlan.description}</p>
+                            <p className="text-sm theme-text-secondary mt-1">{safeCurrentPlan.price}</p>
                             {overageCost > 0 && (
                                 <div className="mt-2 p-2 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded text-xs">
                                     <p className="text-red-700 dark:text-red-300 font-medium">초과분 요금: ₩{overageCost.toLocaleString()}</p>
                                     <p className="text-red-600 dark:text-red-400 text-[11px]">
-                                        초과 사용량: {(planUsageData.current.tokens.used - planUsageData.current.tokens.limit).toLocaleString()} 토큰 × ₩{currentPlan.overageRate}/1,000토큰
+                                        초과 사용량: {(safePlanUsageData.current.tokens.used - safePlanUsageData.current.tokens.limit).toLocaleString()} 토큰 × ₩{safeCurrentPlan.overageRate}/1,000토큰
                                     </p>
                                 </div>
                             )}
                         </div>
                         <div className="text-right">
                             <p className="text-sm theme-text-secondary">토큰 사용량</p>
-                            <p className="text-3xl md:text-4xl font-bold theme-blue-accent">{planUsageData.current.tokens.used.toLocaleString()}</p>
-                            <p className="text-sm theme-text-secondary">/ {planUsageData.current.tokens.limit.toLocaleString()} 토큰</p>
+                            <p className="text-3xl md:text-4xl font-bold theme-blue-accent">{safePlanUsageData.current.tokens.used.toLocaleString()}</p>
+                            <p className="text-sm theme-text-secondary">/ {safePlanUsageData.current.tokens.limit.toLocaleString()} 토큰</p>
                             <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                                API 호출: {planUsageData.current.requests.count.toLocaleString()}회 (평균 {planUsageData.current.requests.avgTokensPerRequest}토큰/회)
+                                API 호출: {safePlanUsageData.current.requests.count.toLocaleString()}회 (평균 {safePlanUsageData.current.requests.avgTokensPerRequest}토큰/회)
                             </p>
                             {overageCost > 0 && (
                                 <p className="text-sm text-red-600 dark:text-red-400 font-medium mt-1">
@@ -336,7 +401,7 @@ export default function DashboardOverview() {
                                 <img src={ICONS.success} alt="성공" className="w-7 h-7 rounded-full" />
                                 <div>
                                     <p className="font-semibold theme-text-primary">API 호출 성공</p>
-                                    <p className="text-sm theme-text-secondary">{formatTimeAgo(activity.lastSuccess?.callAt)}</p>
+                                    <p className="text-sm theme-text-secondary">{formatTimeAgo(activity.lastSuccess?.date)}</p>
                                 </div>
                             </div>
                             <div className="text-sm theme-text-secondary">총 {activity.totalSuccess.toLocaleString()}회 ({(activity.totalSuccess * avgTokens).toLocaleString()} 토큰)</div>
@@ -346,7 +411,7 @@ export default function DashboardOverview() {
                                 <img src={ICONS.info} alt="검증성공" className="w-7 h-7 rounded-full" />
                                 <div>
                                     <p className="font-semibold theme-text-primary">CAPTCHA 검증 성공</p>
-                                    <p className="text-sm theme-text-secondary">{formatTimeAgo(activity.lastSucc24?.callAt)}</p>
+                                    <p className="text-sm theme-text-secondary">{formatTimeAgo(activity.lastSucc24?.date)}</p>
                                 </div>
                             </div>
                             <div className="text-sm theme-text-secondary">총 {activity.succ24Count.toLocaleString()}회 ({(activity.succ24Count * avgTokens).toLocaleString()} 토큰)</div>
@@ -356,7 +421,7 @@ export default function DashboardOverview() {
                                 <img src={ICONS.error} alt="실패" className="w-7 h-7 rounded-full" />
                                 <div>
                                     <p className="font-semibold theme-text-primary">CAPTCHA 검증 실패</p>
-                                    <p className="text-sm theme-text-secondary">{formatTimeAgo(activity.lastFail?.callAt)}</p>
+                                    <p className="text-sm theme-text-secondary">{formatTimeAgo(activity.lastFail?.date)}</p>
                                 </div>
                             </div>
                             <div className="text-sm theme-text-secondary">총 {activity.totalFail.toLocaleString()}회 ({(activity.totalFail * avgTokens).toLocaleString()} 토큰)</div>
@@ -369,7 +434,7 @@ export default function DashboardOverview() {
                                     <p className="text-sm theme-text-secondary">{formatTimeAgo(new Date().toISOString())}</p>
                                 </div>
                             </div>
-                            <div className="text-sm theme-text-secondary">{(planUsageData.current?.tokens?.percentage || 0)}% 도달</div>
+                            <div className="text-sm theme-text-secondary">{(safePlanUsageData.current?.tokens?.percentage || 0)}% 도달</div>
                         </li>
                     </ul>
                 </div>

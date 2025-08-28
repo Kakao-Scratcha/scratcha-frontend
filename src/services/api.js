@@ -117,27 +117,28 @@ export const dashboardAPI = {
     getUsage: (period) => apiClient.get(`/dashboard/usage?period=${period}`),
     getRecentActivity: () => apiClient.get('/dashboard/activity'),
 
-    // 로그 API 추가
-    getLogs: (params = {}) => {
-        const { keyId, skip = 0, limit = 100 } = params;
+    // 로그 관련 API
+    getLogs: (params) => {
+        const { keyId, periodType = 'yearly', skip = 0, limit = 10 } = params;
         const queryParams = new URLSearchParams();
-
         if (keyId) queryParams.append('keyId', keyId);
+        queryParams.append('periodType', periodType);
         queryParams.append('skip', skip);
         queryParams.append('limit', limit);
 
-        console.log('📊 로그 조회 API 호출:', { keyId, skip, limit });
-        return apiClient.get(`/dashboard/usage-stats/logs?${queryParams.toString()}`);
+        console.log('📊 로그 조회 API 호출:', { keyId, periodType, skip, limit });
+        return apiClient.get(`/dashboard/statistics/logs?${queryParams.toString()}`);
     },
+};
 
-    // 전체 로그 조회
-    getAllLogs: (skip = 0, limit = 100) => {
-        return dashboardAPI.getLogs({ skip, limit });
-    },
-
-    // 특정 API 키 로그 조회
-    getLogsByKeyId: (keyId, skip = 0, limit = 100) => {
-        return dashboardAPI.getLogs({ keyId, skip, limit });
+// 요금제 관련 API
+export const billingAPI = {
+    // 요금제 변경 (실제 API 스펙에 맞게 수정)
+    changePlan: (userId, planName) => {
+        console.log('💰 요금제 변경 API 호출:', { userId, planName });
+        return apiClient.patch(`/dashboard/users/${userId}/plan`, {
+            plan: planName.toLowerCase()
+        });
     },
 };
 
