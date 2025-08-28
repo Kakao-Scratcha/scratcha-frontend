@@ -20,7 +20,6 @@ export default function DashboardSettings() {
 
     const getServerUserName = (u) => (u?.userName ?? u?.username ?? u?.name ?? u?.email ?? '');
 
-    // const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [isNameModalOpen, setIsNameModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -39,7 +38,7 @@ export default function DashboardSettings() {
         currentName: getServerUserName(user),
         newName: ''
     });
-    // 비밀번호 UI용 상태 (API 미연동)
+    // 비밀번호 UI용 상태
     const [passwordForm, setPasswordForm] = useState({
         currentPassword: '',
         newPassword: '',
@@ -143,16 +142,17 @@ export default function DashboardSettings() {
         }
     };
 
-    // 이름 변경 처리
+    // 이름 변경 처리 (API 연동)
     const handleNameChange = async (e) => {
         e.preventDefault();
-        console.log('이름 변경:', nameForm);
+        console.log('정보 수정:', { nameForm, passwordForm });
 
         const trimmedName = nameForm.newName.trim();
+        const { currentPassword, newPassword, confirmPassword } = passwordForm;
 
-        // 유효성 검사
+        // 이름 유효성 검사
         if (!trimmedName) {
-            alert('새 이름을 입력해주세요.');
+            alert('이름을 입력해주세요.');
             return;
         }
 
@@ -162,31 +162,66 @@ export default function DashboardSettings() {
             return;
         }
 
+        // 비밀번호 변경이 있는 경우 유효성 검사
+        if (currentPassword || newPassword || confirmPassword) {
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('비밀번호 변경을 위해서는 모든 비밀번호 필드를 입력해주세요.');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('새 비밀번호와 확인 비밀번호가 일치하지 않습니다.');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                alert('새 비밀번호는 8자 이상이어야 합니다.');
+                return;
+            }
+        }
+
         setIsUpdating(true);
         try {
-            console.log('🔄 이름 변경 API 호출 중...');
-            const response = await authAPI.updateUsername(trimmedName);
-            console.log('✅ 이름 변경 성공:', response.data);
+            console.log('🔄 정보 수정 API 호출 중...');
+
+            // API 요청 데이터 구성
+            const requestData = { userName: trimmedName };
+            if (currentPassword && newPassword && confirmPassword) {
+                requestData.currnetPassword = currentPassword;
+                requestData.newPassword = newPassword;
+                requestData.confirmPassword = confirmPassword;
+            }
+
+            const response = await authAPI.updateProfile(requestData);
+            console.log('✅ 정보 수정 성공:', response.data);
 
             // 로컬 상태 업데이트
             updateUser({ userName: trimmedName, username: trimmedName, name: trimmedName });
 
-            // 유저 정보 다시 불러오기 제거 (무한 호출 방지)
-            console.log('✅ 이름 변경 완료 - 로컬 상태 업데이트됨');
+            console.log('✅ 정보 수정 완료 - 로컬 상태 업데이트됨');
 
             setIsNameModalOpen(false);
+
+            // 폼 초기화
             setNameForm({
                 currentName: trimmedName,
                 newName: ''
             });
+            setPasswordForm({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+            });
 
-            alert('이름이 성공적으로 변경되었습니다!');
+            alert('정보가 성공적으로 수정되었습니다!');
         } catch (error) {
-            console.error('❌ 이름 변경 실패:', error);
+            console.error('❌ 정보 수정 실패:', error);
 
-            let errorMessage = '이름 변경에 실패했습니다.';
+            let errorMessage = '정보 수정에 실패했습니다.';
             if (error.response?.status === 409) {
                 errorMessage = '이미 사용 중인 이름입니다.';
+            } else if (error.response?.status === 400) {
+                errorMessage = '현재 비밀번호가 올바르지 않습니다.';
             } else if (error.response?.status === 422) {
                 errorMessage = '입력 정보를 확인해주세요.';
             }
@@ -197,17 +232,7 @@ export default function DashboardSettings() {
         }
     };
 
-    // 비밀번호 변경 처리 (주석처리)
-    // const handlePasswordChange = (e) => {
-    //     e.preventDefault();
-    //     console.log('비밀번호 변경:', passwordForm);
-    //     setIsPasswordModalOpen(false);
-    //     setPasswordForm({
-    //         currentPassword: '',
-    //         newPassword: '',
-    //         confirmPassword: ''
-    //     });
-    // };
+
 
     // 회원 탈퇴 처리
     const handleAccountDelete = async () => {
@@ -499,19 +524,7 @@ export default function DashboardSettings() {
                             </button>
                         </div>
 
-                        {/* 비밀번호 변경 (주석처리) */}
-                        {/* <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <div>
-                                <h4 className="font-medium text-gray-900 dark:text-white">비밀번호 변경</h4>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">계정 보안을 위해 정기적으로 비밀번호를 변경하세요</p>
-                            </div>
-                            <button
-                                onClick={() => setIsPasswordModalOpen(true)}
-                                className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-700 dark:hover:bg-blue-600 transition"
-                            >
-                                변경하기
-                            </button>
-                        </div> */}
+
 
                         {/* 회원 탈퇴 */}
                         <div className="flex items-center justify-between p-4 theme-layout-secondary rounded-lg">
@@ -626,69 +639,7 @@ export default function DashboardSettings() {
                 </form>
             </Modal>
 
-            {/* 비밀번호 변경 모달 (주석처리) */}
-            {/* <Modal
-                isOpen={isPasswordModalOpen}
-                onClose={() => setIsPasswordModalOpen(false)}
-                title="비밀번호 변경"
-            >
-                <form onSubmit={handlePasswordChange} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                            현재 비밀번호
-                        </label>
-                        <input
-                            type="password"
-                            value={passwordForm.currentPassword}
-                            onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
-                            required
-                        />
-                    </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                            새 비밀번호
-                        </label>
-                        <input
-                            type="password"
-                            value={passwordForm.newPassword}
-                            onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
-                            required
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                            새 비밀번호 확인
-                        </label>
-                        <input
-                            type="password"
-                            value={passwordForm.confirmPassword}
-                            onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
-                            required
-                        />
-                    </div>
-
-                    <div className="flex gap-3 pt-4">
-                        <button
-                            type="button"
-                            onClick={() => setIsPasswordModalOpen(false)}
-                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-                        >
-                            취소
-                        </button>
-                        <button
-                            type="submit"
-                            className="flex-1 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-700 dark:hover:bg-blue-600 transition"
-                        >
-                            변경하기
-                        </button>
-                    </div>
-                </form>
-            </Modal> */}
 
             {/* 회원 탈퇴 확인 모달 (리디자인) */}
             <Modal

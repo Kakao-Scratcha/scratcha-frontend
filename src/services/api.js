@@ -23,7 +23,10 @@ export const authAPI = {
     },
 
     // 사용자 정보 업데이트
-    updateProfile: (data) => apiClient.patch('/dashboard/users/me', data),
+    updateProfile: (data) => {
+        console.log('📞 updateProfile API 호출:', data);
+        return apiClient.patch('/dashboard/users/me', data);
+    },
 
     // 사용자 이름 변경
     updateUsername: (newUsername) => {
