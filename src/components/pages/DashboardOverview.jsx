@@ -24,12 +24,13 @@ export default function DashboardOverview() {
     const {
         selectedPeriod,
         usageData: chartUsageData,
-        stats,
         isLoading,
         setPeriod,
         planUsageData,
         calculateOverageCost,
         calculateTotalCost,
+        requestsStats,
+        loadAllRequestsStats,
     } = useDashboardStore();
 
     // authStore의 user.plan을 기반으로 요금제 정보 생성
@@ -93,6 +94,11 @@ export default function DashboardOverview() {
             requests: { count: 0, avgTokensPerRequest: 20 }
         }
     };
+
+    // 컴포넌트 마운트 시 통계 데이터 로드
+    useEffect(() => {
+        loadAllRequestsStats();
+    }, [loadAllRequestsStats]);
 
     // 최근 활동 데이터 (API 로그 기반으로 변경)
     const { logs } = useDashboardStore();
@@ -266,60 +272,84 @@ export default function DashboardOverview() {
                     </div>
                 </div>
 
-                {/* 전체 사용량 (경고 아이콘 제거, 중앙 정렬, 변화율 확대) */}
+                {/* 전체 사용량 (API 데이터 연동) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-5 rounded-lg theme-card text-center">
                         <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>오늘 사용량</h3>
-                        <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{stats.today.value.toLocaleString()}</p>
-                        <div className="mt-2 inline-flex items-center gap-2 justify-center">
-                            {stats.today.change >= 0 ? (
-                                <>
-                                    <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                    <span className="text-lg md:text-xl font-bold theme-success">+{stats.today.change}%</span>
-                                </>
-                            ) : (
-                                <>
-                                    <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                    <span className="text-lg md:text-xl font-bold theme-error">-{Math.abs(stats.today.change)}%</span>
-                                </>
-                            )}
-                        </div>
+                        {requestsStats.daily.loading ? (
+                            <div className="flex justify-center items-center h-20">
+                                <LoadingSpinner />
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.daily.currentCount.toLocaleString()}</p>
+                                <div className="mt-2 inline-flex items-center gap-2 justify-center">
+                                    {requestsStats.daily.rate >= 0 ? (
+                                        <>
+                                            <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
+                                            <span className="text-lg md:text-xl font-bold theme-success">+{requestsStats.daily.rate.toFixed(2)}%</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                            <span className="text-lg md:text-xl font-bold theme-error">{requestsStats.daily.rate.toFixed(2)}%</span>
+                                        </>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     <div className="p-5 rounded-lg theme-card text-center">
                         <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>이번 주</h3>
-                        <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{stats.week.value.toLocaleString()}</p>
-                        <div className="mt-2 inline-flex items-center gap-2 justify-center">
-                            {stats.week.change >= 0 ? (
-                                <>
-                                    <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                    <span className="text-lg md:text-xl font-bold theme-success">+{stats.week.change}%</span>
-                                </>
-                            ) : (
-                                <>
-                                    <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                    <span className="text-lg md:text-xl font-bold theme-error">-{Math.abs(stats.week.change)}%</span>
-                                </>
-                            )}
-                        </div>
+                        {requestsStats.weekly.loading ? (
+                            <div className="flex justify-center items-center h-20">
+                                <LoadingSpinner />
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.weekly.currentCount.toLocaleString()}</p>
+                                <div className="mt-2 inline-flex items-center gap-2 justify-center">
+                                    {requestsStats.weekly.rate >= 0 ? (
+                                        <>
+                                            <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
+                                            <span className="text-lg md:text-xl font-bold theme-success">+{requestsStats.weekly.rate.toFixed(2)}%</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                            <span className="text-lg md:text-xl font-bold theme-error">{requestsStats.weekly.rate.toFixed(2)}%</span>
+                                        </>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     <div className="p-5 rounded-lg theme-card text-center">
                         <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>이번 달</h3>
-                        <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{stats.month.value.toLocaleString()}</p>
-                        <div className="mt-2 inline-flex items-center gap-2 justify-center">
-                            {stats.month.change >= 0 ? (
-                                <>
-                                    <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                    <span className="text-lg md:text-xl font-bold theme-success">+{stats.month.change}%</span>
-                                </>
-                            ) : (
-                                <>
-                                    <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                    <span className="text-lg md:text-xl font-bold theme-error">-{Math.abs(stats.month.change)}%</span>
-                                </>
-                            )}
-                        </div>
+                        {requestsStats.monthly.loading ? (
+                            <div className="flex justify-center items-center h-20">
+                                <LoadingSpinner />
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.monthly.currentCount.toLocaleString()}</p>
+                                <div className="mt-2 inline-flex items-center gap-2 justify-center">
+                                    {requestsStats.monthly.rate >= 0 ? (
+                                        <>
+                                            <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
+                                            <span className="text-lg md:text-xl font-bold theme-success">+{requestsStats.monthly.rate.toFixed(2)}%</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                            <span className="text-lg md:text-xl font-bold theme-error">{requestsStats.monthly.rate.toFixed(2)}%</span>
+                                        </>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
