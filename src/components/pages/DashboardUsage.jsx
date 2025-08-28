@@ -76,7 +76,7 @@ export default function DashboardUsage() {
     useEffect(() => {
         const periodType = getPeriodType(selectedPeriod);
         loadAllLogs(1, itemsPerPage, periodType);
-    }, [itemsPerPage]);
+    }, [itemsPerPage, selectedPeriod]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 필터 변경 시 데이터 업데이트 (기간 변경 시에만)
     useEffect(() => {
@@ -99,7 +99,7 @@ export default function DashboardUsage() {
         setTimeout(() => {
             setIsLoading(false);
         }, 500);
-    }, [selectedPeriod, setGlobalPeriod, loadAllLogs, loadLogsByKeyId, itemsPerPage]);
+    }, [selectedPeriod, selectedApiKeyId, itemsPerPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 필터 변경 시 API 로그 업데이트 (디바운스 적용)
     useEffect(() => {

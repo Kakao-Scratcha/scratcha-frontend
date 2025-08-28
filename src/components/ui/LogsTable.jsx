@@ -16,7 +16,7 @@ export default function LogsTable() {
     // 초기 로그 로드
     useEffect(() => {
         loadAllLogs(1, 10, 'yearly');
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // API 키 선택 핸들러
     const handleKeyChange = (keyId) => {

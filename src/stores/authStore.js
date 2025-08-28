@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authAPI } from '../services/api';
-import { useDashboardStore } from './dashboardStore';
 
 // JWT 토큰 유틸리티 함수들
 const tokenUtils = {
