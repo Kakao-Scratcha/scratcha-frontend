@@ -2,13 +2,9 @@ import { create } from 'zustand';
 import {
     DEFAULT_PLAN,
     PLAN_USAGE_DATA,
-    bucketUsageSeries,
-    computeStatsFromLogs,
-    generateUsageLogs,
-    getStableSessionLogs,
 } from '../data/dashboardDummy';
-import { LOG_DATASETS, DEFAULT_DATASET } from '../data/logDatasets';
-import { applicationAPI, dashboardAPI } from '../services/api';
+import { applicationAPI, dashboardAPI, billingAPI } from '../services/api';
+import { useAuthStore } from './authStore';
 
 // 초기 상태 준비
 const INITIAL_PERIOD = '전체';
@@ -26,15 +22,13 @@ export const useDashboardStore = create((set, get) => ({
         month: { value: 0, change: 0 },
     },
     isLoading: false,
-    sessionLogs: getStableSessionLogs(DEFAULT_DATASET),
-    usageLogs: generateUsageLogs(DEFAULT_DATASET),
-    datasetScenario: DEFAULT_DATASET,
     apps: [],
     selectedAppId: null,
     apiKeys: [],
     isAppsLoading: false,
-    currentPlan: DEFAULT_PLAN,
-    planUsageData: PLAN_USAGE_DATA,
+
+    // 서버에서 가져온 사용자 정보의 요금제 데이터 사용
+    planUsageData: PLAN_USAGE_DATA,  // 더미데이터로 초기화
 
     // 로그 관련 상태 추가
     logs: {
@@ -64,29 +58,50 @@ export const useDashboardStore = create((set, get) => ({
 
     // 로그 데이터 로드
     loadLogs: async (params = {}) => {
-        const { keyId, page = 1, limit = 10 } = params;
+        const { keyId, periodType = 'yearly', page = 1, limit = 10 } = params;
         const skip = (page - 1) * limit;
 
-        console.log('📊 로그 로드 시작:', { keyId, page, limit, skip });
+        console.log('📊 로그 로드 시작:', { keyId, periodType, page, limit, skip });
 
         set(state => ({
             logs: { ...state.logs, loading: true, error: null }
         }));
 
         try {
-            const response = await dashboardAPI.getLogs({ keyId, skip, limit });
+            const response = await dashboardAPI.getLogs({ keyId, periodType, skip, limit });
             console.log('📊 로그 API 응답:', response.data);
+            console.log('📊 응답 데이터 구조:', {
+                data: response.data.data,
+                total: response.data.total,
+                page: response.data.page,
+                size: response.data.size,
+                dataLength: response.data.data?.length
+            });
+
+            // API 응답 구조에 따라 데이터 추출
+            const responseData = response.data;
+            const items = responseData.data || responseData.items || responseData || [];
+            const total = responseData.total || 0;
+            const page = responseData.page || 1;
+            const size = responseData.size || limit;
 
             set({
                 logs: {
-                    items: response.data.items || [],
-                    total: response.data.total || 0,
-                    page: response.data.page || 1,
-                    size: response.data.size || limit,
+                    items,
+                    total,
+                    page,
+                    size,
                     loading: false,
                     error: null
                 },
                 selectedKeyId: keyId || null
+            });
+
+            console.log('📊 상태 업데이트 후 logs:', {
+                items,
+                total,
+                page,
+                size
             });
         } catch (error) {
             console.error('로그 데이터 로드 실패:', error);
@@ -101,20 +116,20 @@ export const useDashboardStore = create((set, get) => ({
     },
 
     // 전체 로그 로드
-    loadAllLogs: async (page = 1, limit = 10) => {
-        await get().loadLogs({ page, limit });
+    loadAllLogs: async (page = 1, limit = 10, periodType = 'yearly') => {
+        await get().loadLogs({ page, limit, periodType });
     },
 
     // 특정 API 키 로그 로드
-    loadLogsByKeyId: async (keyId, page = 1, limit = 10) => {
-        await get().loadLogs({ keyId, page, limit });
+    loadLogsByKeyId: async (keyId, page = 1, limit = 10, periodType = 'yearly') => {
+        await get().loadLogs({ keyId, page, limit, periodType });
     },
 
     // 로그 페이지 변경
-    changeLogPage: async (page, limit = 10) => {
+    changeLogPage: async (page, limit = 10, periodType = 'yearly') => {
         const { selectedKeyId } = get();
-        console.log('📄 페이지 변경:', { page, limit, selectedKeyId });
-        await get().loadLogs({ keyId: selectedKeyId, page, limit });
+        console.log('📄 페이지 변경:', { page, limit, selectedKeyId, periodType });
+        await get().loadLogs({ keyId: selectedKeyId, page, limit, periodType });
     },
 
     // 기존 액션들 수정 (로그 데이터 활용)
@@ -177,71 +192,13 @@ export const useDashboardStore = create((set, get) => ({
         }
     },
 
-    // 기간 변경 (로그 데이터 활용)
+    // 기간 변경
     setPeriod: (period) => {
-        set((state) => {
-            // 실제 API에서 해당 기간의 로그 데이터를 가져와야 함
-            const newUsageData = bucketUsageSeries(period, state.sessionLogs);
-            const newStats = computeStatsFromLogs(state.sessionLogs);
-
-            return {
-                selectedPeriod: period,
-                usageData: newUsageData,
-                stats: newStats,
-            };
-        });
-    },
-
-    // 데이터셋 시나리오 변경
-    setDatasetScenario: (scenario) => {
-        set((state) => {
-            const dataset = LOG_DATASETS[scenario] || LOG_DATASETS[DEFAULT_DATASET];
-            const newSessionLogs = dataset.sessionLogs;
-            const newUsageLogs = dataset.usageLogs;
-            const newUsageData = bucketUsageSeries(state.selectedPeriod, newSessionLogs);
-            const newStats = computeStatsFromLogs(newSessionLogs);
-
-            return {
-                datasetScenario: scenario,
-                sessionLogs: newSessionLogs,
-                usageLogs: newUsageLogs,
-                usageData: newUsageData,
-                stats: newStats,
-            };
-        });
-    },
-
-    // 나머지 기존 액션들 유지...
-    updateUsageLogs: (logs) => {
-        set((state) => {
-            const newUsageData = bucketUsageSeries(state.selectedPeriod, logs);
-            const newStats = computeStatsFromLogs(logs);
-
-            return {
-                usageLogs: logs,
-                usageData: newUsageData,
-                stats: newStats,
-            };
-        });
+        set({ selectedPeriod: period });
     },
 
     setChartType: (chartType) => set({ chartType }),
     setLoading: (isLoading) => set({ isLoading }),
-
-    setSessionLogs: (logs) => {
-        set((state) => {
-            const newUsageData = bucketUsageSeries(state.selectedPeriod, logs);
-            const newStats = computeStatsFromLogs(logs);
-
-            return {
-                sessionLogs: logs,
-                usageData: newUsageData,
-                stats: newStats,
-            };
-        });
-    },
-
-    setUsageLogs: (logs) => set({ usageLogs: logs }),
     setSelectedAppId: (appId) => set({ selectedAppId: appId }),
 
     // 최근 활동
@@ -302,4 +259,169 @@ export const useDashboardStore = create((set, get) => ({
         const overageCost = useDashboardStore.getState().calculateOverageCost(used, limit, basePrice, overageRate);
         return basePriceNumber + overageCost;
     },
-})); 
+
+    // 요금제 변경 함수 (API 연동)
+    changePlan: async (newPlanName) => {
+        console.log('🔄 요금제 변경 시도:', newPlanName);
+
+        try {
+            // 사용자 ID 가져오기
+            const { user } = useAuthStore.getState();
+            if (!user || !user.id) {
+                console.error('❌ 사용자 ID가 없습니다.');
+                return { success: false, error: '사용자 정보를 찾을 수 없습니다.' };
+            }
+
+            // 1단계: 실제 API 호출
+            const response = await billingAPI.changePlan(user.id, newPlanName);
+            console.log('✅ API 요금제 변경 성공:', response.data);
+
+            // 2단계: 서버 응답에서 요금제 정보 추출
+            const serverPlanName = response.data.plan || 'free';
+            console.log('📋 서버 응답 요금제명:', serverPlanName);
+
+            // 3단계: 내정보 확인 API 호출하여 일치 여부 확인
+            try {
+                const { getProfile } = useAuthStore.getState();
+                const profileResponse = await getProfile({ showLoading: false });
+                console.log('✅ 내정보 확인 API 응답:', profileResponse);
+
+                // profileResponse가 null이거나 user가 없는 경우 처리
+                if (!profileResponse || !profileResponse.user) {
+                    console.error('❌ 내정보 확인 API 응답이 유효하지 않음:', profileResponse);
+                    return {
+                        success: false,
+                        error: '사용자 정보를 가져올 수 없습니다. 잠시 후 다시 시도해주세요.'
+                    };
+                }
+
+                const userProfile = profileResponse.user;
+                const profilePlanName = userProfile.plan || 'free';
+                console.log('📋 내정보에서 가져온 요금제명:', profilePlanName);
+
+                // 4단계: 서버 응답과 내정보 일치 여부 확인
+                if (serverPlanName !== profilePlanName) {
+                    console.error('❌ 요금제 정보 불일치:', {
+                        서버응답: serverPlanName,
+                        내정보: profilePlanName
+                    });
+                    return {
+                        success: false,
+                        error: '요금제 변경이 완료되지 않았습니다. 잠시 후 다시 시도해주세요.'
+                    };
+                }
+
+                console.log('✅ 요금제 정보 일치 확인 완료:', serverPlanName);
+
+                // 5단계: 더미데이터의 요금제 설정
+                const planConfigs = {
+                    'free': {
+                        name: 'Free',
+                        limit: 1000,
+                        price: '₩0',
+                        description: '월 1,000 토큰 무료제공',
+                        overageRate: 0,
+                        features: ['기본 API 통계', '광고 포함']
+                    },
+                    'starter': {
+                        name: 'Starter',
+                        limit: 50000,
+                        price: '₩29,900',
+                        description: '월 50,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
+                        overageRate: 2.0,
+                        features: ['기본 API & 통계', '광고 제거', '이메일 지원']
+                    },
+                    'pro': {
+                        name: 'Pro',
+                        limit: 200000,
+                        price: '₩79,900',
+                        description: '월 200,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
+                        overageRate: 2.0,
+                        features: ['Starter의 모든 혜택', '커스텀 UI 스킨 지원', '고급 분석 리포트']
+                    },
+                    'enterprise': {
+                        name: 'Enterprise',
+                        limit: 999999999,
+                        price: '맞춤 견적',
+                        description: '월 무제한 또는 대규모 토큰 패키지',
+                        overageRate: 0,
+                        features: ['Pro의 모든 혜택', '전용 인프라/보안 강화', 'SLA 보장', '24/7 모니터링']
+                    }
+                };
+
+                const newPlanConfig = planConfigs[serverPlanName] || planConfigs['free'];
+
+                // 6단계: 서버에서 가져온 사용량 정보 사용
+                const serverUsage = userProfile.usage || userProfile.subscription?.usage;
+                const serverTokensUsed = serverUsage?.tokensUsed || 0;
+                const serverRequestsCount = serverUsage?.requestsCount || 0;
+                const serverAvgTokensPerRequest = serverUsage?.avgTokensPerRequest || 20;
+
+                console.log('📊 서버 사용량 정보:', {
+                    tokensUsed: serverTokensUsed,
+                    requestsCount: serverRequestsCount,
+                    avgTokensPerRequest: serverAvgTokensPerRequest
+                });
+
+                // 7단계: 프론트엔드 상태 업데이트 (서버 데이터 기반)
+                const limit = newPlanConfig.limit;
+                const percentage = Math.min(100, Math.round((serverTokensUsed / limit) * 100));
+
+                set(state => {
+                    return {
+                        planUsageData: {
+                            ...state.planUsageData,
+                            current: {
+                                tokens: {
+                                    used: serverTokensUsed,
+                                    limit,
+                                    percentage
+                                },
+                                requests: {
+                                    count: serverRequestsCount,
+                                    avgTokensPerRequest: serverAvgTokensPerRequest
+                                }
+                            },
+                            lastMonth: {
+                                ...state.planUsageData.lastMonth,
+                                tokens: {
+                                    ...state.planUsageData.lastMonth.tokens,
+                                    limit, // lastMonth의 limit도 업데이트
+                                },
+                                billing: {
+                                    ...state.planUsageData.lastMonth.billing,
+                                    overageRate: newPlanConfig.overageRate, // 초과 요금률도 업데이트
+                                }
+                            }
+                        }
+                    };
+                });
+
+                console.log('✅ 요금제 변경 완료:', {
+                    새요금제: newPlanConfig.name,
+                    새한도: newPlanConfig.limit,
+                    현재사용량: serverTokensUsed,
+                    사용률: percentage + '%'
+                });
+
+                // 8단계: authStore 사용자 정보 업데이트
+                const { updateUser } = useAuthStore.getState();
+                updateUser({ plan: serverPlanName });
+                console.log('✅ authStore 사용자 정보 plan 필드 업데이트:', serverPlanName);
+
+                return { success: true };
+
+            } catch (profileError) {
+                console.error('❌ 내정보 확인 API 호출 실패:', profileError);
+                return {
+                    success: false,
+                    error: '요금제 변경 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+                };
+            }
+
+        } catch (error) {
+            console.error('❌ 요금제 변경 실패:', error);
+            return { success: false, error: error.message };
+        }
+    },
+}));
