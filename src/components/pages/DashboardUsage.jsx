@@ -224,17 +224,45 @@ export default function DashboardUsage() {
         return key.substring(0, 8) + '...' + key.substring(key.length - 4);
     };
 
-    // 날짜 포맷팅
+    // 날짜 포맷팅 (API에서 KST로 오는 데이터 처리)
     const formatDate = (dateString) => {
+        if (!dateString) return '-';
+
+        console.log('🔍 formatDate 입력:', dateString);
+
+        // ISO 날짜 형식인지 확인 (YYYY-MM-DD)
+        const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateString);
+        console.log('🔍 isDateOnly:', isDateOnly);
+
+        if (isDateOnly) {
+            // 날짜만 있는 경우 - KST 기준으로 처리
+            const date = new Date(dateString + 'T00:00:00');
+            const result = date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+            console.log('🔍 날짜만 표시:', result);
+            return result;
+        }
+
+        // 시간이 포함된 경우 - KST 시간대 유지
         const date = new Date(dateString);
-        return date.toLocaleString('ko-KR', {
+
+        // KST 시간대 옵션 추가
+        const options = {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
             hour: '2-digit',
             minute: '2-digit',
-            second: '2-digit'
-        });
+            second: '2-digit',
+            timeZone: 'Asia/Seoul' // KST 시간대 명시
+        };
+
+        const result = date.toLocaleString('ko-KR', options);
+        console.log('🔍 시간 포함 표시:', result);
+        return result;
     };
 
     return (
@@ -399,7 +427,7 @@ export default function DashboardUsage() {
                                                     <TableHeader>ID</TableHeader>
                                                     <TableHeader>앱</TableHeader>
                                                     <TableHeader>API 키</TableHeader>
-                                                    <TableHeader>시간</TableHeader>
+                                                    <TableHeader title="한국 시간 (KST) 기준">시간 (KST)</TableHeader>
                                                     <TableHeader>결과</TableHeader>
                                                     <TableHeader>응답시간</TableHeader>
                                                 </TableRow>
