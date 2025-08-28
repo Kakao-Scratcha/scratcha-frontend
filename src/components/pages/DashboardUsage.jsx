@@ -226,6 +226,22 @@ export default function DashboardUsage() {
 
     // 날짜 포맷팅
     const formatDate = (dateString) => {
+        if (!dateString) return '-';
+
+        // ISO 날짜 형식인지 확인 (YYYY-MM-DD)
+        const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateString);
+
+        if (isDateOnly) {
+            // 날짜만 있는 경우
+            const date = new Date(dateString + 'T00:00:00');
+            return date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        }
+
+        // 시간이 포함된 경우
         const date = new Date(dateString);
         return date.toLocaleString('ko-KR', {
             year: 'numeric',
