@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
-import Chart from '../ui/Chart';
+import UsageChart from '../ui/UsageChart';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import Table, { TableHead, TableBody, TableRow, TableHeader, TableCell } from '../ui/Table';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from '../../utils/chartImports';
 import { useDashboardStore } from '../../stores/dashboardStore';
 
 export default function DashboardUsage() {
@@ -21,7 +20,8 @@ export default function DashboardUsage() {
         loadAllLogs,
         loadLogsByKeyId,
         changeLogPage,
-        refreshApplications
+        refreshApplications,
+        loadStatisticsSummary
     } = useDashboardStore();
 
     const [selectedAppId, setSelectedAppId] = useState('all');
@@ -76,7 +76,13 @@ export default function DashboardUsage() {
     useEffect(() => {
         const periodType = getPeriodType(selectedPeriod);
         loadAllLogs(1, itemsPerPage, periodType);
-    }, [itemsPerPage, selectedPeriod]); // eslint-disable-line react-hooks/exhaustive-deps
+
+        // 그래프 뷰일 때 통계 요약 데이터 로드
+        if (viewMode === 'graph') {
+            const keyId = selectedApiKeyId === 'all' ? null : selectedApiKeyId;
+            loadStatisticsSummary(keyId, selectedPeriod);
+        }
+    }, [itemsPerPage, selectedPeriod, viewMode, selectedApiKeyId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 필터 변경 시 데이터 업데이트 (기간 변경 시에만)
     useEffect(() => {
@@ -95,11 +101,17 @@ export default function DashboardUsage() {
             loadLogsByKeyId(selectedApiKeyId, 1, itemsPerPage, periodType);
         }
 
+        // 그래프 뷰일 때 통계 요약 데이터 로드
+        if (viewMode === 'graph') {
+            const keyId = selectedApiKeyId === 'all' ? null : selectedApiKeyId;
+            loadStatisticsSummary(keyId, selectedPeriod);
+        }
+
         // 로딩 시뮬레이션
         setTimeout(() => {
             setIsLoading(false);
         }, 500);
-    }, [selectedPeriod, selectedApiKeyId, itemsPerPage]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [selectedPeriod, selectedApiKeyId, itemsPerPage, viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 필터 변경 시 API 로그 업데이트 (디바운스 적용)
     useEffect(() => {
@@ -115,13 +127,19 @@ export default function DashboardUsage() {
                 loadLogsByKeyId(selectedApiKeyId, 1, itemsPerPage, periodType);
             }
 
+            // 그래프 뷰일 때 통계 요약 데이터 로드
+            if (viewMode === 'graph') {
+                const keyId = selectedApiKeyId === 'all' ? null : selectedApiKeyId;
+                loadStatisticsSummary(keyId, selectedPeriod);
+            }
+
             setTimeout(() => {
                 setIsLoading(false);
             }, 300);
         }, 300); // 300ms 디바운스
 
         return () => clearTimeout(timeoutId);
-    }, [selectedApiKeyId, selectedPeriod, loadAllLogs, loadLogsByKeyId, itemsPerPage]);
+    }, [selectedApiKeyId, selectedPeriod, viewMode, loadAllLogs, loadLogsByKeyId, loadStatisticsSummary, itemsPerPage]);
 
     // 앱 선택 핸들러 (API 키 자동 필터링)
     const handleAppChange = (appId) => {
@@ -368,24 +386,21 @@ export default function DashboardUsage() {
                                         </div>
                                     </div>
 
-                                    {logs.items && logs.items.length > 0 ? (
-                                        <Chart
-                                            data={logs.items.map(log => ({
-                                                date: new Date(log.date).toLocaleDateString('ko-KR'),
-                                                usage: 1, // 각 로그를 1로 카운트
-                                                result: log.result
-                                            }))}
-                                            type="line"
-                                            height={400}
-                                            xKey="date"
-                                            yKey="usage"
-                                            color="#3B82F6"
-                                        />
-                                    ) : (
-                                        <div className="flex justify-center items-center h-64 text-gray-500">
-                                            API 로그 데이터가 없습니다.
-                                        </div>
-                                    )}
+                                    {(() => {
+                                        const { usageData } = useDashboardStore.getState();
+                                        return usageData && usageData.length > 0 ? (
+                                            <UsageChart
+                                                data={usageData}
+                                                selectedPeriod={selectedPeriod}
+                                                height="h-96"
+                                                debugName="UsageChart"
+                                            />
+                                        ) : (
+                                            <div className="flex justify-center items-center h-64 text-gray-500">
+                                                API 로그 데이터가 없습니다.
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             )}
 

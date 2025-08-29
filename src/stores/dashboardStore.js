@@ -5,6 +5,7 @@ import {
 } from '../data/dashboardDummy';
 import { applicationAPI, dashboardAPI, billingAPI } from '../services/api';
 import { useAuthStore } from './authStore';
+import { PERIOD_TYPE_MAP, processChartData } from '../utils/chartDataUtils';
 
 // 초기 상태 준비
 const INITIAL_PERIOD = '전체';
@@ -275,6 +276,36 @@ export const useDashboardStore = create((set, get) => ({
         { id: 3, type: 'warning', title: '웹훅 전송', time: '3시간 전', count: '성공', icon: 'zap' },
         { id: 4, type: 'error', title: '캡차 검증 실패', time: '5시간 전', count: '-1', icon: 'x' }
     ],
+
+    // 새로운 통계 API 연동
+    loadStatisticsSummary: async (keyId = null, selectedPeriod = '전체') => {
+        const periodType = PERIOD_TYPE_MAP[selectedPeriod] || 'yearly';
+
+        console.log('📊 통계 요약 로드 시작:', { keyId, selectedPeriod, periodType });
+
+        set({ isLoading: true });
+
+        try {
+            const response = await dashboardAPI.getStatisticsSummary(keyId, periodType);
+            console.log('📊 통계 요약 API 응답:', response.data);
+
+            // API 응답 데이터를 차트 형식으로 변환
+            const chartData = processChartData(response.data, selectedPeriod);
+
+            set({
+                usageData: chartData,
+                isLoading: false
+            });
+
+            console.log('✅ 통계 요약 로드 완료:', { keyId, selectedPeriod, chartData });
+        } catch (error) {
+            console.error('❌ 통계 요약 로드 실패:', error);
+            set({
+                usageData: [],
+                isLoading: false
+            });
+        }
+    },
 
     // 기존 액션들 유지...
     addActivity: (activity) => {

@@ -138,6 +138,16 @@ export const dashboardAPI = {
         console.log('📊 통계 요청 API 호출:', { periodType });
         return apiClient.get(`/dashboard/statistics/requests?periodType=${periodType}`);
     },
+
+    // 새로운 통계 요약 API
+    getStatisticsSummary: (keyId = null, periodType = 'yearly') => {
+        const queryParams = new URLSearchParams();
+        if (keyId) queryParams.append('keyId', keyId);
+        queryParams.append('periodType', periodType);
+
+        console.log('📊 통계 요약 API 호출:', { keyId, periodType });
+        return apiClient.get(`/dashboard/statistics/summary?${queryParams.toString()}`);
+    },
 };
 
 // 요금제 관련 API
