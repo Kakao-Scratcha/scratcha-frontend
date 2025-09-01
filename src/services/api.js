@@ -84,6 +84,14 @@ export const applicationAPI = {
         return apiClient.post(`/dashboard/api-keys/?appId=${appId}&expiresPolicy=0`, data);
     },
 
+    // API 키 난이도 업데이트
+    updateApiKeyDifficulty: (keyId, difficulty) => {
+        console.log('🔑 API 키 난이도 업데이트 API 호출:', { keyId, difficulty });
+        return apiClient.patch(`/dashboard/api-keys/${keyId}`, {
+            difficulty: difficulty
+        });
+    },
+
     // API 키 삭제
     deleteApiKey: (keyId) => {
         console.log('🔑 API 키 삭제 API 호출:', { keyId });

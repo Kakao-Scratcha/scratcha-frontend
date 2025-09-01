@@ -432,12 +432,17 @@ export default function DashboardApp() {
                                                         전체키개수: apiKeys.length,
                                                         해당앱키개수: appApiKeys.length,
                                                         중복제거후키개수: uniqueApiKeys.length,
-                                                        키목록: uniqueApiKeys.map(key => ({ id: key.id, name: key.name, status: key.status }))
+                                                        키목록: uniqueApiKeys.map(key => ({
+                                                            id: key.id,
+                                                            name: key.name,
+                                                            status: key.status,
+                                                            difficulty: key.difficulty || 'low'
+                                                        }))
                                                     });
                                                     return uniqueApiKeys;
                                                 })().map((apiKey, index) => (
                                                     <div key={`api_key_${app.id}_${apiKey.id}_${index}`} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                                        {/* 첫 줄: 이름(좌, 상태 배지 붙임), 마지막사용일(우), 삭제(우) */}
+                                                        {/* 첫 줄: 이름(좌, 상태 배지 붙임), 난이도, 마지막사용일(우), 삭제(우) */}
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-2">
                                                                 <p className="font-medium text-gray-900 dark:text-gray-100">{apiKey.name}</p>
@@ -446,6 +451,17 @@ export default function DashboardApp() {
                                                                     size="md"
                                                                     className={`h-8 leading-8 px-3 py-0 ${apiKey.status === 'inactive' ? 'bg-red-100 text-red-800 border-red-200' : ''}`}
                                                                 />
+                                                                {/* 난이도 배지 추가 */}
+                                                                <span className={`inline-flex items-center h-8 leading-8 px-3 py-0 rounded text-xs font-medium ${(apiKey.difficulty || 'low') === 'low'
+                                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                                    : (apiKey.difficulty || 'low') === 'middle'
+                                                                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                                                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                                                    }`}>
+                                                                    {(apiKey.difficulty || 'low') === 'low' ? '쉬움' :
+                                                                        (apiKey.difficulty || 'low') === 'middle' ? '보통' :
+                                                                            (apiKey.difficulty || 'low') === 'high' ? '어려움' : (apiKey.difficulty || 'low')}
+                                                                </span>
                                                             </div>
                                                             <div className="flex items-center gap-3">
                                                                 <span className="text-xs text-gray-600 dark:text-gray-400">마지막 사용: {apiKey.lastUsed}</span>

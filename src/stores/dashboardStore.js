@@ -226,6 +226,7 @@ export const useDashboardStore = create((set, get) => ({
                             name: `API Key ${k.id}`,
                             key: k.key,
                             status: k.isActive ? 'active' : 'inactive',
+                            difficulty: k.difficulty || 'low', // 난이도 정보 추가
                             lastUsed: '사용 기록 없음',
                         });
                     }
@@ -252,7 +253,14 @@ export const useDashboardStore = create((set, get) => ({
             });
 
             devLog('📱 처리된 앱들:', freshApps);
-            devLog('🔑 처리된 키들:', freshKeys);
+            devLog('🔑 처리된 키들:', freshKeys.map(key => ({
+                id: key.id,
+                appId: key.appId,
+                name: key.name,
+                status: key.status,
+                difficulty: key.difficulty,
+                hasKey: !!key.key
+            })));
             set({ apps: freshApps, apiKeys: freshKeys });
         } catch (error) {
             devError('📱 애플리케이션 데이터 로드 실패:', error);

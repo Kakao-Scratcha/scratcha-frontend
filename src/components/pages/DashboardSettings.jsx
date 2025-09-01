@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { authAPI } from '../../services/api';
 import { validateUserName } from '../../utils/validators';
 import { devLog, devError } from '../../utils/logger';
+import { applicationAPI } from '../../services/api';
 
 export default function DashboardSettings() {
     const {
@@ -82,7 +83,7 @@ export default function DashboardSettings() {
 
     // 변경된 필드 하이라이트 감지
     // const changedModel = !!(selectedApp && tempSettings[selectedApp.id]?.model !== undefined && tempSettings[selectedApp.id]?.model !== selectedApp.settings.model);
-    const changedNoise = !!(selectedApp && appSettings[selectedApp.id]?.noiseLevel !== undefined && appSettings[selectedApp.id]?.noiseLevel !== selectedApp.settings.noiseLevel);
+    const changedDifficulty = !!(selectedApp && appSettings[selectedApp.id]?.difficulty !== undefined && appSettings[selectedApp.id]?.difficulty !== selectedApp.settings.difficulty);
     // const changedHeuristic = !!(selectedApp && tempSettings[selectedApp.id]?.heuristicLevel !== undefined && tempSettings[selectedApp.id]?.heuristicLevel !== selectedApp.settings.heuristicLevel);
 
     // 서비스 설정 옵션
@@ -93,11 +94,7 @@ export default function DashboardSettings() {
     //     { value: 'custom', label: '커스텀 모델' }
     // ];
 
-    const noiseLevelOptions = [
-        { value: '상', label: '상 (높은 노이즈)' },
-        { value: '중', label: '중 (보통 노이즈)' },
-        { value: '하', label: '하 (낮은 노이즈)' }
-    ];
+
 
     // const heuristicLevelOptions = [
     //     { value: '상', label: '상 (높은 휴리스틱)' },
@@ -107,23 +104,55 @@ export default function DashboardSettings() {
     // ];
 
     // 설정 적용 처리
-    const handleApplySettings = () => {
+    const handleApplySettings = async () => {
         if (selectedApp && appSettings[selectedApp.id]) {
-            // 실제 APP 설정 업데이트
-            updateAppSettings(selectedApp.id, appSettings[selectedApp.id]);
+            const settingsToApply = appSettings[selectedApp.id];
 
-            // 임시 설정 제거
-            setAppSettings(prev => {
-                const newTemp = { ...prev };
-                delete newTemp[selectedApp.id];
-                return newTemp;
-            });
+            setIsUpdating(true);
+            try {
+                // 난이도 설정이 변경된 경우 API 호출
+                if (settingsToApply.difficulty && settingsToApply.difficulty !== selectedApp.settings.difficulty) {
+                    devLog('🔄 난이도 설정 API 호출:', {
+                        appId: selectedApp.id,
+                        difficulty: settingsToApply.difficulty
+                    });
 
-            // 설정이 변경되면 실제 API 호출로 설정 적용
-            devLog('설정 적용:', appSettings[selectedApp.id]);
-            setSaveSuccess(true);
-            // 성공 배너 자동 숨김 (3초)
-            setTimeout(() => setSaveSuccess(false), 3000);
+                    // 해당 앱의 API 키들에 난이도 설정 적용
+                    const appApiKeys = useDashboardStore.getState().apiKeys.filter(key => key.appId === selectedApp.id);
+
+                    for (const apiKey of appApiKeys) {
+                        try {
+                            await applicationAPI.updateApiKeyDifficulty(apiKey.id, settingsToApply.difficulty);
+                            devLog('✅ API 키 난이도 업데이트 성공:', { keyId: apiKey.id, difficulty: settingsToApply.difficulty });
+                        } catch (error) {
+                            devError('❌ API 키 난이도 업데이트 실패:', { keyId: apiKey.id, error });
+                            throw error;
+                        }
+                    }
+                }
+
+                // 실제 APP 설정 업데이트
+                updateAppSettings(selectedApp.id, settingsToApply);
+
+                // 임시 설정 제거
+                setAppSettings(prev => {
+                    const newTemp = { ...prev };
+                    delete newTemp[selectedApp.id];
+                    return newTemp;
+                });
+
+                // 설정이 변경되면 실제 API 호출로 설정 적용
+                devLog('설정 적용:', settingsToApply);
+                setSaveSuccess(true);
+                // 성공 배너 자동 숨김 (3초)
+                setTimeout(() => setSaveSuccess(false), 3000);
+
+            } catch (error) {
+                devError('❌ 설정 저장 실패:', error);
+                alert('설정 저장에 실패했습니다. 다시 시도해주세요.');
+            } finally {
+                setIsUpdating(false);
+            }
         }
     };
 
@@ -271,12 +300,18 @@ export default function DashboardSettings() {
     };
 
     // 설정 상태 텍스트 생성 (원본 설정 기준)
-    const getSettingsText = (app) => {        // const model = modelOptions.find(opt => opt.value === app.settings.model)?.label.split(' ')[0] || app.settings.model;
-        return `노이즈: ${app.settings.noiseLevel}`;
+    const getSettingsText = (app) => {
+        const difficultyText = app.settings.difficulty === 'low' ? '낮음' :
+            app.settings.difficulty === 'middle' ? '중간' :
+                app.settings.difficulty === 'high' ? '높음' : '낮음';
+        return `난이도: ${difficultyText}`;
     };
 
-    // 임시 설정이 있는지 확인
-    const hasTempSettings = selectedApp && appSettings[selectedApp.id];
+    // 임시 설정이 있는지 확인 (실제 변경사항이 있는 경우에만)
+    const hasTempSettings = selectedApp && appSettings[selectedApp.id] && (
+        (appSettings[selectedApp.id].difficulty !== undefined &&
+            appSettings[selectedApp.id].difficulty !== (selectedApp.settings.difficulty || 'low'))
+    );
 
     return (
         <DashboardLayout
@@ -339,13 +374,13 @@ export default function DashboardSettings() {
                                 <h3 className="text-xl font-semibold theme-text-primary">My Scratcha 설정</h3>
                                 <button
                                     onClick={handleApplySettings}
-                                    disabled={!hasTempSettings}
-                                    className={`px-4 py-2 rounded-lg font-semibold transition ${hasTempSettings
+                                    disabled={!hasTempSettings || isUpdating}
+                                    className={`px-4 py-2 rounded-lg font-semibold transition ${hasTempSettings && !isUpdating
                                         ? 'bg-blue-600 dark:bg-blue-500 text-white hover:opacity-90'
                                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                         }`}
                                 >
-                                    설정 저장
+                                    {isUpdating ? '저장 중...' : '설정 저장'}
                                 </button>
                             </div>
                         )}
@@ -392,11 +427,12 @@ export default function DashboardSettings() {
                                         </select>
                                     </div> */}
 
-                                    {/* 노이즈 강도 설정 */}
+
+                                    {/* 난이도 설정 */}
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <label className="block text-sm font-medium theme-text-primary">
-                                                노이즈 강도
+                                                난이도
                                             </label>
                                             <div className="relative group">
                                                 <button
@@ -407,26 +443,24 @@ export default function DashboardSettings() {
                                                     ?
                                                 </button>
                                                 <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 absolute z-10 left-6 top-1 w-64 px-3 py-2 rounded-md bg-gray-900 text-gray-100 text-xs shadow-lg border border-gray-700 whitespace-normal break-words text-left transition-opacity duration-150">
-                                                    노이즈가 높을수록 자동화 공격 저항성이 증가하지만 사용자 경험이 떨어질 수 있습니다.
+                                                    난이도가 높을수록 캡차가 어려워지지만 보안성이 향상됩니다.
                                                 </div>
                                             </div>
                                         </div>
                                         <p className="text-sm theme-text-secondary mt-1 mb-2">
-                                            캡차 이미지에 적용할 노이즈 강도를 설정하세요
+                                            캡차의 난이도를 설정하세요
                                         </p>
                                         <select
-                                            value={currentSettings.noiseLevel || selectedApp.settings.noiseLevel}
-                                            onChange={(e) => handleAppSettingChange('noiseLevel', e.target.value)}
-                                            className={`w-full px-3 py-2 theme-input focus:outline-none focus:ring-2 ${changedNoise
+                                            value={currentSettings.difficulty || selectedApp.settings.difficulty || 'low'}
+                                            onChange={(e) => handleAppSettingChange('difficulty', e.target.value)}
+                                            className={`w-full px-3 py-2 theme-input focus:outline-none focus:ring-2 ${changedDifficulty
                                                 ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                                 : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
                                                 }`}
                                         >
-                                            {noiseLevelOptions.map((option) => (
-                                                <option key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </option>
-                                            ))}
+                                            <option value="low">낮음</option>
+                                            <option value="middle">중간</option>
+                                            <option value="high">높음</option>
                                         </select>
                                     </div>
 
