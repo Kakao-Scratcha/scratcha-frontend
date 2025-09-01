@@ -31,16 +31,15 @@ export default function Contact() {
             await new Promise(resolve => setTimeout(resolve, 1000));
             setSubmitStatus('success');
             setFormData({ name: '', email: '', subject: '', message: '' });
-        } catch (error) {
-            console.error('문의 전송 실패:', error);
-            setSubmitStatus('error');
+        } catch {
+            // 문의 전송 실패 처리
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="min-h-screen theme-layout">
             <div className="max-w-7xl mx-auto px-4 py-16">
                 {/* Hero Section */}
                 <div className="text-center mb-16">
@@ -244,55 +243,7 @@ export default function Contact() {
                                 </div>
                             </div>
                         </Card>
-
-                        {/* API Docs Link */}
-                        <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                API 문서
-                            </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                                개발자 가이드와 API 문서를 확인하세요.
-                            </p>
-                            <a
-                                href="/api-docs"
-                                className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                            >
-                                API 문서 보기
-                            </a>
-                        </Card>
                     </div>
-                </div>
-
-                {/* Additional Info */}
-                <div className="mt-16 text-center">
-                    <Card className="p-8 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                            더 많은 도움이 필요하신가요?
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-300 mb-6 max-w-2xl mx-auto">
-                            API 문서, 개발자 가이드, 또는 커뮤니티 포럼을 통해 더 많은 정보를 얻을 수 있습니다.
-                        </p>
-                        <div className="flex flex-wrap justify-center gap-4">
-                            <a
-                                href="/api-docs"
-                                className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                            >
-                                API 문서
-                            </a>
-                            <a
-                                href="/demo"
-                                className="inline-block border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-blue-600 hover:text-white transition-colors"
-                            >
-                                데모 보기
-                            </a>
-                            <a
-                                href="/pricing"
-                                className="inline-block border-2 border-gray-600 text-gray-600 dark:text-gray-300 px-6 py-3 rounded-lg font-medium hover:bg-gray-600 hover:text-white transition-colors"
-                            >
-                                요금제 보기
-                            </a>
-                        </div>
-                    </Card>
                 </div>
             </div>
         </div>

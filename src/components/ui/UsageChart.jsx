@@ -70,14 +70,13 @@ export default function UsageChart({
     margin = { top: 40, right: 12, bottom: 40, left: 12 },
     showGrid = true,
     allowDecimals = false,
-    className = "",
-    debugName = "UsageChart"
+    className = ""
 }) {
     const xTickFormatter = createXTickFormatter(selectedPeriod);
     const formattedData = formatDataByPeriod(data, selectedPeriod);
 
     return (
-        <Chart debugName={debugName} height={height} className={className}>
+        <Chart height={height} className={className}>
             <LineChart data={formattedData} margin={margin}>
                 {showGrid && (
                     <CartesianGrid

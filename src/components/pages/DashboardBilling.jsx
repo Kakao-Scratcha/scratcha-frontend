@@ -4,6 +4,7 @@ import Modal from '../ui/Modal';
 import ProgressBar from '../ui/ProgressBar';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { useAuthStore } from '../../stores/authStore';
+import { devLog, devError } from '../../utils/logger';
 
 export default function DashboardBilling() {
     // Typography scale for consistency
@@ -66,50 +67,37 @@ export default function DashboardBilling() {
         return planConfigs[planName] || planConfigs['free'];
     };
 
-    // 현재 요금제 정보 (authStore 기반)
+    // 현재 요금제 정보
     const currentPlanInfo = getCurrentPlanInfo();
-
-
 
     // 요금제 변경 처리
     const handlePlanChange = async () => {
-        if (!selectedPlan) {
-            alert('변경할 요금제를 선택해주세요.');
-            return;
-        }
-
+        devLog('🔄 요금제 변경 시작:', selectedPlan);
         setIsLoading(true);
-        console.log('🔄 요금제 변경 시작:', selectedPlan);
 
         try {
-            const result = await changePlan(selectedPlan);
-            console.log('📋 요금제 변경 결과:', result);
+            const result = await changePlan(selectedPlan.toLowerCase());
+            devLog('📋 요금제 변경 결과:', result);
 
             if (result.success) {
-                // 성공 팝업
-                alert(`✅ ${selectedPlan} 요금제로 성공적으로 변경되었습니다!`);
-                console.log('✅ 요금제 변경 성공 팝업 표시');
+                devLog('✅ 요금제 변경 성공 팝업 표시');
+                alert('요금제가 성공적으로 변경되었습니다!');
+                setIsPlanChangeModalOpen(false);
             } else {
-                // 실패 팝업
                 const errorMessage = result.error || '요금제 변경에 실패했습니다.';
-                alert(`❌ 요금제 변경 실패: ${errorMessage}`);
-                console.error('❌ 요금제 변경 실패 팝업 표시:', errorMessage);
+                devError('❌ 요금제 변경 실패 팝업 표시:', errorMessage);
+                alert(`요금제 변경 실패: ${errorMessage}`);
             }
 
-            setIsPlanChangeModalOpen(false);
-
-            // 변경 후 상태 확인
-            console.log('✅ 요금제 변경 완료 후 상태 확인:', {
-                selectedPlan,
-                result,
-                currentPlanInfo,
-                userPlan: useAuthStore.getState().user?.plan
+            devLog('✅ 요금제 변경 완료 후 상태 확인:', {
+                현재요금제: user?.plan,
+                선택된요금제: selectedPlan.toLowerCase(),
+                성공여부: result.success
             });
 
         } catch (error) {
-            console.error('❌ 요금제 변경 중 예외 발생:', error);
-            alert(`❌ 요금제 변경 중 오류가 발생했습니다: ${error.message}`);
-            setIsPlanChangeModalOpen(false);
+            devError('❌ 요금제 변경 중 예외 발생:', error);
+            alert('요금제 변경 중 오류가 발생했습니다.');
         } finally {
             setIsLoading(false);
         }

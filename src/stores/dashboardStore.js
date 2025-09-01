@@ -6,6 +6,7 @@ import {
 import { applicationAPI, dashboardAPI, billingAPI } from '../services/api';
 import { useAuthStore } from './authStore';
 import { PERIOD_TYPE_MAP, processChartData } from '../utils/chartDataUtils';
+import { devLog, devError } from '../utils/logger';
 
 // 초기 상태 준비
 const INITIAL_PERIOD = '전체';
@@ -66,7 +67,7 @@ export const useDashboardStore = create((set, get) => ({
 
     // 통계 데이터 로드
     loadRequestsStats: async (periodType) => {
-        console.log('📊 통계 데이터 로드 시작:', periodType);
+        devLog('📊 통계 데이터 로드 시작:', periodType);
 
         set(state => ({
             requestsStats: {
@@ -81,7 +82,7 @@ export const useDashboardStore = create((set, get) => ({
 
         try {
             const response = await dashboardAPI.getRequestsStats(periodType);
-            console.log('📊 통계 API 응답:', response.data);
+            devLog('📊 통계 API 응답:', response.data);
 
             const { currentCount, previousCount, rate } = response.data.data;
 
@@ -98,9 +99,9 @@ export const useDashboardStore = create((set, get) => ({
                 }
             }));
 
-            console.log('✅ 통계 데이터 로드 완료:', { periodType, currentCount, previousCount, rate });
+            devLog('✅ 통계 데이터 로드 완료:', { periodType, currentCount, previousCount, rate });
         } catch (error) {
-            console.error('❌ 통계 데이터 로드 실패:', error);
+            devError('❌ 통계 데이터 로드 실패:', error);
             set(state => ({
                 requestsStats: {
                     ...state.requestsStats,
@@ -116,7 +117,7 @@ export const useDashboardStore = create((set, get) => ({
 
     // 모든 통계 데이터 로드
     loadAllRequestsStats: async () => {
-        console.log('📊 모든 통계 데이터 로드 시작');
+        devLog('📊 모든 통계 데이터 로드 시작');
         await Promise.all([
             get().loadRequestsStats('daily'),
             get().loadRequestsStats('weekly'),
@@ -129,7 +130,7 @@ export const useDashboardStore = create((set, get) => ({
         const { keyId, periodType = 'yearly', page = 1, limit = 10 } = params;
         const skip = (page - 1) * limit;
 
-        console.log('📊 로그 로드 시작:', { keyId, periodType, page, limit, skip });
+        devLog('📊 로그 로드 시작:', { keyId, periodType, page, limit, skip });
 
         set(state => ({
             logs: { ...state.logs, loading: true, error: null }
@@ -137,8 +138,8 @@ export const useDashboardStore = create((set, get) => ({
 
         try {
             const response = await dashboardAPI.getLogs({ keyId, periodType, skip, limit });
-            console.log('📊 로그 API 응답:', response.data);
-            console.log('📊 응답 데이터 구조:', {
+            devLog('📊 로그 API 응답:', response.data);
+            devLog('📊 응답 데이터 구조:', {
                 data: response.data.data,
                 total: response.data.total,
                 page: response.data.page,
@@ -165,14 +166,14 @@ export const useDashboardStore = create((set, get) => ({
                 selectedKeyId: keyId || null
             });
 
-            console.log('📊 상태 업데이트 후 logs:', {
+            devLog('📊 상태 업데이트 후 logs:', {
                 items,
                 total,
                 page,
                 size
             });
         } catch (error) {
-            console.error('로그 데이터 로드 실패:', error);
+            devError('로그 데이터 로드 실패:', error);
             set(state => ({
                 logs: {
                     ...state.logs,
@@ -196,26 +197,26 @@ export const useDashboardStore = create((set, get) => ({
     // 로그 페이지 변경
     changeLogPage: async (page, limit = 10, periodType = 'yearly') => {
         const { selectedKeyId } = get();
-        console.log('📄 페이지 변경:', { page, limit, selectedKeyId, periodType });
+        devLog('📄 페이지 변경:', { page, limit, selectedKeyId, periodType });
         await get().loadLogs({ keyId: selectedKeyId, page, limit, periodType });
     },
 
     // 기존 액션들 수정 (로그 데이터 활용)
     refreshApplications: async () => {
-        console.log('📱 애플리케이션 데이터 새로고침 시작');
+        devLog('📱 애플리케이션 데이터 새로고침 시작');
         set({ isAppsLoading: true, apps: [], apiKeys: [] });
         try {
             const response = await applicationAPI.getAllApplications();
-            console.log('📱 애플리케이션 API 응답:', response.data);
+            devLog('📱 애플리케이션 API 응답:', response.data);
 
             const processedKeyIds = new Set();
 
             // 모든 키 수집 (배열/단일 모두 지원), 중복 제거
             const freshKeys = [];
             (response.data || []).forEach(app => {
-                console.log('📱 앱 데이터 처리:', app);
+                devLog('📱 앱 데이터 처리:', app);
                 const keys = Array.isArray(app.keys) ? app.keys : (app.key ? [app.key] : []);
-                console.log('🔑 앱의 키들:', keys);
+                devLog('🔑 앱의 키들:', keys);
                 keys.forEach(k => {
                     if (k && !processedKeyIds.has(k.id)) {
                         processedKeyIds.add(k.id);
@@ -225,6 +226,7 @@ export const useDashboardStore = create((set, get) => ({
                             name: `API Key ${k.id}`,
                             key: k.key,
                             status: k.isActive ? 'active' : 'inactive',
+                            difficulty: k.difficulty || 'low', // 난이도 정보 추가
                             lastUsed: '사용 기록 없음',
                         });
                     }
@@ -250,11 +252,18 @@ export const useDashboardStore = create((set, get) => ({
                 };
             });
 
-            console.log('📱 처리된 앱들:', freshApps);
-            console.log('🔑 처리된 키들:', freshKeys);
+            devLog('📱 처리된 앱들:', freshApps);
+            devLog('🔑 처리된 키들:', freshKeys.map(key => ({
+                id: key.id,
+                appId: key.appId,
+                name: key.name,
+                status: key.status,
+                difficulty: key.difficulty,
+                hasKey: !!key.key
+            })));
             set({ apps: freshApps, apiKeys: freshKeys });
         } catch (error) {
-            console.error('📱 애플리케이션 데이터 로드 실패:', error);
+            devError('📱 애플리케이션 데이터 로드 실패:', error);
         } finally {
             set({ isAppsLoading: false });
         }
@@ -281,13 +290,13 @@ export const useDashboardStore = create((set, get) => ({
     loadStatisticsSummary: async (keyId = null, selectedPeriod = '전체') => {
         const periodType = PERIOD_TYPE_MAP[selectedPeriod] || 'yearly';
 
-        console.log('📊 통계 요약 로드 시작:', { keyId, selectedPeriod, periodType });
+        devLog('📊 통계 요약 로드 시작:', { keyId, selectedPeriod, periodType });
 
         set({ isLoading: true });
 
         try {
             const response = await dashboardAPI.getStatisticsSummary(keyId, periodType);
-            console.log('📊 통계 요약 API 응답:', response.data);
+            devLog('📊 통계 요약 API 응답:', response.data);
 
             // API 응답 데이터를 차트 형식으로 변환
             const chartData = processChartData(response.data, selectedPeriod);
@@ -297,9 +306,9 @@ export const useDashboardStore = create((set, get) => ({
                 isLoading: false
             });
 
-            console.log('✅ 통계 요약 로드 완료:', { keyId, selectedPeriod, chartData });
+            devLog('✅ 통계 요약 로드 완료:', { keyId, selectedPeriod, chartData });
         } catch (error) {
-            console.error('❌ 통계 요약 로드 실패:', error);
+            devError('❌ 통계 요약 로드 실패:', error);
             set({
                 usageData: [],
                 isLoading: false
@@ -360,33 +369,33 @@ export const useDashboardStore = create((set, get) => ({
 
     // 요금제 변경 함수 (API 연동)
     changePlan: async (newPlanName) => {
-        console.log('🔄 요금제 변경 시도:', newPlanName);
+        devLog('🔄 요금제 변경 시도:', newPlanName);
 
         try {
             // 사용자 ID 가져오기
             const { user } = useAuthStore.getState();
             if (!user || !user.id) {
-                console.error('❌ 사용자 ID가 없습니다.');
+                devError('❌ 사용자 ID가 없습니다.');
                 return { success: false, error: '사용자 정보를 찾을 수 없습니다.' };
             }
 
             // 1단계: 실제 API 호출
             const response = await billingAPI.changePlan(user.id, newPlanName);
-            console.log('✅ API 요금제 변경 성공:', response.data);
+            devLog('✅ API 요금제 변경 성공:', response.data);
 
             // 2단계: 서버 응답에서 요금제 정보 추출
             const serverPlanName = response.data.plan || 'free';
-            console.log('📋 서버 응답 요금제명:', serverPlanName);
+            devLog('📋 서버 응답 요금제명:', serverPlanName);
 
             // 3단계: 내정보 확인 API 호출하여 일치 여부 확인
             try {
                 const { getProfile } = useAuthStore.getState();
                 const profileResponse = await getProfile({ showLoading: false });
-                console.log('✅ 내정보 확인 API 응답:', profileResponse);
+                devLog('✅ 내정보 확인 API 응답:', profileResponse);
 
                 // profileResponse가 null이거나 user가 없는 경우 처리
                 if (!profileResponse || !profileResponse.user) {
-                    console.error('❌ 내정보 확인 API 응답이 유효하지 않음:', profileResponse);
+                    devError('❌ 내정보 확인 API 응답이 유효하지 않음:', profileResponse);
                     return {
                         success: false,
                         error: '사용자 정보를 가져올 수 없습니다. 잠시 후 다시 시도해주세요.'
@@ -395,11 +404,11 @@ export const useDashboardStore = create((set, get) => ({
 
                 const userProfile = profileResponse.user;
                 const profilePlanName = userProfile.plan || 'free';
-                console.log('📋 내정보에서 가져온 요금제명:', profilePlanName);
+                devLog('📋 내정보에서 가져온 요금제명:', profilePlanName);
 
                 // 4단계: 서버 응답과 내정보 일치 여부 확인
                 if (serverPlanName !== profilePlanName) {
-                    console.error('❌ 요금제 정보 불일치:', {
+                    devError('❌ 요금제 정보 불일치:', {
                         서버응답: serverPlanName,
                         내정보: profilePlanName
                     });
@@ -409,7 +418,7 @@ export const useDashboardStore = create((set, get) => ({
                     };
                 }
 
-                console.log('✅ 요금제 정보 일치 확인 완료:', serverPlanName);
+                devLog('✅ 요금제 정보 일치 확인 완료:', serverPlanName);
 
                 // 5단계: 더미데이터의 요금제 설정
                 const planConfigs = {
@@ -455,7 +464,7 @@ export const useDashboardStore = create((set, get) => ({
                 const serverRequestsCount = serverUsage?.requestsCount || 0;
                 const serverAvgTokensPerRequest = serverUsage?.avgTokensPerRequest || 20;
 
-                console.log('📊 서버 사용량 정보:', {
+                devLog('📊 서버 사용량 정보:', {
                     tokensUsed: serverTokensUsed,
                     requestsCount: serverRequestsCount,
                     avgTokensPerRequest: serverAvgTokensPerRequest
@@ -495,7 +504,7 @@ export const useDashboardStore = create((set, get) => ({
                     };
                 });
 
-                console.log('✅ 요금제 변경 완료:', {
+                devLog('✅ 요금제 변경 완료:', {
                     새요금제: newPlanConfig.name,
                     새한도: newPlanConfig.limit,
                     현재사용량: serverTokensUsed,
@@ -505,12 +514,12 @@ export const useDashboardStore = create((set, get) => ({
                 // 8단계: authStore 사용자 정보 업데이트
                 const { updateUser } = useAuthStore.getState();
                 updateUser({ plan: serverPlanName });
-                console.log('✅ authStore 사용자 정보 plan 필드 업데이트:', serverPlanName);
+                devLog('✅ authStore 사용자 정보 plan 필드 업데이트:', serverPlanName);
 
                 return { success: true };
 
             } catch (profileError) {
-                console.error('❌ 내정보 확인 API 호출 실패:', profileError);
+                devError('❌ 내정보 확인 API 호출 실패:', profileError);
                 return {
                     success: false,
                     error: '요금제 변경 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
@@ -518,7 +527,7 @@ export const useDashboardStore = create((set, get) => ({
             }
 
         } catch (error) {
-            console.error('❌ 요금제 변경 실패:', error);
+            devError('❌ 요금제 변경 실패:', error);
             return { success: false, error: error.message };
         }
     },

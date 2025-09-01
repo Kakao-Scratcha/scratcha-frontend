@@ -7,7 +7,7 @@ export default function Footer() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     return (
-        <footer className="w-full pt-12 pb-8 mt-12 theme-footer">
+        <footer className="w-full pt-12 pb-8 theme-footer">
             <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row md:justify-between gap-12">
                 {/* 좌측: 로고, 소셜 */}
                 <div className="flex flex-col gap-4 min-w-[180px] text-left">

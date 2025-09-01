@@ -146,16 +146,15 @@ export default function DashboardOverview() {
     };
     const usageColor = getUsageColorClass(usagePercent);
 
-    // 디버그 로그: 기간/차트타입/데이터 포인트 수
-    useEffect(() => {
-        // 너무 긴 데이터 출력 방지 위해 앞/뒤 2개만 미리보기
-        const preview = Array.isArray(chartUsageData)
-            ? { head: chartUsageData.slice(0, 2), tail: chartUsageData.slice(-2) }
-            : null;
-        console.log('[Overview] selectedPeriod:', selectedPeriod);
-        console.log('[Overview] chartUsageData length:', Array.isArray(chartUsageData) ? chartUsageData.length : 'N/A');
-        console.log('[Overview] chartUsageData preview:', preview);
-    }, [selectedPeriod, chartUsageData]);
+    // 디버그 로그 제거
+    // useEffect(() => {
+    //     const preview = Array.isArray(chartUsageData)
+    //         ? { head: chartUsageData.slice(0, 2), tail: chartUsageData.slice(-2) }
+    //         : null;
+    //     console.log('[Overview] selectedPeriod:', selectedPeriod);
+    //     console.log('[Overview] chartUsageData length:', Array.isArray(chartUsageData) ? chartUsageData.length : 'N/A');
+    //     console.log('[Overview] chartUsageData preview:', preview);
+    // }, [selectedPeriod, chartUsageData]);
 
     // 초과분 요금 계산 (통합 사용량 데이터 사용)
     const overageCost = calculateOverageCost(safePlanUsageData.current.tokens.used, safeCurrentPlan.limit, safeCurrentPlan.overageRate);
@@ -360,7 +359,6 @@ export default function DashboardOverview() {
                             <UsageChart
                                 data={chartUsageData}
                                 selectedPeriod={selectedPeriod}
-                                debugName="OverviewChart"
                             />
                         )}
                     </div>
