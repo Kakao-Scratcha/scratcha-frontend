@@ -295,15 +295,15 @@ export default function DashboardUsage() {
                 </div>
 
                 {/* 필터 */}
-                <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         {/* 앱 선택 */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">앱</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">앱</label>
                             <select
                                 value={selectedAppId}
                                 onChange={(e) => handleAppChange(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                             >
                                 <option value="all">전체</option>
                                 {apps.map(app => (
@@ -314,11 +314,11 @@ export default function DashboardUsage() {
 
                         {/* API 키 선택 */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">API 키</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API 키</label>
                             <select
                                 value={selectedApiKeyId}
                                 onChange={(e) => handleApiKeyChange(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                             >
                                 <option value="all">전체</option>
                                 {appApiKeys.map(key => (
@@ -329,11 +329,11 @@ export default function DashboardUsage() {
 
                         {/* 기간 선택 */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">기간</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">기간</label>
                             <select
                                 value={selectedPeriod}
                                 onChange={(e) => setSelectedPeriod(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                             >
                                 {periodOptions.map(option => (
                                     <option key={option} value={option}>{option}</option>
@@ -343,13 +343,13 @@ export default function DashboardUsage() {
 
                         {/* 보기 모드 */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">보기</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">보기</label>
                             <div className="flex">
                                 <button
                                     onClick={() => setViewMode('graph')}
                                     className={`flex-1 px-3 py-2 text-sm font-medium rounded-l-md border ${viewMode === 'graph'
                                         ? 'bg-blue-600 text-white border-blue-600'
-                                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
                                         }`}
                                 >
                                     그래프
@@ -358,7 +358,7 @@ export default function DashboardUsage() {
                                     onClick={() => setViewMode('table')}
                                     className={`flex-1 px-3 py-2 text-sm font-medium rounded-r-md border ${viewMode === 'table'
                                         ? 'bg-blue-600 text-white border-blue-600'
-                                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
                                         }`}
                                 >
                                     테이블
@@ -396,7 +396,7 @@ export default function DashboardUsage() {
                                                 debugName="UsageChart"
                                             />
                                         ) : (
-                                            <div className="flex justify-center items-center h-64 text-gray-500">
+                                            <div className="flex justify-center items-center h-64 text-gray-500 dark:text-gray-400">
                                                 API 로그 데이터가 없습니다.
                                             </div>
                                         );
@@ -471,7 +471,7 @@ export default function DashboardUsage() {
                                             </TableBody>
                                         </Table>
                                     ) : (
-                                        <div className="flex justify-center items-center h-64 text-gray-500">
+                                        <div className="flex justify-center items-center h-64 text-gray-500 dark:text-gray-400">
                                             로그 데이터가 없습니다.
                                         </div>
                                     )}
@@ -483,7 +483,7 @@ export default function DashboardUsage() {
                                             <button
                                                 onClick={() => handlePageChange(1)}
                                                 disabled={currentPage === 1}
-                                                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 &lt;&lt;
                                             </button>
@@ -492,7 +492,7 @@ export default function DashboardUsage() {
                                             <button
                                                 onClick={() => handlePageChange(Math.max(1, currentPage - 10))}
                                                 disabled={currentPage <= 10}
-                                                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 &lt;
                                             </button>
@@ -530,7 +530,7 @@ export default function DashboardUsage() {
                                                         onClick={() => handlePageChange(page)}
                                                         className={`px-3 py-2 text-sm font-medium rounded-md border ${page === currentPage
                                                             ? 'bg-blue-600 text-white border-blue-600'
-                                                            : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
+                                                            : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
                                                             }`}
                                                     >
                                                         {page}
@@ -542,7 +542,7 @@ export default function DashboardUsage() {
                                             <button
                                                 onClick={() => handlePageChange(Math.min(totalPages, currentPage + 10))}
                                                 disabled={currentPage >= totalPages - 9 || currentPage === totalPages}
-                                                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 &gt;
                                             </button>
@@ -551,7 +551,7 @@ export default function DashboardUsage() {
                                             <button
                                                 onClick={() => handlePageChange(totalPages)}
                                                 disabled={currentPage === totalPages}
-                                                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 &gt;&gt;
                                             </button>

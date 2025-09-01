@@ -279,6 +279,59 @@ body {
   border-color: var(--color-border-primary);
 }
 
+/* Prism.js 스타일 오버라이드 */
+.prismjs {
+  background: #f3f4f6 !important; /* bg-gray-100 */
+}
+
+.dark .prismjs {
+  background: #111827 !important; /* dark:bg-gray-900 */
+}
+
+.prismjs code {
+  color: #374151 !important; /* text-gray-700 */
+}
+
+.dark .prismjs code {
+  color: #e5e7eb !important; /* dark:text-gray-200 */
+}
+
+.dark .prismjs .token.keyword {
+  color: #60a5fa !important;
+}
+
+.dark .prismjs .token.string {
+  color: #34d399 !important;
+}
+
+.dark .prismjs .token.comment {
+  color: #9ca3af !important;
+}
+
+.dark .prismjs .token.function {
+  color: #fbbf24 !important;
+}
+
+.dark .prismjs .token.operator {
+  color: #f87171 !important;
+}
+
+.dark .prismjs .token.punctuation {
+  color: #e5e7eb !important;
+}
+
+.dark .prismjs .token.tag {
+  color: #60a5fa !important;
+}
+
+.dark .prismjs .token.attr-name {
+  color: #fbbf24 !important;
+}
+
+.dark .prismjs .token.attr-value {
+  color: #34d399 !important;
+}
+
 .theme-border-secondary {
   border-color: var(--color-border-secondary);
 }
