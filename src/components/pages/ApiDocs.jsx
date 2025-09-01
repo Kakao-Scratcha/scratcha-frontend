@@ -11,7 +11,7 @@ export default function ApiDocs() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="min-h-screen theme-layout">
             {/* Hero Section */}
             <div className="max-w-7xl mx-auto px-4 py-16">
                 <div className="text-center mb-16">
@@ -238,34 +238,6 @@ function App() {
                             <p className="text-gray-600 dark:text-gray-300">외부 이미지 로딩 지원</p>
                         </Card>
                     </div>
-                </div>
-
-
-
-                {/* CTA */}
-                <div className="text-center">
-                    <Card className="p-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                        <h2 className="text-3xl font-bold mb-4">지금 시작하세요</h2>
-                        <p className="text-xl mb-6 opacity-90">
-                            Scratcha SDK로 캡차 검증을 쉽게 통합해보세요.
-                        </p>
-                        <div className="space-x-4">
-                            <a
-                                href="https://www.npmjs.com/package/scratcha-sdk"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-                            >
-                                NPM 패키지 보기
-                            </a>
-                            <a
-                                href="/demo"
-                                className="inline-block border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
-                            >
-                                데모 보기
-                            </a>
-                        </div>
-                    </Card>
                 </div>
             </div >
         </div >
