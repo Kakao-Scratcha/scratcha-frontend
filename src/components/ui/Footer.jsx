@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import SocialLinks from './SocialLinks';
+import { useAuthStore } from '../../stores/authStore';
 
 export default function Footer() {
+    const { isAuthenticated } = useAuthStore();
+
     const handleLinkClick = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -42,17 +45,21 @@ export default function Footer() {
                         </div>
                         <ul className="space-y-1 text-gray-600 dark:text-gray-300">
                             <li><Link to="/contact" onClick={handleLinkClick} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">문의하기</Link></li>
-                            <li><span className="text-gray-400 dark:text-gray-500 cursor-not-allowed">FAQ</span></li>
-                            <li><span className="text-gray-400 dark:text-gray-500 cursor-not-allowed">가이드</span></li>
                         </ul>
                     </div>
                     <div>
                         <div className="font-semibold mb-2 text-gray-900 dark:text-white">
-                            계정
+                            {isAuthenticated ? '서비스' : '계정'}
                         </div>
                         <ul className="space-y-1 text-gray-600 dark:text-gray-300">
-                            <li><Link to="/signin" onClick={handleLinkClick} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">로그인</Link></li>
-                            <li><Link to="/signup" onClick={handleLinkClick} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">회원가입</Link></li>
+                            {isAuthenticated ? (
+                                <li><Link to="/dashboard" onClick={handleLinkClick} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">대시보드</Link></li>
+                            ) : (
+                                <>
+                                    <li><Link to="/signin" onClick={handleLinkClick} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">로그인</Link></li>
+                                    <li><Link to="/signup" onClick={handleLinkClick} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">회원가입</Link></li>
+                                </>
+                            )}
                         </ul>
                     </div>
                 </div>
