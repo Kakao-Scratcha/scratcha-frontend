@@ -1,4 +1,7 @@
 import React from 'react';
+import ntFavicon from '../../assets/images/nt_favicon.ico';
+import ghFavicon from '../../assets/images/gh_favicon.svg';
+import spFavicon from '../../assets/images/sp_favicon.ico';
 
 export default function SocialLinks() {
     return (
@@ -12,7 +15,7 @@ export default function SocialLinks() {
                 rel="noopener noreferrer"
             >
                 <img
-                    src="/src/assets/images/nt_favicon.ico"
+                    src={ntFavicon}
                     alt="Notion"
                     className="w-5 h-5"
                 />
@@ -27,7 +30,7 @@ export default function SocialLinks() {
                 rel="noopener noreferrer"
             >
                 <img
-                    src="/src/assets/images/gh_favicon.svg"
+                    src={ghFavicon}
                     alt="GitHub"
                     className="w-5 h-5"
                 />
@@ -42,7 +45,7 @@ export default function SocialLinks() {
                 rel="noopener noreferrer"
             >
                 <img
-                    src="/src/assets/images/sp_favicon.ico"
+                    src={spFavicon}
                     alt="SniperFactory"
                     className="w-5 h-5"
                 />
