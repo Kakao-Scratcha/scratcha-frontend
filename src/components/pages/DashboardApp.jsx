@@ -18,6 +18,7 @@ export default function DashboardApp() {
 
     const [isAddAppModalOpen, setIsAddAppModalOpen] = useState(false);
     const [isDeleteAppModalOpen, setIsDeleteAppModalOpen] = useState(false);
+    const [isEditAppModalOpen, setIsEditAppModalOpen] = useState(false);
     const [isAddApiKeyModalOpen, setIsAddApiKeyModalOpen] = useState(false);
     const [isDeleteApiKeyModalOpen, setIsDeleteApiKeyModalOpen] = useState(false);
     const [selectedAppId, setSelectedAppId] = useState(null);
@@ -31,6 +32,12 @@ export default function DashboardApp() {
 
     // 새 APP 폼 상태
     const [newAppForm, setNewAppForm] = useState({
+        name: '',
+        description: ''
+    });
+
+    // APP 수정 폼 상태
+    const [editAppForm, setEditAppForm] = useState({
         name: '',
         description: ''
     });
@@ -127,6 +134,51 @@ export default function DashboardApp() {
             await loadApplications();
         } catch (error) {
             handleApiError(error, 'APP 생성');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // APP 수정 모달 열기
+    const handleOpenEditApp = (app) => {
+        setSelectedAppId(app.id);
+        setEditAppForm({
+            name: app.name || '',
+            description: app.description || ''
+        });
+        setIsEditAppModalOpen(true);
+    };
+
+    // APP 수정 처리 (API 연결)
+    const handleUpdateApp = async (e) => {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+        if (!selectedAppId) {
+            setErrorModal({ isOpen: true, message: '수정할 APP이 선택되지 않았습니다.' });
+            return;
+        }
+
+        if (!editAppForm.name.trim()) {
+            setErrorModal({ isOpen: true, message: '앱 이름을 입력해주세요.' });
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await applicationAPI.updateApplication(selectedAppId, {
+                appName: editAppForm.name.trim(),
+                description: editAppForm.description.trim()
+            });
+
+            devLog('✅ APP 수정 성공:', response.data);
+
+            setIsEditAppModalOpen(false);
+            setEditAppForm({ name: '', description: '' });
+
+            // 데이터 다시 조회
+            await loadApplications();
+        } catch (error) {
+            handleApiError(error, 'APP 수정');
         } finally {
             setLoading(false);
         }
@@ -371,6 +423,13 @@ export default function DashboardApp() {
                                             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{app.name}</h3>
                                         </div>
                                         <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={() => handleOpenEditApp(app)}
+                                                disabled={loading}
+                                                className="px-3 py-1 rounded text-sm font-medium bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition disabled:opacity-50 dark:bg-yellow-900 dark:text-yellow-200"
+                                            >
+                                                수정
+                                            </button>
                                             <button
                                                 onClick={() => {
                                                     setSelectedAppId(app.id);
@@ -659,6 +718,69 @@ export default function DashboardApp() {
                             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
                         >
                             {loading ? '추가 중...' : '추가'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* APP 수정 모달 */}
+            <Modal
+                isOpen={isEditAppModalOpen}
+                onClose={() => setIsEditAppModalOpen(false)}
+                title="APP 수정"
+            >
+                <form onSubmit={handleUpdateApp} className="space-y-4">
+                    {selectedApp && (
+                        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">선택한 APP</p>
+                            <p className="font-medium text-gray-900 dark:text-gray-100">{selectedApp.name}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{selectedApp.description}</p>
+                        </div>
+                    )}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                            APP 이름
+                        </label>
+                        <input
+                            type="text"
+                            value={editAppForm.name}
+                            onChange={(e) => setEditAppForm(prev => ({ ...prev, name: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="APP 이름을 입력하세요"
+                            required
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                            설명
+                        </label>
+                        <textarea
+                            value={editAppForm.description}
+                            onChange={(e) => setEditAppForm(prev => ({ ...prev, description: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="APP에 대한 설명을 입력하세요"
+                            rows={3}
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                        <button
+                            type="button"
+                            onClick={() => setIsEditAppModalOpen(false)}
+                            disabled={loading}
+                            className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition disabled:opacity-50"
+                        >
+                            취소
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
+                        >
+                            {loading ? '저장 중...' : '저장'}
                         </button>
                     </div>
                 </form>

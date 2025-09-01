@@ -69,7 +69,7 @@ export const applicationAPI = {
     // 애플리케이션 업데이트
     updateApplication: (appId, data) => {
         console.log('📱 애플리케이션 업데이트 API 호출:', { appId, data });
-        return apiClient.put(`/dashboard/applications/${appId}`, data);
+        return apiClient.patch(`/dashboard/applications/${appId}`, data);
     },
 
     // 애플리케이션 삭제
