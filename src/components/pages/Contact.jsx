@@ -41,7 +41,7 @@ export default function Contact() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-            <div className="container mx-auto px-4 py-16">
+            <div className="max-w-7xl mx-auto px-4 py-16">
                 {/* Hero Section */}
                 <div className="text-center mb-16">
                     <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
@@ -62,13 +62,13 @@ export default function Contact() {
                             </h2>
 
                             {submitStatus === 'success' && (
-                                <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                                <div className="mb-6 p-4 bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-600 text-green-700 dark:text-green-300 rounded-lg">
                                     메시지가 성공적으로 전송되었습니다. 빠른 시일 내에 답변드리겠습니다.
                                 </div>
                             )}
 
                             {submitStatus === 'error' && (
-                                <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                                <div className="mb-6 p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 rounded-lg">
                                     메시지 전송에 실패했습니다. 잠시 후 다시 시도해주세요.
                                 </div>
                             )}
