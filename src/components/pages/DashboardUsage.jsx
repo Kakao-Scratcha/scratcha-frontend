@@ -250,8 +250,6 @@ export default function DashboardUsage() {
 
     // 결과 상태별 색상
     const getResultColor = (result) => {
-        console.log('🔍 Result 값 확인:', result, typeof result);
-
         switch (result) {
             case '성공':
             case 'success':
@@ -266,7 +264,6 @@ export default function DashboardUsage() {
             case '인증오류':
                 return 'text-orange-600 dark:text-orange-400';
             default:
-                console.log('⚠️ 매칭되지 않은 result 값:', result);
                 return 'text-gray-600 dark:text-gray-400';
         }
     };
