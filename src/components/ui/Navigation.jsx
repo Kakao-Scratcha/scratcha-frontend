@@ -16,6 +16,8 @@ export default function Navigation({ isMobile = false }) {
                 <Link to="/overview" className={baseClasses} onClick={handleClick}>개요</Link>
                 <Link to="/pricing" className={baseClasses} onClick={handleClick}>요금제</Link>
                 <Link to="/demo" className={baseClasses} onClick={handleClick}>데모</Link>
+                <Link to="/api-docs" className={baseClasses} onClick={handleClick}>API 문서</Link>
+                <Link to="/contact" className={baseClasses} onClick={handleClick}>문의하기</Link>
                 {isAuthenticated && (
                     <Link to="/dashboard" className={baseClasses} onClick={handleClick}>대시보드</Link>
                 )}
@@ -45,6 +47,20 @@ export default function Navigation({ isMobile = false }) {
                 onClick={handleClick}
             >
                 데모
+            </Link>
+            <Link
+                to="/api-docs"
+                className={baseClasses}
+                onClick={handleClick}
+            >
+                API 문서
+            </Link>
+            <Link
+                to="/contact"
+                className={baseClasses}
+                onClick={handleClick}
+            >
+                문의하기
             </Link>
             {isAuthenticated && (
                 <Link

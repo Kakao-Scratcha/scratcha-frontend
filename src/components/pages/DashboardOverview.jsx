@@ -123,16 +123,10 @@ export default function DashboardOverview() {
         const totalSuccess = Math.round(totalRequests * (successRate / 100));
         const totalFail = totalRequests - totalSuccess;
 
-        // 최근 24시간 성공 (전체의 약 1/7)
-        const succ24Count = Math.round(totalSuccess / 7);
-
         return {
-            totalSuccess,
-            lastSuccess: { date: new Date().toISOString() }, // 최신 날짜
-            succ24Count,
-            lastSucc24: { date: new Date().toISOString() }, // 최신 날짜
-            totalFail,
-            lastFail: { date: new Date().toISOString() }, // 최신 날짜
+            totalRequests,   // 전체 API 호출 수
+            totalSuccess,    // 성공한 호출 수
+            totalFail,       // 실패한 호출 수
         };
     }, [requestsStats.weekly]);
 
@@ -378,23 +372,23 @@ export default function DashboardOverview() {
                     <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                         <li className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <img src={ICONS.success} alt="성공" className="w-7 h-7 rounded-full" />
+                                <img src={ICONS.info} alt="전체호출" className="w-7 h-7 rounded-full" />
                                 <div>
                                     <p className="font-semibold theme-text-primary">API 호출 성공</p>
                                     <p className="text-sm theme-text-secondary">최근 7일</p>
                                 </div>
                             </div>
-                            <div className="text-sm theme-text-secondary">총 {activity.totalSuccess.toLocaleString()}회 ({(activity.totalSuccess * avgTokens).toLocaleString()} 토큰)</div>
+                            <div className="text-sm theme-text-secondary">총 {activity.totalRequests.toLocaleString()}회 ({(activity.totalRequests * avgTokens).toLocaleString()} 토큰)</div>
                         </li>
                         <li className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <img src={ICONS.info} alt="검증성공" className="w-7 h-7 rounded-full" />
+                                <img src={ICONS.success} alt="성공" className="w-7 h-7 rounded-full" />
                                 <div>
                                     <p className="font-semibold theme-text-primary">CAPTCHA 검증 성공</p>
-                                    <p className="text-sm theme-text-secondary">최근 24시간</p>
+                                    <p className="text-sm theme-text-secondary">최근 7일</p>
                                 </div>
                             </div>
-                            <div className="text-sm theme-text-secondary">총 {activity.succ24Count.toLocaleString()}회 ({(activity.succ24Count * avgTokens).toLocaleString()} 토큰)</div>
+                            <div className="text-sm theme-text-secondary">총 {activity.totalSuccess.toLocaleString()}회 ({(activity.totalSuccess * avgTokens).toLocaleString()} 토큰)</div>
                         </li>
                         <li className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">

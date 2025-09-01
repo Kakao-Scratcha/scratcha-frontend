@@ -10,6 +10,8 @@ import Signup from './components/pages/Signup';
 import Overview from './components/pages/Overview';
 import Pricing from './components/pages/Pricing';
 import Demo from './components/pages/Demo';
+import ApiDocs from './components/pages/ApiDocs';
+import Contact from './components/pages/Contact';
 import DashboardOverview from './components/pages/DashboardOverview';
 import DashboardSettings from './components/pages/DashboardSettings';
 import DashboardUsage from './components/pages/DashboardUsage';
@@ -27,6 +29,8 @@ function App() {
             <Route path="overview" element={<Overview />} />
             <Route path="pricing" element={<Pricing />} />
             <Route path="demo" element={<Demo />} />
+            <Route path="api-docs" element={<ApiDocs />} />
+            <Route path="contact" element={<Contact />} />
           </Route>
           <Route path="dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
             <Route index element={<DashboardOverview />} />
