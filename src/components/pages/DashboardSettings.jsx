@@ -301,10 +301,22 @@ export default function DashboardSettings() {
 
     // 설정 상태 텍스트 생성 (원본 설정 기준)
     const getSettingsText = (app) => {
-        const difficultyText = app.settings.difficulty === 'low' ? '낮음' :
-            app.settings.difficulty === 'middle' ? '중간' :
-                app.settings.difficulty === 'high' ? '높음' : '낮음';
-        return `난이도: ${difficultyText}`;
+        const difficulty = app.settings.difficulty || 'low';
+        const difficultyText = difficulty === 'low' ? '쉬움' :
+            difficulty === 'middle' ? '보통' :
+                difficulty === 'high' ? '어려움' : '쉬움';
+
+        const difficultyColor = difficulty === 'low'
+            ? 'text-green-600 dark:text-green-400'
+            : difficulty === 'middle'
+                ? 'text-yellow-600 dark:text-yellow-400'
+                : 'text-red-600 dark:text-red-400';
+
+        return (
+            <span>
+                난이도: <span className={`font-medium ${difficultyColor}`}>{difficultyText}</span>
+            </span>
+        );
     };
 
     // 임시 설정이 있는지 확인 (실제 변경사항이 있는 경우에만)
@@ -458,9 +470,9 @@ export default function DashboardSettings() {
                                                 : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
                                                 }`}
                                         >
-                                            <option value="low">낮음</option>
-                                            <option value="middle">중간</option>
-                                            <option value="high">높음</option>
+                                            <option value="low">쉬움</option>
+                                            <option value="middle">보통</option>
+                                            <option value="high">어려움</option>
                                         </select>
                                     </div>
 

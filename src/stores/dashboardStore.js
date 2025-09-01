@@ -237,6 +237,10 @@ export const useDashboardStore = create((set, get) => ({
             const freshApps = (response.data || []).map((app) => {
                 const keys = freshKeys.filter(k => k.appId === app.id);
                 const isActive = keys.length > 0 ? keys.some(k => k.status === 'active') : false;
+
+                // 해당 앱의 키들에서 난이도 정보 가져오기 (첫 번째 키의 난이도 사용)
+                const appDifficulty = keys.length > 0 ? (keys[0].difficulty || 'low') : 'low';
+
                 return {
                     id: app.id,
                     name: app.appName,
@@ -246,6 +250,7 @@ export const useDashboardStore = create((set, get) => ({
                         model: 'gpt-4',
                         noiseLevel: '중',
                         heuristicLevel: '중',
+                        difficulty: appDifficulty, // 난이도 정보 추가
                     },
                     usage: { today: 0, week: 0, month: 0 },
                     createdAt: new Date().toISOString().split('T')[0],
