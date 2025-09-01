@@ -250,11 +250,14 @@ export default function DashboardUsage() {
 
     // 결과 상태별 색상
     const getResultColor = (result) => {
+        console.log('🔍 Result 값 확인:', result, typeof result);
+
         switch (result) {
             case '성공':
             case 'success':
                 return 'text-green-600 dark:text-green-400';
             case '실패':
+            case 'fail':
             case 'error':
                 return 'text-red-600 dark:text-red-400';
             case '타임아웃':
@@ -263,6 +266,7 @@ export default function DashboardUsage() {
             case '인증오류':
                 return 'text-orange-600 dark:text-orange-400';
             default:
+                console.log('⚠️ 매칭되지 않은 result 값:', result);
                 return 'text-gray-600 dark:text-gray-400';
         }
     };
@@ -428,6 +432,7 @@ export default function DashboardUsage() {
                                         <Table>
                                             <TableHead>
                                                 <TableRow>
+                                                    <TableHeader>번호</TableHeader>
                                                     <TableHeader>ID</TableHeader>
                                                     <TableHeader>앱</TableHeader>
                                                     <TableHeader>API 키</TableHeader>
@@ -437,8 +442,11 @@ export default function DashboardUsage() {
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
-                                                {currentLogs.map((log) => (
+                                                {currentLogs.map((log, index) => (
                                                     <TableRow key={log.id} className="theme-table-row hover:theme-hover-bg">
+                                                        <TableCell className="text-left py-3 px-4 theme-text-primary">
+                                                            {(currentPage - 1) * itemsPerPage + index + 1}
+                                                        </TableCell>
                                                         <TableCell className="text-left py-3 px-4 theme-text-primary">{log.id}</TableCell>
                                                         <TableCell className="text-left py-3 px-4 theme-text-primary">
                                                             {log.appName}
@@ -449,8 +457,10 @@ export default function DashboardUsage() {
                                                         <TableCell className="text-left py-3 px-4 theme-text-primary text-sm">
                                                             {formatDate(log.date)}
                                                         </TableCell>
-                                                        <TableCell className={`text-left py-3 px-4 font-medium ${getResultColor(log.result)}`}>
-                                                            {log.result}
+                                                        <TableCell className="text-left py-3 px-4 font-medium">
+                                                            <span className={getResultColor(log.result)}>
+                                                                {log.result}
+                                                            </span>
                                                         </TableCell>
                                                         <TableCell className="text-left py-3 px-4 theme-text-primary">
                                                             {`${log.ratency}ms`}
