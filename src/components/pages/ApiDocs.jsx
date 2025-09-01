@@ -61,8 +61,12 @@ export default function ApiDocs() {
   apiKey="your-api-key"
   endpoint="https://api.your-domain.com"
   mode="normal"
-  onSuccess={handleSuccess}
-  onError={handleError}
+  onSuccess={(result) => {
+    // 성공 처리
+  }}
+  onError={(error) => {
+    // 에러 처리
+  }}
 />`}
                                     </code>
                                 </pre>

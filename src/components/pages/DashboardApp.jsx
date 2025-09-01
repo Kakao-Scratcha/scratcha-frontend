@@ -4,6 +4,7 @@ import Modal from '../ui/Modal';
 import StatusBadge from '../ui/StatusBadge';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { applicationAPI } from '../../services/api';
+import { devLog, devError } from '../../utils/logger';
 
 export default function DashboardApp() {
     const {
@@ -56,35 +57,21 @@ export default function DashboardApp() {
 
     // API 에러 처리 함수
     const handleApiError = (error, operation) => {
-        console.error(`❌ ${operation} 실패:`, error);
-        console.log(`🔍 ${operation} 오류 상세 분석:`, {
-            operation,
-            errorType: error.constructor.name,
-            message: error.message,
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            data: error.response?.data,
-            headers: error.response?.headers
-        });
+        devError(`❌ ${operation} 실패:`, error);
 
         let errorMessage = `${operation} 중 오류가 발생했습니다.`;
 
         if (error.response?.status === 401) {
-            console.log('🔐 401 인증 오류');
             errorMessage = '인증이 필요합니다. 다시 로그인해주세요.';
         } else if (error.response?.status === 403) {
-            console.log('🚫 403 권한 오류');
             errorMessage = '권한이 없습니다.';
         } else if (error.response?.status === 404) {
-            console.log('🔍 404 리소스 없음');
             if (operation === '애플리케이션 목록 로드') {
-                console.log('📝 앱이 없습니다. 정상적인 상황입니다.');
-                return;
+                return; // 앱이 없는 것은 정상적인 상황
             } else {
                 errorMessage = '요청한 리소스를 찾을 수 없습니다.';
             }
         } else if (error.response?.status === 422) {
-            console.log('🔍 422 Unprocessable Entity 오류 상세 정보:', error.response.data);
             if (error.response?.data?.detail) {
                 if (Array.isArray(error.response.data.detail)) {
                     errorMessage = error.response.data.detail
@@ -93,26 +80,21 @@ export default function DashboardApp() {
                 } else {
                     errorMessage = error.response.data.detail;
                 }
-            } else if (error.response?.data?.message) {
-                errorMessage = error.response.data.message;
             } else {
                 errorMessage = '앱을 삭제할 수 없습니다. API 키가 연결되어 있거나 다른 제약 조건이 있을 수 있습니다.';
             }
         } else if (error.response?.data?.detail) {
-            console.log('📋 응답 데이터 detail:', error.response.data.detail);
             errorMessage = error.response.data.detail;
         } else if (error.message) {
-            console.log('💬 에러 메시지:', error.message);
             errorMessage = error.message;
         }
 
-        console.log(`📢 최종 에러 메시지: ${errorMessage}`);
         setErrorModal({ isOpen: true, message: errorMessage });
     };
 
     // 데이터 로드 함수 (재사용 가능)
     const loadApplications = useCallback(async () => {
-        console.log('🚀 데이터 로드 시작');
+        devLog('🚀 데이터 로드 시작');
         setLoading(true);
         try {
             await refreshApplications();
@@ -124,29 +106,24 @@ export default function DashboardApp() {
     }, [refreshApplications]);
 
     // APP 추가 처리 (API 연결)
-    const handleAddApp = async (e) => {
-        e.preventDefault();
-        if (!newAppForm.name.trim() || !newAppForm.description.trim()) {
-            setErrorModal({ isOpen: true, message: 'APP 이름과 설명을 모두 입력해주세요.' });
+    const handleAddApp = async () => {
+        if (!newAppForm.name.trim()) {
+            setErrorModal({ isOpen: true, message: '앱 이름을 입력해주세요.' });
             return;
         }
 
         setLoading(true);
         try {
-            console.log('🔄 APP 생성 시작:', newAppForm);
-            const response = await applicationAPI.createApplication({
+            await applicationAPI.createApplication({
                 appName: newAppForm.name.trim(),
                 description: newAppForm.description.trim(),
                 expiresPolicy: 0
             });
 
-            console.log('✅ APP 생성 성공:', response.data);
-
             setNewAppForm({ name: '', description: '' });
             setIsAddAppModalOpen(false);
 
             // 데이터 다시 조회
-            console.log('🔄 APP 추가 후 데이터 다시 조회');
             await loadApplications();
         } catch (error) {
             handleApiError(error, 'APP 생성');
@@ -157,32 +134,32 @@ export default function DashboardApp() {
 
     // APP 삭제 처리 (API 연결)
     const handleDeleteApp = async () => {
-        console.log('🚀 handleDeleteApp 함수 시작:', { selectedAppId });
+        devLog('🚀 handleDeleteApp 함수 시작:', { selectedAppId });
 
         if (!selectedAppId) {
-            console.log('❌ selectedAppId가 없습니다.');
+            devLog('❌ selectedAppId가 없습니다.');
             return;
         }
 
         setLoading(true);
         try {
-            console.log('🔄 APP 삭제 API 호출 시작:', selectedAppId);
+            devLog('🔄 APP 삭제 API 호출 시작:', selectedAppId);
             const response = await applicationAPI.deleteApplication(selectedAppId);
-            console.log('✅ APP 삭제 API 응답:', response);
+            devLog('✅ APP 삭제 API 응답:', response);
 
-            console.log('✅ APP 삭제 성공');
+            devLog('✅ APP 삭제 성공');
 
             setSelectedAppId(null);
             setIsDeleteAppModalOpen(false);
-            console.log('✅ 모달 닫기 완료');
+            devLog('✅ 모달 닫기 완료');
 
             // 데이터 다시 조회
-            console.log('🔄 APP 삭제 후 데이터 다시 조회 시작');
+            devLog('�� APP 삭제 후 데이터 다시 조회 시작');
             await loadApplications();
-            console.log('✅ 데이터 재조회 완료');
+            devLog('✅ 데이터 재조회 완료');
         } catch (error) {
-            console.log('❌ APP 삭제 중 오류 발생:', error);
-            console.log('❌ 오류 상세 정보:', {
+            devLog('❌ APP 삭제 중 오류 발생:', error);
+            devLog('❌ 오류 상세 정보:', {
                 message: error.message,
                 status: error.response?.status,
                 statusText: error.response?.statusText,
@@ -190,31 +167,26 @@ export default function DashboardApp() {
             });
             handleApiError(error, 'APP 삭제');
         } finally {
-            console.log('🏁 handleDeleteApp 함수 종료');
+            devLog('🏁 handleDeleteApp 함수 종료');
             setLoading(false);
         }
     };
 
     // API 키 추가 처리
-    const handleAddApiKey = async (e) => {
-        e.preventDefault();
-        if (!newApiKeyForm.name.trim() || !selectedAppId) {
-            setErrorModal({ isOpen: true, message: 'API 키 이름을 입력해주세요.' });
+    const handleAddApiKey = async () => {
+        if (!selectedAppId) {
+            setErrorModal({ isOpen: true, message: '앱을 선택해주세요.' });
             return;
         }
 
         setLoading(true);
         try {
-            // 실제 API 호출
-            console.log('🔄 API 키 생성 시작:', { appId: selectedAppId, name: newApiKeyForm.name.trim() });
-            const response = await applicationAPI.createApiKey(selectedAppId, '');
-            console.log('✅ API 키 생성 성공:', response.data);
+            await applicationAPI.createApiKey(selectedAppId, '');
 
             setNewApiKeyForm({ name: '' });
             setIsAddApiKeyModalOpen(false);
 
             // 데이터 다시 조회
-            console.log('🔄 API 키 추가 후 데이터 다시 조회');
             await loadApplications();
         } catch (error) {
             handleApiError(error, 'API 키 생성');
@@ -225,29 +197,29 @@ export default function DashboardApp() {
 
     // API 키 삭제 처리
     const handleDeleteApiKey = async () => {
-        console.log('🚀 handleDeleteApiKey 함수 시작:', { selectedApiKeyId, selectedAppId });
+        devLog('🚀 handleDeleteApiKey 함수 시작:', { selectedApiKeyId, selectedAppId });
 
         if (!selectedApiKeyId || !selectedAppId) {
-            console.log('❌ 필수 값 누락:', { selectedApiKeyId, selectedAppId });
+            devLog('❌ 필수 값 누락:', { selectedApiKeyId, selectedAppId });
             return;
         }
 
         setLoading(true);
         try {
             // 실제 API 호출
-            console.log('🔄 API 키 삭제 시작:', { keyId: selectedApiKeyId });
+            devLog('🔄 API 키 삭제 시작:', { keyId: selectedApiKeyId });
             await applicationAPI.deleteApiKey(selectedApiKeyId);
-            console.log('✅ API 키 삭제 성공');
+            devLog('✅ API 키 삭제 성공');
 
             setSelectedApiKeyId(null);
             setIsDeleteApiKeyModalOpen(false);
-            console.log('✅ 삭제 완료 - 모달 닫기');
+            devLog('✅ 삭제 완료 - 모달 닫기');
 
             // 데이터 다시 조회
-            console.log('🔄 API 키 삭제 후 데이터 다시 조회');
+            devLog('�� API 키 삭제 후 데이터 다시 조회');
             await loadApplications();
         } catch (error) {
-            console.log('❌ API 키 삭제 오류:', error);
+            devLog('❌ API 키 삭제 오류:', error);
             handleApiError(error, 'API 키 삭제');
         } finally {
             setLoading(false);
@@ -262,7 +234,7 @@ export default function DashboardApp() {
 
     // HTTP 환경에서 사용할 fallback 복사 함수
     const copyToClipboardFallback = async (text) => {
-        console.log('🔄 Fallback 복사 방법 시도...');
+        devLog('🔄 Fallback 복사 방법 시도...');
 
         try {
             // 방법 1: document.execCommand 사용 (구형 브라우저 지원)
@@ -279,13 +251,13 @@ export default function DashboardApp() {
             document.body.removeChild(textArea);
 
             if (successful) {
-                console.log('✅ Fallback 복사 성공 (execCommand)');
+                devLog('✅ Fallback 복사 성공 (execCommand)');
                 return;
             } else {
                 throw new Error('execCommand 실패');
             }
         } catch (error) {
-            console.error('❌ Fallback 복사 실패:', error);
+            devError('❌ Fallback 복사 실패:', error);
 
             // 방법 2: 사용자에게 수동 복사 안내
             const message = `API 키를 수동으로 복사해주세요:\n\n${text}`;
@@ -321,7 +293,7 @@ export default function DashboardApp() {
         const loadApplicationsWithCleanup = async () => {
             if (!isMounted) return; // 컴포넌트가 언마운트된 경우 중단
 
-            console.log('🚀 useEffect 실행 - 데이터 로드 시작');
+            devLog('🚀 useEffect 실행 - 데이터 로드 시작');
             await loadApplications();
         };
 
@@ -329,7 +301,7 @@ export default function DashboardApp() {
 
         // 클린업 함수
         return () => {
-            console.log('🧹 useEffect 클린업 - 컴포넌트 언마운트');
+            devLog('🧹 useEffect 클린업 - 컴포넌트 언마운트');
             isMounted = false;
         };
     }, [loadApplications]);
@@ -371,7 +343,7 @@ export default function DashboardApp() {
                                 // 중복 제거: 같은 id를 가진 첫 번째 앱만 유지
                                 index === self.findIndex(a => a.id === app.id)
                             );
-                            console.log('🎨 UI 렌더링 - 앱 목록:', {
+                            devLog('🎨 UI 렌더링 - 앱 목록:', {
                                 원본앱개수: apps.length,
                                 필터링후앱개수: filteredApps.length,
                                 앱목록: filteredApps.map(app => ({ id: app.id, name: app.name }))
@@ -454,7 +426,7 @@ export default function DashboardApp() {
                                                     const uniqueApiKeys = appApiKeys.filter((apiKey, index, self) =>
                                                         index === self.findIndex(key => key.id === apiKey.id)
                                                     );
-                                                    console.log(`🔑 UI 렌더링 - 앱 ${app.id} (${app.name})의 API 키:`, {
+                                                    devLog(`🔑 UI 렌더링 - 앱 ${app.id} (${app.name})의 API 키:`, {
                                                         앱ID: app.id,
                                                         앱이름: app.name,
                                                         전체키개수: apiKeys.length,
@@ -509,11 +481,11 @@ export default function DashboardApp() {
                                                                         try {
                                                                             const newStatus = apiKey.status === 'active' ? false : true;
                                                                             const res = await applicationAPI.toggleApiKeyStatus(id, newStatus);
-                                                                            console.log('🔁 토글 응답 본문:', res?.data);
+                                                                            devLog('🔁 토글 응답 본문:', res?.data);
                                                                             await loadApplications();
                                                                             const afterKeys = useDashboardStore.getState().apiKeys;
                                                                             const updated = afterKeys.find(k => k.id === id);
-                                                                            console.log('✅ 토글 후 최신 상태:', {
+                                                                            devLog('✅ 토글 후 최신 상태:', {
                                                                                 id,
                                                                                 storeStatus: updated?.status,
                                                                                 isActive: updated ? updated.status === 'active' : undefined
@@ -537,7 +509,7 @@ export default function DashboardApp() {
                                                                 </button>
                                                                 <button
                                                                     onClick={async () => {
-                                                                        console.log('🔍 API 키 복사 시도:', {
+                                                                        devLog('🔍 API 키 복사 시도:', {
                                                                             apiKeyId: apiKey.id,
                                                                             apiKeyName: apiKey.name,
                                                                             apiKeyValue: apiKey.key,
@@ -547,21 +519,21 @@ export default function DashboardApp() {
                                                                         });
 
                                                                         try {
-                                                                            console.log('📋 클립보드 복사 시작...');
+                                                                            devLog('📋 클립보드 복사 시작...');
 
                                                                             // HTTPS 환경에서는 Clipboard API 사용
                                                                             if (window.location.protocol === 'https:') {
                                                                                 await navigator.clipboard.writeText(apiKey.key);
-                                                                                console.log('✅ HTTPS - Clipboard API 복사 성공');
+                                                                                devLog('✅ HTTPS - Clipboard API 복사 성공');
                                                                             } else {
                                                                                 // HTTP 환경에서는 fallback 방법 사용
-                                                                                console.log('🌐 HTTP 환경 - fallback 방법 사용');
+                                                                                devLog('🌐 HTTP 환경 - fallback 방법 사용');
                                                                                 await copyToClipboardFallback(apiKey.key);
                                                                             }
 
                                                                             alert('API 키가 복사되었습니다.');
                                                                         } catch (error) {
-                                                                            console.error('❌ 클립보드 복사 실패:', {
+                                                                            devError('❌ 클립보드 복사 실패:', {
                                                                                 error: error.message,
                                                                                 errorName: error.name,
                                                                                 errorStack: error.stack,

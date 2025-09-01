@@ -24,7 +24,15 @@ export default defineConfig({
       }
     },
     // 청크 크기 경고 임계값 증가
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 1000,
+    // 프로덕션 빌드 시 console.log 제거
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,  // console.log 제거
+        drop_debugger: true, // debugger 제거
+      },
+    },
   },
 
 })

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -12,11 +12,6 @@ export default function LogsTable() {
         loadLogsByKeyId,
         changeLogPage
     } = useDashboardStore();
-
-    // 초기 로그 로드
-    useEffect(() => {
-        loadAllLogs(1, 10, 'yearly');
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // API 키 선택 핸들러
     const handleKeyChange = (keyId) => {

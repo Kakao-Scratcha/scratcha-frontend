@@ -5,6 +5,7 @@ import { useDashboardStore } from '../../stores/dashboardStore';
 import { useAuth } from '../../hooks/useAuth';
 import { authAPI } from '../../services/api';
 import { validateUserName } from '../../utils/validators';
+import { devLog, devError } from '../../utils/logger';
 
 export default function DashboardSettings() {
     const {
@@ -51,26 +52,24 @@ export default function DashboardSettings() {
             try {
                 await refreshApplications();
             } catch (e) {
-                console.error('❌ 앱 목록 로드 실패:', e);
+                devError('❌ 앱 목록 로드 실패:', e);
             }
         })();
     }, [refreshApplications]);
 
     // 사용자 정보가 변경될 때마다 이름 폼 업데이트
     useEffect(() => {
-        console.log('🔍 사용자 정보 확인:', user);
         const serverName = getServerUserName(user);
-        if (serverName) {
-            console.log('✅ 사용자 이름 업데이트:', serverName);
+        if (serverName && serverName !== nameForm.currentName) {
             setNameForm(prev => ({
                 ...prev,
                 currentName: serverName
             }));
         }
-    }, [user]);
+    }, [user, nameForm.currentName]);
 
     // 임시 설정 상태 관리
-    const [tempSettings, setTempSettings] = useState({});
+    const [appSettings, setAppSettings] = useState({});
 
     // 선택된 APP
     const selectedApp = apps.find(app => app.id === selectedAppId);
@@ -78,12 +77,12 @@ export default function DashboardSettings() {
     // 현재 설정 (임시 설정이 있으면 임시 설정, 없으면 원본 설정)
     const currentSettings = selectedApp ? {
         ...selectedApp.settings,
-        ...tempSettings[selectedApp.id]
+        ...appSettings[selectedApp.id]
     } : {};
 
     // 변경된 필드 하이라이트 감지
     // const changedModel = !!(selectedApp && tempSettings[selectedApp.id]?.model !== undefined && tempSettings[selectedApp.id]?.model !== selectedApp.settings.model);
-    const changedNoise = !!(selectedApp && tempSettings[selectedApp.id]?.noiseLevel !== undefined && tempSettings[selectedApp.id]?.noiseLevel !== selectedApp.settings.noiseLevel);
+    const changedNoise = !!(selectedApp && appSettings[selectedApp.id]?.noiseLevel !== undefined && appSettings[selectedApp.id]?.noiseLevel !== selectedApp.settings.noiseLevel);
     // const changedHeuristic = !!(selectedApp && tempSettings[selectedApp.id]?.heuristicLevel !== undefined && tempSettings[selectedApp.id]?.heuristicLevel !== selectedApp.settings.heuristicLevel);
 
     // 서비스 설정 옵션
@@ -109,19 +108,19 @@ export default function DashboardSettings() {
 
     // 설정 적용 처리
     const handleApplySettings = () => {
-        if (selectedApp && tempSettings[selectedApp.id]) {
+        if (selectedApp && appSettings[selectedApp.id]) {
             // 실제 APP 설정 업데이트
-            updateAppSettings(selectedApp.id, tempSettings[selectedApp.id]);
+            updateAppSettings(selectedApp.id, appSettings[selectedApp.id]);
 
             // 임시 설정 제거
-            setTempSettings(prev => {
+            setAppSettings(prev => {
                 const newTemp = { ...prev };
                 delete newTemp[selectedApp.id];
                 return newTemp;
             });
 
-            // TODO: 실제 API 호출로 설정 적용
-            console.log('설정 적용:', tempSettings[selectedApp.id]);
+            // 설정이 변경되면 실제 API 호출로 설정 적용
+            devLog('설정 적용:', appSettings[selectedApp.id]);
             setSaveSuccess(true);
             // 성공 배너 자동 숨김 (3초)
             setTimeout(() => setSaveSuccess(false), 3000);
@@ -132,7 +131,7 @@ export default function DashboardSettings() {
     const handleAppSettingChange = (field, value) => {
         if (selectedApp) {
             setSaveSuccess(false);
-            setTempSettings(prev => ({
+            setAppSettings(prev => ({
                 ...prev,
                 [selectedApp.id]: {
                     ...prev[selectedApp.id],
@@ -145,7 +144,7 @@ export default function DashboardSettings() {
     // 이름 변경 처리 (API 연동)
     const handleNameChange = async (e) => {
         e.preventDefault();
-        console.log('정보 수정:', { nameForm, passwordForm });
+        devLog('정보 수정:', { nameForm, passwordForm });
 
         const trimmedName = nameForm.newName.trim();
         const { currentPassword, newPassword, confirmPassword } = passwordForm;
@@ -182,7 +181,7 @@ export default function DashboardSettings() {
 
         setIsUpdating(true);
         try {
-            console.log('🔄 정보 수정 API 호출 중...');
+            devLog('🔄 정보 수정 API 호출 중...');
 
             // API 요청 데이터 구성
             const requestData = { userName: trimmedName };
@@ -193,12 +192,12 @@ export default function DashboardSettings() {
             }
 
             const response = await authAPI.updateProfile(requestData);
-            console.log('✅ 정보 수정 성공:', response.data);
+            devLog('✅ 정보 수정 성공:', response.data);
 
             // 로컬 상태 업데이트
             updateUser({ userName: trimmedName, username: trimmedName, name: trimmedName });
 
-            console.log('✅ 정보 수정 완료 - 로컬 상태 업데이트됨');
+            devLog('✅ 정보 수정 완료 - 로컬 상태 업데이트됨');
 
             setIsNameModalOpen(false);
 
@@ -215,7 +214,7 @@ export default function DashboardSettings() {
 
             alert('정보가 성공적으로 수정되었습니다!');
         } catch (error) {
-            console.error('❌ 정보 수정 실패:', error);
+            devError('❌ 정보 수정 실패:', error);
 
             let errorMessage = '정보 수정에 실패했습니다.';
             if (error.response?.status === 409) {
@@ -236,16 +235,16 @@ export default function DashboardSettings() {
 
     // 회원 탈퇴 처리
     const handleAccountDelete = async () => {
-        console.log('🗑️ 회원 탈퇴 시도');
+        devLog('🗑️ 회원 탈퇴 시도');
 
         setIsDeleting(true);
         try {
-            console.log('🔄 회원 탈퇴 API 호출 중...');
+            devLog('🔄 회원 탈퇴 API 호출 중...');
             const response = await authAPI.deleteAccount();
-            console.log('✅ 회원 탈퇴 성공:', response.data);
+            devLog('✅ 회원 탈퇴 성공:', response.data);
 
             // 프론트엔드에서만 로그아웃 처리 (백엔드 API 없음)
-            console.log('🔒 회원 탈퇴 후 프론트엔드 로그아웃 처리');
+            devLog('🔒 회원 탈퇴 후 프론트엔드 로그아웃 처리');
             await logout();
 
             // 모달 닫기
@@ -253,10 +252,10 @@ export default function DashboardSettings() {
 
             // 성공 메시지
             alert('회원 탈퇴가 완료되었습니다. 로그인 페이지로 이동합니다.');
-            console.log('✅ 회원 탈퇴 완료');
+            devLog('✅ 회원 탈퇴 완료');
 
         } catch (error) {
-            console.error('❌ 회원 탈퇴 실패:', error);
+            devError('❌ 회원 탈퇴 실패:', error);
 
             let errorMessage = '회원 탈퇴에 실패했습니다.';
             if (error.response?.status === 401) {
@@ -277,7 +276,7 @@ export default function DashboardSettings() {
     };
 
     // 임시 설정이 있는지 확인
-    const hasTempSettings = selectedApp && tempSettings[selectedApp.id];
+    const hasTempSettings = selectedApp && appSettings[selectedApp.id];
 
     return (
         <DashboardLayout

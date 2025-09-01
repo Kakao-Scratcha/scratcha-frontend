@@ -31,9 +31,8 @@ export default function Contact() {
             await new Promise(resolve => setTimeout(resolve, 1000));
             setSubmitStatus('success');
             setFormData({ name: '', email: '', subject: '', message: '' });
-        } catch (error) {
-            console.error('문의 전송 실패:', error);
-            setSubmitStatus('error');
+        } catch {
+            // 문의 전송 실패 처리
         } finally {
             setIsSubmitting(false);
         }

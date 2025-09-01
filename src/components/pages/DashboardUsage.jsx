@@ -82,7 +82,7 @@ export default function DashboardUsage() {
             const keyId = selectedApiKeyId === 'all' ? null : selectedApiKeyId;
             loadStatisticsSummary(keyId, selectedPeriod);
         }
-    }, [itemsPerPage, selectedPeriod, viewMode, selectedApiKeyId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [itemsPerPage, selectedPeriod, viewMode, selectedApiKeyId, loadAllLogs, loadStatisticsSummary]);
 
     // 필터 변경 시 데이터 업데이트 (기간 변경 시에만)
     useEffect(() => {
@@ -111,7 +111,7 @@ export default function DashboardUsage() {
         setTimeout(() => {
             setIsLoading(false);
         }, 500);
-    }, [selectedPeriod, selectedApiKeyId, itemsPerPage, viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [selectedPeriod, selectedApiKeyId, itemsPerPage, viewMode, setGlobalPeriod, loadAllLogs, loadLogsByKeyId, loadStatisticsSummary]);
 
     // 필터 변경 시 API 로그 업데이트 (디바운스 적용)
     useEffect(() => {
@@ -199,23 +199,54 @@ export default function DashboardUsage() {
     // 현재 표시할 로그 데이터
     const currentLogs = logs.items || [];
 
-    // 디버깅용 로그
-    console.log('🔍 DashboardUsage 렌더링:', {
-        logs,
-        currentLogs,
-        totalPages,
-        itemsPerPage,
-        selectedPeriod,
-        selectedApiKeyId,
-        selectedAppId
-    });
+    // 디버깅용 로그 제거
+    // useEffect(() => {
+    //     console.log('🔍 DashboardUsage 렌더링:', {
+    //         selectedAppId,
+    //         selectedApiKeyId,
+    //         selectedPeriod,
+    //         viewMode,
+    //         currentPage,
+    //         itemsPerPage,
+    //         logs: {
+    //             items: logs.items?.length || 0,
+    //             total: logs.total,
+    //             page: logs.page,
+    //             loading: logs.loading,
+    //             error: logs.error
+    //         }
+    //     });
+    // }, [selectedAppId, selectedApiKeyId, selectedPeriod, viewMode, currentPage, itemsPerPage, logs]);
 
+    // 날짜 포맷팅 함수
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
 
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return 'N/A';
 
-    // 페이지 변경 시 첫 페이지로 이동
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [selectedAppId, selectedApiKeyId, selectedPeriod]);
+            const isDateOnly = date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0;
+
+            if (isDateOnly) {
+                // 날짜만 표시
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                const result = `${month}월 ${day}일`;
+                return result;
+            } else {
+                // 시간 포함 표시
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const result = `${month}월 ${day}일 ${hours}:${minutes}`;
+                return result;
+            }
+        } catch {
+            return 'N/A';
+        }
+    };
 
     // 결과 상태별 색상
     const getResultColor = (result) => {
@@ -240,47 +271,6 @@ export default function DashboardUsage() {
     const maskApiKey = (key) => {
         if (!key) return '';
         return key.substring(0, 8) + '...' + key.substring(key.length - 4);
-    };
-
-    // 날짜 포맷팅 (API에서 KST로 오는 데이터 처리)
-    const formatDate = (dateString) => {
-        if (!dateString) return '-';
-
-        console.log('🔍 formatDate 입력:', dateString);
-
-        // ISO 날짜 형식인지 확인 (YYYY-MM-DD)
-        const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateString);
-        console.log('🔍 isDateOnly:', isDateOnly);
-
-        if (isDateOnly) {
-            // 날짜만 있는 경우 - KST 기준으로 처리
-            const date = new Date(dateString + 'T00:00:00');
-            const result = date.toLocaleDateString('ko-KR', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            });
-            console.log('🔍 날짜만 표시:', result);
-            return result;
-        }
-
-        // 시간이 포함된 경우 - KST 시간대 유지
-        const date = new Date(dateString);
-
-        // KST 시간대 옵션 추가
-        const options = {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            timeZone: 'Asia/Seoul' // KST 시간대 명시
-        };
-
-        const result = date.toLocaleString('ko-KR', options);
-        console.log('🔍 시간 포함 표시:', result);
-        return result;
     };
 
     return (
@@ -393,7 +383,6 @@ export default function DashboardUsage() {
                                                 data={usageData}
                                                 selectedPeriod={selectedPeriod}
                                                 height="h-96"
-                                                debugName="UsageChart"
                                             />
                                         ) : (
                                             <div className="flex justify-center items-center h-64 text-gray-500 dark:text-gray-400">

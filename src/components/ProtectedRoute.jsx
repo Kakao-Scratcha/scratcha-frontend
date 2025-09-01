@@ -11,17 +11,13 @@ export default function ProtectedRoute({ children }) {
     // 페이지 이동 시 토큰 유효성 체크
     useEffect(() => {
         if (isAuthenticated && !isLoading) {
-            console.log('🔍 페이지 이동 시 토큰 유효성 체크');
             const validity = checkTokenValidity();
 
             if (!validity.isValid) {
-                console.log('⚠️ 페이지 이동 중 토큰 무효화 감지:', validity.reason);
                 const wasLoggedOut = autoLogoutIfExpired();
                 if (wasLoggedOut) {
-                    console.log('🔄 페이지 이동 중 자동 로그아웃 완료');
+                    // 자동 로그아웃 완료
                 }
-            } else {
-                console.log('✅ 페이지 이동 시 토큰 유효함');
             }
         }
     }, [isAuthenticated, isLoading, location.pathname, checkTokenValidity, autoLogoutIfExpired]);
