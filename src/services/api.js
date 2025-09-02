@@ -180,4 +180,23 @@ export const settingsAPI = {
     // 통합 설정
     getIntegrations: () => apiClient.get('/settings/integrations'),
     updateIntegrations: (integrations) => apiClient.put('/settings/integrations', integrations),
+};
+
+// 결제 관련 API
+export const paymentAPI = {
+    // 결제 승인
+    confirmPayment: (paymentData) => {
+        console.log('💳 결제 승인 API 호출 시작');
+        console.log('📤 요청 데이터:', paymentData);
+        console.log('🌐 API 엔드포인트: /payments/confirm');
+
+        const response = apiClient.post('/payments/confirm', paymentData, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        console.log('📡 API 요청 전송 완료');
+        return response;
+    },
 }; 
