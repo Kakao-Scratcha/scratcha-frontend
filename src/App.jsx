@@ -18,6 +18,10 @@ import DashboardUsage from './components/pages/DashboardUsage';
 import DashboardBilling from './components/pages/DashboardBilling';
 import DashboardApp from './components/pages/DashboardApp';
 import NotFound from './components/pages/NotFound';
+import HomePage from './components/tosspayments/Home';
+import CheckoutPage from './components/tosspayments/Checkout';
+import SuccessPage from './components/tosspayments/Success';
+import FailPage from './components/tosspayments/Fail';
 
 function App() {
   return (
@@ -41,6 +45,10 @@ function App() {
           </Route>
           <Route path="signin" element={<Signin />} />
           <Route path="signup" element={<Signup />} />
+          <Route path="homePage" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+          <Route path="checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+          <Route path="success" element={<ProtectedRoute><SuccessPage /></ProtectedRoute>} />
+          <Route path="fail" element={<ProtectedRoute><FailPage /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
