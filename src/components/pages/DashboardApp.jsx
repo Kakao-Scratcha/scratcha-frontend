@@ -110,10 +110,13 @@ export default function DashboardApp() {
         } finally {
             setLoading(false);
         }
-    }, [refreshApplications]);
+    }, []); // refreshApplications 의존성 제거
 
     // APP 추가 처리 (API 연결)
-    const handleAddApp = async () => {
+    const handleAddApp = async (e) => { // 이벤트 파라미터 추가
+        // 폼 제출 기본 동작 방지
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
         if (!newAppForm.name.trim()) {
             setErrorModal({ isOpen: true, message: '앱 이름을 입력해주세요.' });
             return;
@@ -340,23 +343,13 @@ export default function DashboardApp() {
 
     // 초기 데이터 로드
     useEffect(() => {
-        let isMounted = true; // 컴포넌트 마운트 상태 추적
-
-        const loadApplicationsWithCleanup = async () => {
-            if (!isMounted) return; // 컴포넌트가 언마운트된 경우 중단
-
-            devLog('🚀 useEffect 실행 - 데이터 로드 시작');
+        const loadInitialData = async () => {
+            devLog('🚀 컴포넌트 마운트 - 초기 데이터 로드 시작');
             await loadApplications();
         };
 
-        loadApplicationsWithCleanup();
-
-        // 클린업 함수
-        return () => {
-            devLog('🧹 useEffect 클린업 - 컴포넌트 언마운트');
-            isMounted = false;
-        };
-    }, [loadApplications]);
+        loadInitialData();
+    }, []); // 빈 의존성 배열로 마운트 시에만 실행
 
     return (
         <DashboardLayout
