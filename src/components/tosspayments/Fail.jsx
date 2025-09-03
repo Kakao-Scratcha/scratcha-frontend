@@ -16,14 +16,14 @@ export default function FailPage() {
     localStorage.removeItem('currentOrder');
     console.log("🧹 localStorage 정리 완료");
 
-    // 실패 시 메인페이지가 아닌 HomePage로 이동하도록 수정
+    // 실패 시 대시보드 빌링 페이지로 이동하도록 수정
     const error = {
       code: searchParams.get("code"),
       message: searchParams.get("message")
     };
     const userFriendlyMessage = error.message || "알 수 없는 오류";
 
-    navigate("/homePage", {
+    navigate("/dashboard/billing", {
       state: {
         paymentResult: "fail",
         errorCode: error.code || "UNKNOWN_ERROR",

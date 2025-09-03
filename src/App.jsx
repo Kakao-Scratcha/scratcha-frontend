@@ -18,7 +18,7 @@ import DashboardUsage from './components/pages/DashboardUsage';
 import DashboardBilling from './components/pages/DashboardBilling';
 import DashboardApp from './components/pages/DashboardApp';
 import NotFound from './components/pages/NotFound';
-import HomePage from './components/tosspayments/Home';
+
 import CheckoutPage from './components/tosspayments/Checkout';
 import SuccessPage from './components/tosspayments/Success';
 import FailPage from './components/tosspayments/Fail';
@@ -43,12 +43,12 @@ function App() {
             <Route path="billing" element={<DashboardBilling />} />
             <Route path="app" element={<DashboardApp />} />
           </Route>
-          <Route path="signin" element={<Signin />} />
-          <Route path="signup" element={<Signup />} />
-          <Route path="homePage" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+          {/* 결제 관련 페이지들 - 독립적인 라우트 */}
           <Route path="checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
           <Route path="success" element={<ProtectedRoute><SuccessPage /></ProtectedRoute>} />
           <Route path="fail" element={<ProtectedRoute><FailPage /></ProtectedRoute>} />
+          <Route path="signin" element={<Signin />} />
+          <Route path="signup" element={<Signup />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
