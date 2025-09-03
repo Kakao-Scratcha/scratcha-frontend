@@ -79,18 +79,35 @@ export default function SuccessPage() {
 
         console.log("✅ 백엔드 API 응답 성공:", result);
 
-        // localStorage 정리
+        // 성공 시 대시보드 빌링 페이지로 이동
+        console.log("🏠 Dashboard Billing으로 리다이렉트...");
+
+        // localStorage에서 주문 정보 가져오기 (제거하기 전에)
+        let orderInfo = null;
+        try {
+          const savedOrder = localStorage.getItem('currentOrder');
+          if (savedOrder) {
+            orderInfo = JSON.parse(savedOrder);
+            console.log("📦 localStorage에서 주문 정보 조회:", orderInfo);
+            console.log("🔍 상품명:", orderInfo.productName);
+            console.log("📝 상품 설명:", orderInfo.productDescription);
+          }
+        } catch (e) {
+          console.error('❌ 주문 정보 파싱 실패:', e);
+        }
+
+        // localStorage 정리 (주문 정보 가져온 후)
         localStorage.removeItem('currentOrder');
         console.log("🧹 localStorage 정리 완료");
 
-        // 성공 시 홈으로 이동
-        console.log("🏠 HomePage로 리다이렉트...");
-        navigate("/homePage", {
+        navigate("/dashboard/billing", {
           state: {
             paymentResult: "success",
             paymentData: result,
             orderId: requestData.orderId,
-            amount: requestData.amount
+            amount: requestData.amount,
+            productName: result.orderName || orderInfo?.productName || '토큰 충전',
+            productDescription: orderInfo?.productDescription || '토큰 패키지 충전'
           },
           replace: true
         });
@@ -128,7 +145,7 @@ export default function SuccessPage() {
         localStorage.removeItem('currentOrder');
         console.log("🧹 실패 시 localStorage 정리 완료");
 
-        navigate("/homePage", {
+        navigate("/dashboard/billing", {
           state: {
             paymentResult: "fail",
             errorCode: error.code || "UNKNOWN_ERROR",

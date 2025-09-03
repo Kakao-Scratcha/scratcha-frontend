@@ -14,16 +14,69 @@ export default function CheckoutPage() {
     const navigate = useNavigate();
     const { user } = useAuthStore();
 
-    // Home 페이지에서 전달받은 상품 정보
-    const selectedProduct = location.state?.selectedProduct || {
-        name: "토스 브랜드 티셔츠",
-        price: 25000
-    };
+    // URL 파라미터나 state에서 전달받은 상품 정보
+    const selectedProduct = useMemo(() => {
+        // URL 파라미터에서 상품 정보 확인
+        const urlParams = new URLSearchParams(location.search);
+        const productName = urlParams.get('product');
+        const productAmount = urlParams.get('amount');
 
-    const [amount, setAmount] = useState({
+        // localStorage에서 주문 정보 확인
+        const currentOrder = localStorage.getItem('currentOrder');
+        let orderData = null;
+
+        if (currentOrder) {
+            try {
+                orderData = JSON.parse(currentOrder);
+            } catch (e) {
+                console.error('주문 정보 파싱 실패:', e);
+            }
+        }
+
+        // 우선순위: URL 파라미터 > localStorage > 기본값
+        if (productName && productAmount) {
+            console.log("🔍 URL 파라미터에서 상품 정보 가져옴:", { productName, productAmount });
+            console.log("📝 localStorage 주문 데이터:", orderData);
+
+            // localStorage에서 해당 상품명에 맞는 description 찾기
+            let description = null;
+            if (orderData && orderData.productName === productName) {
+                description = orderData.productDescription;
+                console.log("✅ localStorage에서 매칭되는 상품 description 찾음:", description);
+            }
+
+            // description이 없으면 상품명으로 생성
+            if (!description) {
+                description = `${productName} 패키지 충전`;
+                console.log("📝 상품명으로 description 생성:", description);
+            }
+
+            return {
+                name: productName,
+                price: parseInt(productAmount),
+                description: description
+            };
+        } else if (orderData) {
+            console.log("🔍 localStorage에서 상품 정보 가져옴:", orderData);
+            return {
+                name: orderData.productName,
+                price: orderData.amount,
+                description: orderData.productDescription
+            };
+        } else {
+            console.log("🔍 기본값 사용");
+            return {
+                name: "토큰 충전",
+                price: 29900,
+                description: "토큰 패키지 충전"
+            };
+        }
+    }, [location.search]);
+
+    const amount = {
         currency: "KRW",
         value: selectedProduct.price,
-    });
+    };
     const [ready, setReady] = useState(false);
     const [widgets, setWidgets] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -38,12 +91,12 @@ export default function CheckoutPage() {
 
     // 상품 정보가 없으면 홈으로 리다이렉트
     useEffect(() => {
-        if (!location.state?.selectedProduct) {
+        if (!selectedProduct || !selectedProduct.name || !selectedProduct.price) {
             console.log("상품 정보가 없습니다. 홈으로 리다이렉트합니다.");
             navigate("/", { replace: true });
             return;
         }
-    }, [location.state, navigate]);
+    }, [selectedProduct, navigate]);
 
     useEffect(() => {
         // 이미 위젯이 로드된 경우 중복 실행 방지
@@ -127,109 +180,45 @@ export default function CheckoutPage() {
         renderPaymentWidgets();
     }, [widgets]);
 
-    const updateAmount = async (amount) => {
-        setAmount(amount);
-        await widgets.setAmount(amount);
-    };
+
 
     return (
-        <div className="wrapper">
-            <div className="box_section">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+            <div className="max-w-2xl mx-auto">
                 {/* 선택된 상품 정보 표시 */}
-                <div style={{
-                    border: "2px solid #0064FF",
-                    borderRadius: "12px",
-                    padding: "20px",
-                    marginBottom: "30px",
-                    backgroundColor: "#f8f9ff"
-                }}>
-                    <h3 style={{ color: "#0064FF", marginBottom: "16px" }}>
+                <div className="border-2 border-blue-500 rounded-xl p-6 mb-8 bg-blue-50 dark:bg-blue-900/20">
+                    <h3 className="text-blue-600 dark:text-blue-400 text-xl font-semibold mb-4 flex items-center">
                         🛒 선택된 상품
                     </h3>
-                    <div style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center"
-                    }}>
-                        <div>
-                            <h4 style={{ margin: "0 0 8px 0", color: "#333", fontSize: "18px" }}>
-                                {selectedProduct.name}
-                            </h4>
-                            <p style={{ margin: "0", color: "#666", fontSize: "14px" }}>
-                                결제 금액: {amount.value.toLocaleString()}원
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => navigate("/")}
-                            style={{
-                                backgroundColor: "#666",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "6px",
-                                padding: "8px 16px",
-                                fontSize: "14px",
-                                cursor: "pointer"
-                            }}
-                        >
-                            상품 변경
-                        </button>
+                    <div>
+                        <h4 className="text-gray-900 dark:text-gray-100 text-lg font-medium mb-2">
+                            {selectedProduct.name}
+                        </h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-base">
+                            결제 금액: <span className="font-semibold text-blue-600 dark:text-blue-400">{amount.value.toLocaleString()}원</span>
+                        </p>
                     </div>
                 </div>
 
                 {/* 결제 UI */}
-                <div id="payment-method" />
+                <div id="payment-method" className="mb-6" />
+
                 {/* 이용약관 UI */}
-                <div id="agreement" />
-                {/* 쿠폰 체크박스 */}
-                <div style={{ paddingLeft: "24px" }}>
-                    <div className="checkable typography--p">
-                        <label
-                            htmlFor="coupon-box"
-                            className="checkable__label typography--regular"
-                        >
-                            <input
-                                id="coupon-box"
-                                className="checkable__input"
-                                type="checkbox"
-                                aria-checked="true"
-                                disabled={!ready}
-                                // ------  주문서의 결제 금액이 변경되었을 경우 결제 금액 업데이트 ------
-                                // @docs https://docs.tosspayments.com/sdk/v2/js#widgetssetamount
-                                onChange={async (event) => {
-                                    await updateAmount({
-                                        currency: amount.currency,
-                                        value: event.target.checked
-                                            ? amount.value - 5000
-                                            : amount.value + 5000,
-                                    });
-                                }}
-                            />
-                            <span className="checkable__label-text">5,000원 쿠폰 적용</span>
-                        </label>
-                    </div>
-                </div>
+                <div id="agreement" className="mb-6" />
+
 
                 {/* 에러 메시지 표시 */}
                 {error && (
-                    <div style={{
-                        marginTop: "20px",
-                        padding: "16px",
-                        backgroundColor: "#fee",
-                        border: "1px solid #fcc",
-                        borderRadius: "8px",
-                        color: "#c33"
-                    }}>
-                        {error}
+                    <div className="mt-6 mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                        <p className="text-red-600 dark:text-red-400 text-sm font-medium">
+                            {error}
+                        </p>
                     </div>
                 )}
 
                 {/* 결제하기 버튼 */}
                 <button
-                    className="button"
-                    style={{ marginTop: "30px" }}
                     disabled={!ready || isLoading}
-                    // ------ '결제하기' 버튼 누르면 결제창 띄우기 ------
-                    // @docs https://docs.tosspayments.com/sdk/v2/js#widgetsrequestpayment
                     onClick={async () => {
                         if (!ready || isLoading) return;
 
@@ -248,6 +237,7 @@ export default function CheckoutPage() {
                                 orderId: orderId,
                                 amount: amount.value,
                                 productName: selectedProduct.name,
+                                productDescription: selectedProduct.description,
                                 timestamp: new Date().toISOString(),
                                 userId: userId || 'guest'
                             };
@@ -261,9 +251,10 @@ export default function CheckoutPage() {
                             // 결제를 요청하기 전에 orderId, amount를 서버에 저장하세요.
                             // 결제 과정에서 악의적으로 결제 금액이 바뀌는 것을 확인하는 용도입니다.
                             console.log("🔐 토스페이먼츠 결제 위젯에 결제 요청 전송...");
+                            console.log("🔐 결제 요청 시 orderName:", selectedProduct.name);
                             await widgets.requestPayment({
                                 orderId: orderId,
-                                orderName: selectedProduct.name,
+                                orderName: selectedProduct.name, // "50K 토큰"
                                 successUrl: window.location.origin + "/success",
                                 failUrl: window.location.origin + "/fail",
                                 customerEmail: "customer123@gmail.com",
@@ -290,11 +281,30 @@ export default function CheckoutPage() {
                             setIsLoading(false);
                         }
                     }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white dark:text-gray-900 font-semibold py-4 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
                 >
-                    {isLoading ? "로딩 중..." : "결제하기"}
+                    {isLoading ? (
+                        <span className="flex items-center justify-center">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            로딩 중...
+                        </span>
+                    ) : (
+                        "결제하기"
+                    )}
+                </button>
+
+                {/* 취소 버튼 */}
+                <button
+                    onClick={() => navigate("/dashboard/billing")}
+                    className="w-full bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white font-medium py-4 px-6 rounded-lg transition-colors duration-200"
+                >
+                    취소
                 </button>
             </div>
-        </div>
+        </div >
     );
 }
 
