@@ -203,8 +203,9 @@ export const useDashboardStore = create((set, get) => ({
 
     // 기존 액션들 수정 (로그 데이터 활용)
     refreshApplications: async () => {
+
         devLog('📱 애플리케이션 데이터 새로고침 시작');
-        set({ isAppsLoading: true, apps: [], apiKeys: [] });
+        set({ isAppsLoading: true }); // apps, apiKeys 초기화 제거하여 에러 시 기존 데이터 유지
         try {
             const response = await applicationAPI.getAllApplications();
             devLog('📱 애플리케이션 API 응답:', response.data);
@@ -269,6 +270,7 @@ export const useDashboardStore = create((set, get) => ({
             set({ apps: freshApps, apiKeys: freshKeys });
         } catch (error) {
             devError('📱 애플리케이션 데이터 로드 실패:', error);
+            // 에러 발생 시에도 기존 데이터 유지 (상태 초기화하지 않음)
         } finally {
             set({ isAppsLoading: false });
         }

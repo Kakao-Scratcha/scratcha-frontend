@@ -113,10 +113,10 @@ export default function DashboardBilling() {
     // 토큰 충전 패키지별 가격 반환
     const getTokenPrice = (packageName) => {
         const tokenPrices = {
-            '10K 토큰': 9900,
-            '50K 토큰': 29900,
-            '100K 토큰': 49900,
-            '500K 토큰': 199900
+            '1000 토큰': 5000,
+            '10000 토큰': 40000,
+            '100000 토큰': 300000,
+            '100 토큰': 1000
         };
         return tokenPrices[packageName] || 0;
     };
@@ -124,11 +124,11 @@ export default function DashboardBilling() {
     // 토큰 충전 패키지 옵션 (4개)
     const tokenPackages = [
         {
-            id: '10k',
-            name: '10K 토큰',
-            price: '₩9,900',
-            tokens: 10000,
-            description: '10,000 토큰 충전',
+            id: '1000',
+            name: '1000 토큰',
+            price: '₩5,000',
+            tokens: 1000,
+            description: '1,000 토큰 충전',
             features: [
                 '즉시 사용 가능',
                 '유효기간 없음',
@@ -136,11 +136,11 @@ export default function DashboardBilling() {
             ]
         },
         {
-            id: '50k',
-            name: '50K 토큰',
-            price: '₩29,900',
-            tokens: 50000,
-            description: '50,000 토큰 충전',
+            id: '10k',
+            name: '10000 토큰',
+            price: '₩40,000',
+            tokens: 10000,
+            description: '10,000 토큰 충전',
             features: [
                 '즉시 사용 가능',
                 '유효기간 없음',
@@ -150,8 +150,8 @@ export default function DashboardBilling() {
         },
         {
             id: '100k',
-            name: '100K 토큰',
-            price: '₩49,900',
+            name: '100000 토큰',
+            price: '₩300,000',
             tokens: 100000,
             description: '100,000 토큰 충전',
             features: [
@@ -162,17 +162,15 @@ export default function DashboardBilling() {
             ]
         },
         {
-            id: '500k',
-            name: '500K 토큰',
-            price: '₩199,900',
-            tokens: 500000,
-            description: '500,000 토큰 충전',
+            id: '100',
+            name: '100 토큰',
+            price: '₩1,000',
+            tokens: 100,
+            description: '100 토큰 충전 (테스트용)',
             features: [
                 '즉시 사용 가능',
                 '유효기간 없음',
-                '전용 인프라',
-                'SLA 보장',
-                '24/7 모니터링'
+                '테스트 및 개발용'
             ]
         }
     ];
