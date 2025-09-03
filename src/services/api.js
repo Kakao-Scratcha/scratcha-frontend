@@ -79,9 +79,9 @@ export const applicationAPI = {
     },
 
     // API 키 생성
-    createApiKey: (appId, data) => {
-        console.log('🔑 API 키 생성 API 호출:', { appId, data });
-        return apiClient.post(`/dashboard/api-keys/?appId=${appId}&expiresPolicy=0`, data);
+    createApiKey: (data) => {
+        console.log('🔑 API 키 생성 API 호출:', data);
+        return apiClient.post('/dashboard/api-keys/', data);
     },
 
     // API 키 난이도 업데이트

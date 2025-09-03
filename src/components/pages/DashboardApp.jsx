@@ -44,7 +44,7 @@ export default function DashboardApp() {
 
     // 새 API 키 폼 상태
     const [newApiKeyForm, setNewApiKeyForm] = useState({
-        name: ''
+        difficulty: 'middle'
     });
 
     // APP 확장/축소 토글
@@ -61,6 +61,16 @@ export default function DashboardApp() {
     // 선택된 APP과 API 키들
     const selectedApp = apps.find(app => app.id === selectedAppId);
     const selectedApiKey = apiKeys.find(key => key.id === selectedApiKeyId);
+
+    // 디버깅용 로그
+    if (selectedAppId) {
+        devLog('🔍 selectedApp 찾기:', {
+            selectedAppId,
+            appsLength: apps.length,
+            foundApp: selectedApp,
+            allAppIds: apps.map(app => ({ id: app.id, name: app.name }))
+        });
+    }
 
     // API 에러 처리 함수
     const handleApiError = (error, operation) => {
@@ -228,26 +238,46 @@ export default function DashboardApp() {
     };
 
     // API 키 추가 처리
-    const handleAddApiKey = async () => {
+    const handleAddApiKey = async (e) => { // 이벤트 파라미터 추가
+        // 폼 제출 기본 동작 방지
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
         if (!selectedAppId) {
             setErrorModal({ isOpen: true, message: '앱을 선택해주세요.' });
             return;
         }
 
+        devLog('🔑 API 키 생성 요청:', {
+            selectedAppId,
+            selectedAppIdType: typeof selectedAppId,
+            difficulty: newApiKeyForm.difficulty,
+            requestBody: {
+                appId: selectedAppId,
+                expiresPolicy: 0,
+                difficulty: newApiKeyForm.difficulty
+            }
+        });
+
         setLoading(true);
         try {
-            await applicationAPI.createApiKey(selectedAppId, '');
+            await applicationAPI.createApiKey({
+                appId: selectedAppId,
+                expiresPolicy: 0,
+                difficulty: newApiKeyForm.difficulty
+            });
 
-            setNewApiKeyForm({ name: '' });
+            setNewApiKeyForm({ difficulty: 'middle' });
             setIsAddApiKeyModalOpen(false);
 
             // 데이터 다시 조회
             await loadApplications();
         } catch (error) {
+            setLoading(false); // 에러 발생 즉시 로딩 상태 해제
             handleApiError(error, 'API 키 생성');
-        } finally {
-            setLoading(false);
+            return; // 에러 발생 시 함수 종료하여 loadApplications() 호출 방지
         }
+        // finally 블록 제거됨
+        setLoading(false);
     };
 
     // API 키 삭제 처리
@@ -274,11 +304,13 @@ export default function DashboardApp() {
             devLog('�� API 키 삭제 후 데이터 다시 조회');
             await loadApplications();
         } catch (error) {
+            setLoading(false); // 에러 발생 즉시 로딩 상태 해제
             devLog('❌ API 키 삭제 오류:', error);
             handleApiError(error, 'API 키 삭제');
-        } finally {
-            setLoading(false);
+            return; // 에러 발생 시 함수 종료하여 loadApplications() 호출 방지
         }
+        // finally 블록 제거됨
+        setLoading(false);
     };
 
     // API 키 표시 (마스킹)
@@ -462,6 +494,7 @@ export default function DashboardApp() {
                                                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">API 키</h4>
                                                 <button
                                                     onClick={() => {
+                                                        devLog('🔑 API 키 추가 모달 열기:', { appId: app.id, appName: app.name });
                                                         setSelectedAppId(app.id);
                                                         setIsAddApiKeyModalOpen(true);
                                                     }}
@@ -834,22 +867,25 @@ export default function DashboardApp() {
                 <form onSubmit={handleAddApiKey} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                            API 키 이름
+                            난이도
                         </label>
-                        <input
-                            type="text"
-                            value={newApiKeyForm.name}
-                            onChange={(e) => setNewApiKeyForm(prev => ({ ...prev, name: e.target.value }))}
+                        <select
+                            value={newApiKeyForm.difficulty || 'middle'}
+                            onChange={(e) => setNewApiKeyForm(prev => ({ ...prev, difficulty: e.target.value }))}
                             className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="API 키 이름을 입력하세요"
                             required
-                        />
+                        >
+                            <option value="low">쉬움</option>
+                            <option value="middle">보통</option>
+                            <option value="high">어려움</option>
+                        </select>
                     </div>
 
                     {selectedApp && (
                         <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                             <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">선택된 APP:</p>
                             <p className="font-medium text-gray-900 dark:text-gray-100">{selectedApp.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">ID: {selectedApp.id}</p>
                         </div>
                     )}
 
