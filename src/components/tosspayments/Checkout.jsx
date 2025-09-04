@@ -73,10 +73,10 @@ export default function CheckoutPage() {
         }
     }, [location.search]);
 
-    const amount = {
+    const amount = useMemo(() => ({
         currency: "KRW",
         value: selectedProduct.price,
-    };
+    }), [selectedProduct.price]); // eslint-disable-line react-hooks/exhaustive-deps
     const [ready, setReady] = useState(false);
     const [widgets, setWidgets] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -87,7 +87,7 @@ export default function CheckoutPage() {
         const userId = user?.id;
         console.log("👤 사용자 정보 확인:", { user, userId, type: typeof userId });
         return generateOrderId(userId);
-    }, [user?.id]);
+    }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 상품 정보가 없으면 홈으로 리다이렉트
     useEffect(() => {
@@ -144,7 +144,7 @@ export default function CheckoutPage() {
         fetchPaymentWidgets();
 
         return () => clearTimeout(timeoutId);
-    }, []); // 빈 의존성 배열로 한 번만 실행
+    }, [customerKey, widgets]);
 
     useEffect(() => {
         async function renderPaymentWidgets() {
@@ -178,7 +178,7 @@ export default function CheckoutPage() {
         }
 
         renderPaymentWidgets();
-    }, [widgets]);
+    }, [widgets, amount]);
 
 
 
