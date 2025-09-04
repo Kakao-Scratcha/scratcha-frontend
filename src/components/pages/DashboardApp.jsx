@@ -120,7 +120,7 @@ export default function DashboardApp() {
         } finally {
             setLoading(false);
         }
-    }, []); // refreshApplications 의존성 제거
+    }, [refreshApplications]);
 
     // APP 추가 처리 (API 연결)
     const handleAddApp = async (e) => { // 이벤트 파라미터 추가
@@ -381,7 +381,7 @@ export default function DashboardApp() {
         };
 
         loadInitialData();
-    }, []); // 빈 의존성 배열로 마운트 시에만 실행
+    }, [loadApplications]);
 
     return (
         <DashboardLayout

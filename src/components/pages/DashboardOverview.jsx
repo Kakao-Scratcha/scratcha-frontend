@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import UsageChart from '../ui/UsageChart';
 import LoadingSpinner from '../ui/LoadingSpinner';
@@ -95,13 +95,24 @@ export default function DashboardOverview() {
         }
     };
 
-    // 컴포넌트 마운트 시 통계 데이터 로드
+    // 초기 로드 여부를 추적하는 ref
+    const isInitialLoad = useRef(true);
+
+    // 컴포넌트 마운트 시 통계 데이터 로드 (초기에는 항상 '전체' 기간으로)
     useEffect(() => {
         loadAllRequestsStats();
-        loadStatisticsSummary(null, selectedPeriod);
+        loadStatisticsSummary(null, '전체'); // 초기 로드 시에는 항상 '전체'로 고정
         // 최근 활동용 7일 통계 데이터 로드
         loadStatisticsSummary(null, '7일');
-    }, [loadAllRequestsStats, loadStatisticsSummary, selectedPeriod]);
+        isInitialLoad.current = false;
+    }, [loadAllRequestsStats, loadStatisticsSummary]);
+
+    // 기간 변경 시 데이터 로드 (초기 로드가 아닌 경우에만)
+    useEffect(() => {
+        if (!isInitialLoad.current) {
+            loadStatisticsSummary(null, selectedPeriod);
+        }
+    }, [selectedPeriod, loadStatisticsSummary]);
 
     // 최근 활동 데이터 (7일 통계 데이터 기반으로 변경)
     const avgTokens = safePlanUsageData.current?.requests?.avgTokensPerRequest || 20;
