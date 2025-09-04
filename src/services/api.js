@@ -199,4 +199,14 @@ export const paymentAPI = {
         console.log('📡 API 요청 전송 완료');
         return response;
     },
+
+    // 구매내역 조회 (페이지네이션)
+    getPaymentHistory: (page = 1, limit = 20) => {
+        const skip = (page - 1) * limit;
+        console.log('💳 구매내역 조회 API 호출:', { page, limit, skip });
+        const queryParams = new URLSearchParams();
+        queryParams.append('skip', skip);
+        queryParams.append('limit', limit);
+        return apiClient.get(`/payments/history?${queryParams.toString()}`);
+    },
 }; 

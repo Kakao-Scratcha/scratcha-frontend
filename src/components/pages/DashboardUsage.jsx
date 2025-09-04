@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import UsageChart from '../ui/UsageChart';
 import LoadingSpinner from '../ui/LoadingSpinner';
-import Table, { TableHead, TableBody, TableRow, TableHeader, TableCell } from '../ui/Table';
+import DataTable from '../ui/DataTable';
 import { useDashboardStore } from '../../stores/dashboardStore';
 
 export default function DashboardUsage() {
@@ -30,7 +30,7 @@ export default function DashboardUsage() {
     const [viewMode, setViewMode] = useState('graph'); // 'graph' or 'table'
     const [isLoading, setIsLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(50);
+    const [itemsPerPage] = useState(10);
 
     // 선택된 APP의 API 키들 (전체 선택 시 모든 API 키)
     const appApiKeys = selectedAppId === 'all' ? apiKeys : apiKeys.filter(key => String(key.appId) === String(selectedAppId));
@@ -274,6 +274,63 @@ export default function DashboardUsage() {
         return key.substring(0, 8) + '...' + key.substring(key.length - 4);
     };
 
+    // 테이블 컬럼 정의
+    const logColumns = [
+        {
+            key: 'index',
+            title: '번호',
+            align: 'left',
+            minWidth: '60px',
+            render: (log, index) => (currentPage - 1) * itemsPerPage + index + 1
+        },
+        {
+            key: 'id',
+            title: 'ID',
+            align: 'left',
+            minWidth: '80px'
+        },
+        {
+            key: 'appName',
+            title: '앱',
+            align: 'left',
+            minWidth: '100px'
+        },
+        {
+            key: 'key',
+            title: 'API 키',
+            align: 'left',
+            className: 'font-mono text-sm',
+            minWidth: '120px',
+            render: (log) => maskApiKey(log.key)
+        },
+        {
+            key: 'date',
+            title: '시간 (KST)',
+            align: 'left',
+            className: 'text-sm',
+            minWidth: '140px',
+            render: (log) => formatDate(log.date)
+        },
+        {
+            key: 'result',
+            title: '결과',
+            align: 'left',
+            minWidth: '80px',
+            render: (log) => (
+                <span className={getResultColor(log.result)}>
+                    {log.result}
+                </span>
+            )
+        },
+        {
+            key: 'ratency',
+            title: '응답시간',
+            align: 'left',
+            minWidth: '100px',
+            render: (log) => `${log.ratency}ms`
+        }
+    ];
+
     return (
         <DashboardLayout>
             <div className="space-y-6">
@@ -397,162 +454,31 @@ export default function DashboardUsage() {
                             {/* 테이블 뷰 */}
                             {viewMode === 'table' && (
                                 <div className="p-6 rounded-lg theme-card">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h3 className={`${T.sectionTitle} theme-text-primary`}>로그 상세</h3>
-                                        <div className="text-sm theme-text-secondary">
-                                            {(() => {
-                                                const total = logs.total || 0;
-                                                const page = logs.page || 1;
-                                                const actualItemsCount = currentLogs.length;
+                                    <DataTable
+                                        title="로그 상세"
+                                        subtitle={(() => {
+                                            const total = logs.total || 0;
+                                            const page = logs.page || 1;
 
-                                                console.log('📊 페이지 정보 계산:', {
-                                                    page,
-                                                    itemsPerPage,
-                                                    total,
-                                                    actualItemsCount
-                                                });
+                                            if (total === 0) {
+                                                return '0개';
+                                            }
 
-                                                if (total === 0) {
-                                                    return '0개';
-                                                }
+                                            // 프론트엔드 페이지 크기(itemsPerPage) 기준으로 계산
+                                            const start = (page - 1) * itemsPerPage + 1;
+                                            const end = Math.min(page * itemsPerPage, total);
 
-                                                // 프론트엔드 페이지 크기(itemsPerPage) 기준으로 계산
-                                                const start = (page - 1) * itemsPerPage + 1;
-                                                const end = Math.min(page * itemsPerPage, total);
-
-                                                return `${start}-${end} / ${total}개`;
-                                            })()}
-                                        </div>
-                                    </div>
-
-                                    {currentLogs.length > 0 ? (
-                                        <Table>
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableHeader>번호</TableHeader>
-                                                    <TableHeader>ID</TableHeader>
-                                                    <TableHeader>앱</TableHeader>
-                                                    <TableHeader>API 키</TableHeader>
-                                                    <TableHeader title="한국 시간 (KST) 기준">시간 (KST)</TableHeader>
-                                                    <TableHeader>결과</TableHeader>
-                                                    <TableHeader>응답시간</TableHeader>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {currentLogs.map((log, index) => (
-                                                    <TableRow key={log.id} className="theme-table-row hover:theme-hover-bg">
-                                                        <TableCell className="text-left py-3 px-4 theme-text-primary">
-                                                            {(currentPage - 1) * itemsPerPage + index + 1}
-                                                        </TableCell>
-                                                        <TableCell className="text-left py-3 px-4 theme-text-primary">{log.id}</TableCell>
-                                                        <TableCell className="text-left py-3 px-4 theme-text-primary">
-                                                            {log.appName}
-                                                        </TableCell>
-                                                        <TableCell className="text-left py-3 px-4 theme-text-primary font-mono text-sm">
-                                                            {maskApiKey(log.key)}
-                                                        </TableCell>
-                                                        <TableCell className="text-left py-3 px-4 theme-text-primary text-sm">
-                                                            {formatDate(log.date)}
-                                                        </TableCell>
-                                                        <TableCell className="text-left py-3 px-4 font-medium">
-                                                            <span className={getResultColor(log.result)}>
-                                                                {log.result}
-                                                            </span>
-                                                        </TableCell>
-                                                        <TableCell className="text-left py-3 px-4 theme-text-primary">
-                                                            {`${log.ratency}ms`}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    ) : (
-                                        <div className="flex justify-center items-center h-64 text-gray-500 dark:text-gray-400">
-                                            로그 데이터가 없습니다.
-                                        </div>
-                                    )}
-
-                                    {/* 페이징 네비게이션 */}
-                                    {totalPages > 1 && (
-                                        <div className="flex justify-center items-center space-x-1 mt-6">
-                                            {/* 첫 페이지로 이동 */}
-                                            <button
-                                                onClick={() => handlePageChange(1)}
-                                                disabled={currentPage === 1}
-                                                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                &lt;&lt;
-                                            </button>
-
-                                            {/* 이전 10페이지 */}
-                                            <button
-                                                onClick={() => handlePageChange(Math.max(1, currentPage - 10))}
-                                                disabled={currentPage <= 10}
-                                                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                &lt;
-                                            </button>
-
-                                            {/* 페이지 번호들 */}
-                                            {(() => {
-                                                const pages = [];
-                                                let start, end;
-
-                                                // 총 10개 페이지를 보여주되, 현재 페이지를 중심으로 조정
-                                                if (totalPages <= 10) {
-                                                    // 총 페이지가 10개 이하면 모든 페이지 표시
-                                                    start = 1;
-                                                    end = totalPages;
-                                                } else {
-                                                    // 현재 페이지를 중심으로 좌우 4페이지씩 (총 9페이지)
-                                                    start = Math.max(1, currentPage - 4);
-                                                    end = Math.min(totalPages, currentPage + 4);
-
-                                                    // 시작이나 끝에 가까우면 조정
-                                                    if (start === 1) {
-                                                        end = Math.min(totalPages, 9);
-                                                    } else if (end === totalPages) {
-                                                        start = Math.max(1, totalPages - 8);
-                                                    }
-                                                }
-
-                                                for (let i = start; i <= end; i++) {
-                                                    pages.push(i);
-                                                }
-
-                                                return pages.map(page => (
-                                                    <button
-                                                        key={page}
-                                                        onClick={() => handlePageChange(page)}
-                                                        className={`px-3 py-2 text-sm font-medium rounded-md border ${page === currentPage
-                                                            ? 'bg-blue-600 text-white border-blue-600'
-                                                            : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-                                                            }`}
-                                                    >
-                                                        {page}
-                                                    </button>
-                                                ));
-                                            })()}
-
-                                            {/* 다음 10페이지 */}
-                                            <button
-                                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 10))}
-                                                disabled={currentPage >= totalPages - 9 || currentPage === totalPages}
-                                                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                &gt;
-                                            </button>
-
-                                            {/* 마지막 페이지로 이동 */}
-                                            <button
-                                                onClick={() => handlePageChange(totalPages)}
-                                                disabled={currentPage === totalPages}
-                                                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                &gt;&gt;
-                                            </button>
-                                        </div>
-                                    )}
+                                            return `${start}-${end} / ${total}개`;
+                                        })()}
+                                        columns={logColumns}
+                                        data={currentLogs}
+                                        loading={logs.loading}
+                                        error={logs.error}
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
+                                        onPageChange={handlePageChange}
+                                        emptyMessage="로그 데이터가 없습니다."
+                                    />
                                 </div>
                             )}
                         </>
