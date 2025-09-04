@@ -31,7 +31,7 @@ export default function FailPage() {
       },
       replace: true
     });
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   return (
     <div id="info" className="box_section" style={{ width: "600px" }}>
