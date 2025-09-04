@@ -14,6 +14,10 @@ RUN npm run build
 
 FROM nginx:alpine
 
+# 파일 디스크립터 제한 증가
+RUN echo "* soft nofile 65536" >> /etc/security/limits.conf && \
+    echo "* hard nofile 65536" >> /etc/security/limits.conf
+
 # nginx.conf 복사
 COPY nginx.conf /etc/nginx/nginx.conf
 
