@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
+import PaymentHistoryTable from '../ui/PaymentHistoryTable';
 import { useAuthStore } from '../../stores/authStore';
 import { useLocation } from 'react-router-dom';
 
@@ -267,39 +268,7 @@ export default function DashboardBilling() {
 
                 {/* 최근 구매내역 */}
                 <div className="theme-card p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <h3 className={`${T.sectionTitle} text-gray-900 dark:text-gray-100 mb-6`}>최근 구매내역</h3>
-                    <div className="space-y-4">
-                        {/* 구매내역이 없을 때 */}
-                        <div className="text-center py-8">
-                            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                </svg>
-                            </div>
-                            <h4 className="text-lg font-medium theme-text-primary mb-2">아직 구매내역이 없습니다</h4>
-                            <p className="text-sm theme-text-secondary mb-4">토큰을 충전하면 구매내역이 여기에 표시됩니다</p>
-                            <button
-                                onClick={() => setIsPlanChangeModalOpen(true)}
-                                className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white dark:text-gray-900 rounded-lg font-semibold hover:opacity-90 transition"
-                            >
-                                첫 번째 구매하기
-                            </button>
-                        </div>
-
-                        {/* 구매내역이 있을 때 (향후 구현) */}
-                        {/* <div className="space-y-3">
-                            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                <div>
-                                    <h4 className="font-medium theme-text-primary">10,000 토큰 패키지</h4>
-                                    <p className="text-sm theme-text-secondary">2024년 12월 15일</p>
-                                </div>
-                                <div className="text-right">
-                                    <div className="font-semibold theme-text-primary">₩29,900</div>
-                                    <div className="text-sm text-green-600 dark:text-green-400">완료</div>
-                                </div>
-                            </div>
-                        </div> */}
-                    </div>
+                    <PaymentHistoryTable />
                 </div>
             </div>
 
@@ -357,82 +326,6 @@ export default function DashboardBilling() {
             </Modal>
 
 
-
-            {/* 결제 결과 모달 */}
-            <Modal
-                isOpen={showPaymentResultModal}
-                onClose={() => setShowPaymentResultModal(false)}
-                title={paymentResult?.paymentResult === "success" ? "결제 완료" : "결제 실패"}
-            >
-                <div className="space-y-6">
-                    {paymentResult?.paymentResult === "success" ? (
-                        <>
-                            <div className="text-center mb-4">
-                                <div className="text-6xl mb-4">🎉</div>
-                                <h3 className="text-xl font-semibold text-green-600 dark:text-green-400 mb-2">
-                                    결제가 완료되었습니다!
-                                </h3>
-                            </div>
-                            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 dark:text-gray-400">주문번호:</span>
-                                        <span className="font-medium text-gray-900 dark:text-gray-100">{paymentResult.orderId}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 dark:text-gray-400">상품명:</span>
-                                        <span className="font-medium text-gray-900 dark:text-gray-100">{paymentResult.productName || '토큰 충전'}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 dark:text-gray-400">상품 내용:</span>
-                                        <span className="font-medium text-gray-900 dark:text-gray-100">{paymentResult.productDescription || '토큰 패키지 충전'}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 dark:text-gray-400">결제금액:</span>
-                                        <span className="font-medium text-gray-900 dark:text-gray-100">{Number(paymentResult.amount).toLocaleString()}원</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <p className="text-center text-green-600 dark:text-green-400 font-medium">
-                                토큰이 즉시 충전되었습니다!
-                            </p>
-                        </>
-                    ) : (
-                        <>
-                            <div className="text-center mb-4">
-                                <div className="text-6xl mb-4">❌</div>
-                                <h3 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
-                                    결제에 실패했습니다
-                                </h3>
-                            </div>
-                            <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 dark:text-gray-400">에러코드:</span>
-                                        <span className="font-medium text-gray-900 dark:text-gray-100">{paymentResult?.errorCode || 'UNKNOWN'}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 dark:text-gray-400">에러메시지:</span>
-                                        <span className="font-medium text-gray-900 dark:text-gray-100">{paymentResult?.errorMessage || '알 수 없는 오류'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <p className="text-center text-red-600 dark:text-red-400 font-medium">
-                                다시 시도해주세요.
-                            </p>
-                        </>
-                    )}
-
-                    <div className="flex justify-center pt-4">
-                        <button
-                            onClick={() => setShowPaymentResultModal(false)}
-                            className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white dark:text-gray-900 rounded-lg font-medium hover:opacity-90 transition"
-                        >
-                            확인
-                        </button>
-                    </div>
-                </div>
-            </Modal>
 
             {/* 결제 결과 모달 */}
             <Modal
