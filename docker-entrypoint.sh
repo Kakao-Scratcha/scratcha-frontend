@@ -2,6 +2,15 @@
 
 echo "🚀 Frontend starting..."
 
+# 파일 디스크립터 제한 설정 (Alpine Linux용)
+ulimit -n 65536 2>/dev/null || true
+echo "📈 File descriptor limit set to: $(ulimit -n)"
+
+# 시스템 레벨 파일 디스크립터 제한 확인
+echo "📊 System file descriptor info:"
+echo "   Current limit: $(ulimit -n)"
+echo "   Max processes: $(ulimit -u)"
+
 # 기본 환경변수 설정
 export VITE_API_URL=${VITE_API_URL:-"http://10.0.129.24:8001"}
 export ENVIRONMENT=${ENVIRONMENT:-"production"}

@@ -14,6 +14,8 @@ RUN npm run build
 
 FROM nginx:alpine
 
+# Alpine Linux에서는 docker-entrypoint.sh에서 ulimit 설정
+
 # nginx.conf 복사
 COPY nginx.conf /etc/nginx/nginx.conf
 
