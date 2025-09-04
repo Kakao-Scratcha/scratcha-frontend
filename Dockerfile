@@ -14,9 +14,7 @@ RUN npm run build
 
 FROM nginx:alpine
 
-# 파일 디스크립터 제한 증가
-RUN echo "* soft nofile 65536" >> /etc/security/limits.conf && \
-    echo "* hard nofile 65536" >> /etc/security/limits.conf
+# Alpine Linux에서는 docker-entrypoint.sh에서 ulimit 설정
 
 # nginx.conf 복사
 COPY nginx.conf /etc/nginx/nginx.conf
