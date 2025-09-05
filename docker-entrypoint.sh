@@ -2,9 +2,9 @@
 
 echo "🚀 Frontend starting..."
 
-# 2GB RAM 환경 파일 디스크립터 제한 설정
-ulimit -n 262144 2>/dev/null || true   # 1,048,576 → 262,144로 완화
-ulimit -u 32768 2>/dev/null || true    # 65,536 → 32,768로 완화
+# 2GB RAM 환경 파일 디스크립터 제한 설정 (메모리 사용량 증가)
+ulimit -n 524288 2>/dev/null || true   # 262,144 → 524,288로 증가
+ulimit -u 65536 2>/dev/null || true    # 32,768 → 65,536으로 증가
 echo "📈 File descriptor limit set to: $(ulimit -n)"
 echo "📈 Max processes limit set to: $(ulimit -u)"
 
