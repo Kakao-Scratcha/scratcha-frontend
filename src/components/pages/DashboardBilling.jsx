@@ -91,20 +91,25 @@ export default function DashboardBilling() {
         // 주문 정보 생성
         const orderData = {
             orderId: `order_${user.id}_${Date.now()}`,
-            amount: getTokenPrice(tokenPackage.name),
-            productName: tokenPackage.name,
+            amount: getTokenPrice(tokenPackage.productName), // productName 사용
+            productName: tokenPackage.productName,           // productName 사용
             productDescription: tokenPackage.description,
             userId: user.id,
             timestamp: Date.now()
         };
 
+        console.log("📦 토큰 패키지 정보:", tokenPackage);
+        console.log("📦 패키지 정보:", {
+            displayName: tokenPackage.name,
+            productName: tokenPackage.productName
+        });
         console.log("📦 생성된 주문 정보:", orderData);
 
         // localStorage에 주문 정보 저장
         localStorage.setItem('currentOrder', JSON.stringify(orderData));
 
         // checkout 페이지로 바로 이동
-        window.location.href = `/checkout?product=${encodeURIComponent(tokenPackage.name)}&amount=${orderData.amount}`;
+        window.location.href = `/checkout?product=${encodeURIComponent(tokenPackage.productName)}&amount=${orderData.amount}`;
     };
 
 
@@ -114,64 +119,67 @@ export default function DashboardBilling() {
     // 토큰 충전 패키지별 가격 반환
     const getTokenPrice = (packageName) => {
         const tokenPrices = {
+            'Starter': 5000,
+            'Standard': 40000,
+            'Enterprise': 300000,
+            // 기존 API 호환성을 위한 매핑
             '1000 토큰': 5000,
             '10000 토큰': 40000,
-            '100000 토큰': 300000,
-            '100 토큰': 1000
+            '100000 토큰': 300000
         };
         return tokenPrices[packageName] || 0;
     };
 
-    // 토큰 충전 패키지 옵션 (4개)
+    // API 상품명을 UI 표시용 이름으로 변환
+    const getDisplayName = (productName) => {
+        const displayMapping = {
+            '1000 토큰': 'Starter',
+            '10000 토큰': 'Standard',
+            '100000 토큰': 'Enterprise'
+        };
+        return displayMapping[productName] || productName;
+    };
+
+
+    // 토큰 충전 패키지 옵션 (3개)
     const tokenPackages = [
         {
             id: '1000',
-            name: '1000 토큰',
+            name: 'Starter',           // UI 표시용 이름
+            productName: '1000 토큰',  // API 전송용 상품명
             price: '₩5,000',
             tokens: 1000,
-            description: '1,000 토큰 충전',
+            description: '1,000 토큰 제공 (토큰당 5원)',
             features: [
-                '즉시 사용 가능',
-                '유효기간 없음',
-                '기본 API 통계'
+                '초기 부담 최소화',
+                '신규 사용자 추천',
+                '간편한 결제'
             ]
         },
         {
             id: '10k',
-            name: '10000 토큰',
+            name: 'Standard',          // UI 표시용 이름
+            productName: '10000 토큰', // API 전송용 상품명
             price: '₩40,000',
             tokens: 10000,
-            description: '10,000 토큰 충전',
+            description: '10,000 토큰 제공 (토큰당 4원)',
             features: [
-                '즉시 사용 가능',
-                '유효기간 없음',
-                '기본 API & 통계',
-                '광고 제거'
+                '일반 사용자 최적화',
+                '20% 할인 혜택',
+                '안정적인 서비스'
             ]
         },
         {
             id: '100k',
-            name: '100000 토큰',
+            name: 'Enterprise',        // UI 표시용 이름
+            productName: '100000 토큰', // API 전송용 상품명
             price: '₩300,000',
             tokens: 100000,
-            description: '100,000 토큰 충전',
+            description: '100,000 토큰 제공 (토큰당 3원)',
             features: [
-                '즉시 사용 가능',
-                '유효기간 없음',
-                '고급 분석 리포트',
-                '우선 지원'
-            ]
-        },
-        {
-            id: '100',
-            name: '100 토큰',
-            price: '₩1,000',
-            tokens: 100,
-            description: '100 토큰 충전 (테스트용)',
-            features: [
-                '즉시 사용 가능',
-                '유효기간 없음',
-                '테스트 및 개발용'
+                '대규모 트래픽 처리',
+                '40% 할인 혜택',
+                '기업용 최적화'
             ]
         }
     ];
@@ -350,7 +358,7 @@ export default function DashboardBilling() {
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600 dark:text-gray-400">상품명:</span>
-                                        <span className="font-medium text-gray-900 dark:text-gray-100">{paymentResult.productName || '토큰 충전'}</span>
+                                        <span className="font-medium text-gray-900 dark:text-gray-100">{getDisplayName(paymentResult.productName) || '토큰 충전'}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600 dark:text-gray-400">상품 내용:</span>

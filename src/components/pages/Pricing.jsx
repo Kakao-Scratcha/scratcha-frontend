@@ -13,49 +13,48 @@ const PRICING_DATA = {
         {
             name: "Free",
             price: "₩ 0",
-            description: "월 1,000 토큰 무료제공",
+            description: "회원 가입시 1,000 토큰 제공",
             features: [
-                "기본 API 통계",
-                "광고 포함"
+                "신규 사용자 체험용",
+                "기본 API 통계 제공"
             ],
             buttonText: "무료 시작",
             popular: false
         },
         {
-            name: "Starter",
-            price: "₩ 29,900",
-            description: "월 50,000 토큰 제공",
+            name: "1000 토큰 구매",
+            price: "₩ 5,000",
+            description: "1,000 토큰 제공 (토큰당 5원)",
             features: [
-                "기본 API & 통계",
-                "광고 제거",
-                "이메일 지원"
+                "초기 부담 최소화",
+                "신규 사용자 추천",
+                "간편한 결제"
             ],
             buttonText: "시작하기",
             popular: true
         },
         {
-            name: "Pro",
-            price: "₩ 79,900",
-            description: "월 200,000 토큰 제공",
+            name: "10000 토큰 구매",
+            price: "₩ 40,000",
+            description: "10,000 토큰 제공 (토큰당 4원)",
             features: [
-                "Starter의 모든 혜택",
-                "커스텀 UI 스킨 지원",
-                "고급 분석 리포트"
+                "일반 사용자 최적화",
+                "20% 할인 혜택",
+                "안정적인 서비스"
             ],
             buttonText: "시작하기",
             popular: false
         },
         {
-            name: "Enterprise",
-            price: "맞춤 견적",
-            description: "월 무제한 또는 대규모 토큰 패키지",
+            name: "100000 토큰 구매",
+            price: "₩ 300,000",
+            description: "100,000 토큰 제공 (토큰당 3원)",
             features: [
-                "Pro의 모든 혜택",
-                "전용 인프라/보안 강화",
-                "SLA 보장",
-                "24/7 모니터링"
+                "대규모 트래픽 처리",
+                "40% 할인 혜택",
+                "기업용 최적화"
             ],
-            buttonText: "문의하기",
+            buttonText: "시작하기",
             popular: false
         }
     ],
