@@ -1,8 +1,6 @@
 import { create } from 'zustand';
-import {
-    PLAN_USAGE_DATA,
-} from '../data/dashboardDummy';
-import { applicationAPI, dashboardAPI } from '../services/api';
+import { PLAN_USAGE_DATA, } from '../data/dashboardDummy';
+import { applicationAPI, dashboardAPI, billingAPI } from '../services/api';
 import { useAuthStore } from './authStore';
 import { PERIOD_TYPE_MAP, processChartData, processMultiAppChartData } from '../utils/chartDataUtils';
 import { devLog, devError } from '../utils/logger';
