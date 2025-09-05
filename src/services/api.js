@@ -210,4 +210,18 @@ export const paymentAPI = {
         queryParams.append('limit', limit);
         return apiClient.get(`/payments/history?${queryParams.toString()}`);
     },
+};
+
+// 문의하기 관련 API
+export const contactAPI = {
+    // 문의하기 전송
+    submitContact: (contactData) => {
+        console.log('📧 문의하기 API 호출:', contactData);
+        return apiClient.post('/contacts/', contactData, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+        });
+    },
 }; 
