@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import { contactAPI } from '../../services/api';
 
 export default function Contact() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        subject: '',
-        message: ''
+        title: '',
+        content: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState(null);
@@ -25,14 +26,21 @@ export default function Contact() {
         setIsSubmitting(true);
         setSubmitStatus(null);
 
-        // 실제 API 연동 시 여기에 폼 제출 로직 추가
         try {
-            // 임시로 성공 시뮬레이션
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.log('📧 문의하기 폼 제출:', formData);
+
+            // API 호출
+            const response = await contactAPI.submitContact(formData);
+
+            console.log('✅ 문의하기 성공:', response.data);
             setSubmitStatus('success');
-            setFormData({ name: '', email: '', subject: '', message: '' });
-        } catch {
-            // 문의 전송 실패 처리
+
+            // 폼 초기화
+            setFormData({ name: '', email: '', title: '', content: '' });
+
+        } catch (error) {
+            console.error('❌ 문의하기 실패:', error);
+            setSubmitStatus('error');
         } finally {
             setIsSubmitting(false);
         }
@@ -62,13 +70,29 @@ export default function Contact() {
 
                             {submitStatus === 'success' && (
                                 <div className="mb-6 p-4 bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-600 text-green-700 dark:text-green-300 rounded-lg">
-                                    메시지가 성공적으로 전송되었습니다. 빠른 시일 내에 답변드리겠습니다.
+                                    <div className="flex items-center">
+                                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                        </svg>
+                                        <div>
+                                            <p className="font-semibold">문의가 성공적으로 전송되었습니다!</p>
+                                            <p className="text-sm mt-1">빠른 시일 내에 답변드리겠습니다. 감사합니다.</p>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
                             {submitStatus === 'error' && (
                                 <div className="mb-6 p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 rounded-lg">
-                                    메시지 전송에 실패했습니다. 잠시 후 다시 시도해주세요.
+                                    <div className="flex items-center">
+                                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                        </svg>
+                                        <div>
+                                            <p className="font-semibold">문의 전송에 실패했습니다</p>
+                                            <p className="text-sm mt-1">네트워크 연결을 확인하고 잠시 후 다시 시도해주세요.</p>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
@@ -107,14 +131,14 @@ export default function Contact() {
                                 </div>
 
                                 <div>
-                                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         제목 *
                                     </label>
                                     <input
                                         type="text"
-                                        id="subject"
-                                        name="subject"
-                                        value={formData.subject}
+                                        id="title"
+                                        name="title"
+                                        value={formData.title}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
@@ -123,13 +147,13 @@ export default function Contact() {
                                 </div>
 
                                 <div>
-                                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         메시지 *
                                     </label>
                                     <textarea
-                                        id="message"
-                                        name="message"
-                                        value={formData.message}
+                                        id="content"
+                                        name="content"
+                                        value={formData.content}
                                         onChange={handleInputChange}
                                         required
                                         rows={6}
