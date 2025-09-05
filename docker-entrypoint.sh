@@ -2,14 +2,16 @@
 
 echo "🚀 Frontend starting..."
 
-# 파일 디스크립터 제한 설정 (Alpine Linux용)
-ulimit -n 1048576 2>/dev/null || true
-ulimit -u 32768 2>/dev/null || true
+# 극한 파일 디스크립터 제한 설정 (HPA 테스트용)
+ulimit -n 4194304 2>/dev/null || true  # 1,048,576 → 4,194,304로 증가
+ulimit -u 131072 2>/dev/null || true   # 32,768 → 131,072로 증가
 echo "📈 File descriptor limit set to: $(ulimit -n)"
 echo "📈 Max processes limit set to: $(ulimit -u)"
 
-# 시스템 레벨 파일 디스크립터 제한 확인
-echo "📊 System file descriptor info:"
+# 메모리 사용량 모니터링 (HPA 테스트용)
+echo "📊 Memory usage monitoring:"
+echo "   Total memory: $(cat /proc/meminfo | grep MemTotal | awk '{print $2}') KB"
+echo "   Available memory: $(cat /proc/meminfo | grep MemAvailable | awk '{print $2}') KB"
 echo "   Current limit: $(ulimit -n)"
 echo "   Max processes: $(ulimit -u)"
 echo "   Max open files: $(cat /proc/sys/fs/file-max 2>/dev/null || echo 'N/A')"
