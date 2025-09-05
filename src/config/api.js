@@ -8,6 +8,19 @@ let configCache = null;
 const getApiBaseUrl = async () => {
     console.log('🔧 getApiBaseUrl 함수 실행');
 
+    // 개발 환경에서는 /api/config 호출 건너뛰기
+    if (import.meta.env.DEV) {
+        console.log('🔧 개발 환경 감지, /api/config 호출 건너뛰기');
+        // 개발 환경에서 동적 감지
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname;
+        const port = '8001';
+        const url = `${protocol}//${hostname}:${port}/api`;
+        console.log('✅ 개발 환경 API URL:', url);
+        return url;
+    }
+
+
     // 1. 설정 API에서 런타임 설정 가져오기 (캐시 활용)
     if (!configCache) {
         try {
