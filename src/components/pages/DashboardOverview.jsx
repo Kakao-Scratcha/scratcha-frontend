@@ -1,14 +1,14 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import UsageChart from '../ui/UsageChart';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { useAuthStore } from '../../stores/authStore';
+import { paymentAPI } from '../../services/api';
 import greenCheckIcon from '@/assets/images/green_check_icon.png';
 import blueCheckIcon from '@/assets/images/blue_check_icon.png';
 import yellowAlertIcon from '@/assets/images/yellow_alert_icon.png';
 import redFailIcon from '@/assets/images/red_fail_icon.png';
-// LogsTable import 제거
 
 export default function DashboardOverview() {
     // Typography scale (dashboard-wide consistency)
@@ -26,49 +26,51 @@ export default function DashboardOverview() {
         isLoading,
         setPeriod,
         planUsageData,
-        calculateOverageCost,
-        calculateTotalCost,
         requestsStats,
         loadAllRequestsStats,
         loadStatisticsSummary,
     } = useDashboardStore();
 
-    // authStore의 user.plan을 기반으로 요금제 정보 생성
+    // 결제 내역 확인을 위한 상태
+    const [hasPaymentHistory, setHasPaymentHistory] = useState(false);
+
+    // 주기적으로 사용자 정보 갱신
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const { getProfile } = useAuthStore.getState();
+            getProfile({ showLoading: false });
+        }, 30000); // 30초마다 갱신
+
+        return () => clearInterval(interval);
+    }, []);
+
+    // 결제 내역 확인 함수
+    const checkPaymentHistory = async () => {
+        try {
+            const response = await paymentAPI.getPaymentHistory(1, 1);
+            const hasHistory = response.data.total > 0;
+            setHasPaymentHistory(hasHistory);
+        } catch {
+            setHasPaymentHistory(false);
+        }
+    };
+
+    // 결제 내역을 기반으로 요금제 정보 생성 (Free/Premium)
     const getCurrentPlanInfo = () => {
-        const planName = user?.plan || 'free';
+        const planName = hasPaymentHistory ? 'premium' : 'free';
 
         const planConfigs = {
             'free': {
                 name: 'Free',
-                limit: 1000,
-                price: '₩0',
-                description: '월 1,000 토큰 무료제공',
-                overageRate: 0,
-                features: ['기본 API 통계', '광고 포함']
+                icon: '🟦',
+                description: '기본 기능을 무료로 이용하세요',
+                features: ['기본 API 통계', '커뮤니티 지원']
             },
-            'starter': {
-                name: 'Starter',
-                limit: 50000,
-                price: '₩29,900',
-                description: '월 50,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
-                overageRate: 2.0,
-                features: ['기본 API & 통계', '광고 제거', '이메일 지원']
-            },
-            'pro': {
-                name: 'Pro',
-                limit: 200000,
-                price: '₩79,900',
-                description: '월 200,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
-                overageRate: 2.0,
-                features: ['Starter의 모든 혜택', '커스텀 UI 스킨 지원', '고급 분석 리포트']
-            },
-            'enterprise': {
-                name: 'Enterprise',
-                limit: 999999999,
-                price: '맞춤 견적',
-                description: '월 무제한 또는 대규모 토큰 패키지',
-                overageRate: 0,
-                features: ['Pro의 모든 혜택', '전용 인프라/보안 강화', 'SLA 보장', '24/7 모니터링']
+            'premium': {
+                name: 'Premium',
+                icon: '⭐',
+                description: '결제한 사용자 전용 혜택',
+                features: ['우선 지원', '고급 분석']
             }
         };
 
@@ -77,16 +79,6 @@ export default function DashboardOverview() {
 
     // 현재 요금제 정보 (authStore 기반)
     const currentPlanInfo = getCurrentPlanInfo();
-
-    // 요금제 정보가 없는 경우 기본값 사용
-    const safeCurrentPlan = currentPlanInfo || {
-        name: 'Free',
-        price: '₩0',
-        description: '월 1,000 토큰 무료제공',
-        limit: 1000,
-        overageRate: 0,
-        features: ['기본 API 통계', '광고 포함']
-    };
 
     const safePlanUsageData = planUsageData || {
         current: {
@@ -104,6 +96,11 @@ export default function DashboardOverview() {
         loadStatisticsSummary(null, '전체'); // 초기 로드 시에는 항상 '전체'로 고정
         // 최근 활동용 7일 통계 데이터 로드
         loadStatisticsSummary(null, '7일');
+        // 결제 내역 확인
+        checkPaymentHistory();
+        // 사용자 정보 새로고침
+        const { getProfile } = useAuthStore.getState();
+        getProfile({ showLoading: false });
         isInitialLoad.current = false;
     }, [loadAllRequestsStats, loadStatisticsSummary]);
 
@@ -141,35 +138,8 @@ export default function DashboardOverview() {
         };
     }, [requestsStats.weekly]);
 
-
-
     // 기간 선택 옵션
-    const periodOptions = ['전체', '1일', '7일', '30일'];
-
-    // 사용률/요금 계산
-    const usagePercent = typeof safePlanUsageData.current.tokens.percentage === 'number'
-        ? safePlanUsageData.current.tokens.percentage
-        : Math.round((safePlanUsageData.current.tokens.used / safePlanUsageData.current.tokens.limit) * 100);
-    const getUsageColorClass = (p) => {
-        if (p < 30) return 'green';
-        if (p < 60) return 'yellow';
-        return 'red';
-    };
-    const usageColor = getUsageColorClass(usagePercent);
-
-    // 디버그 로그 제거
-    // useEffect(() => {
-    //     const preview = Array.isArray(chartUsageData)
-    //         ? { head: chartUsageData.slice(0, 2), tail: chartUsageData.slice(-2) }
-    //         : null;
-    //     console.log('[Overview] selectedPeriod:', selectedPeriod);
-    //     console.log('[Overview] chartUsageData length:', Array.isArray(chartUsageData) ? chartUsageData.length : 'N/A');
-    //     console.log('[Overview] chartUsageData preview:', preview);
-    // }, [selectedPeriod, chartUsageData]);
-
-    // 초과분 요금 계산 (통합 사용량 데이터 사용)
-    const overageCost = calculateOverageCost(safePlanUsageData.current.tokens.used, safeCurrentPlan.limit, safeCurrentPlan.overageRate);
-    const totalCost = calculateTotalCost(safePlanUsageData.current.tokens.used, safeCurrentPlan.limit, safeCurrentPlan.price, safeCurrentPlan.overageRate);
+    const periodOptions = ['전체', '당일', '7일', '30일'];
 
     // 기간 라벨
     const fmtMD = (d) => `${d.getMonth() + 1}월 ${d.getDate()}일`;
@@ -177,7 +147,7 @@ export default function DashboardOverview() {
     const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
     const now = new Date();
     const rangeLabel = (() => {
-        if (selectedPeriod === '1일') {
+        if (selectedPeriod === '당일') {
             return `${fmtMD(now)} 00:00 ~ 현재`;
         }
         if (selectedPeriod === '7일') {
@@ -211,47 +181,33 @@ export default function DashboardOverview() {
             subtitle="현재 플랜과 사용량을 확인하세요"
         >
             <div className="space-y-6">
-                {/* 현재 요금제 (타이틀 제거, 스타일 업그레이드) */}
+                {/* 현재 요금제 */}
                 <div className="p-5 rounded-lg theme-card">
                     <div className="flex items-center justify-between">
                         <div>
-                            <div className="flex items-center gap-2">
-                                <p className="text-2xl md:text-3xl font-bold theme-text-primary">{safeCurrentPlan.name}</p>
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${usageColor === 'green' ? 'theme-usage-green' : usageColor === 'yellow' ? 'theme-usage-yellow' : 'theme-usage-red'}`}>
-                                    {usagePercent}%
-                                </span>
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="text-2xl">{currentPlanInfo.icon}</span>
+                                <p className="text-2xl md:text-3xl font-bold theme-text-primary">{currentPlanInfo.name}</p>
                             </div>
-                            <p className="text-base theme-text-secondary">{safeCurrentPlan.description}</p>
-                            <p className="text-sm theme-text-secondary mt-1">{safeCurrentPlan.price}</p>
-                            {overageCost > 0 && (
-                                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded text-xs">
-                                    <p className="text-red-700 dark:text-red-300 font-medium">초과분 요금: ₩{overageCost.toLocaleString()}</p>
-                                    <p className="text-red-600 dark:text-red-400 text-[11px]">
-                                        초과 사용량: {(safePlanUsageData.current.tokens.used - safePlanUsageData.current.tokens.limit).toLocaleString()} 토큰 × ₩{safeCurrentPlan.overageRate}/1,000토큰
-                                    </p>
-                                </div>
-                            )}
+                            <p className="text-base theme-text-secondary mb-3">{currentPlanInfo.description}</p>
+
+                            {/* 기능 목록 */}
+                            <div className="space-y-1">
+                                {currentPlanInfo.features.map((feature, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                                        <span className="text-sm theme-text-secondary">{feature}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-sm theme-text-secondary">토큰 사용량</p>
-                            <p className="text-3xl md:text-4xl font-bold theme-blue-accent">{safePlanUsageData.current.tokens.used.toLocaleString()}</p>
-                            <p className="text-sm theme-text-secondary">/ {safePlanUsageData.current.tokens.limit.toLocaleString()} 토큰</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                                API 호출: {safePlanUsageData.current.requests.count.toLocaleString()}회 (평균 {safePlanUsageData.current.requests.avgTokensPerRequest}토큰/회)
+                            <p className="text-sm theme-text-secondary">보유 토큰</p>
+                            <p className="text-3xl md:text-4xl font-bold theme-blue-accent">
+                                {user?.token ? user.token.toLocaleString() : '0'}
                             </p>
-                            {overageCost > 0 && (
-                                <p className="text-sm text-red-600 dark:text-red-400 font-medium mt-1">
-                                    총 요금: ₩{totalCost.toLocaleString()}
-                                </p>
-                            )}
+                            <p className="text-sm theme-text-secondary">토큰</p>
                         </div>
-                    </div>
-                    <div className="mt-3 w-full theme-progress-bg rounded-full h-3">
-                        <div
-                            className={`h-3 rounded-full transition-all duration-300 ${usageColor === 'green' ? 'theme-usage-green' : usageColor === 'yellow' ? 'theme-usage-yellow' : 'theme-usage-red'
-                                }`}
-                            style={{ width: `${Math.min(usagePercent, 100)}%` }}
-                        />
                     </div>
                 </div>
 
@@ -267,15 +223,20 @@ export default function DashboardOverview() {
                             <>
                                 <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.daily.currentCount.toLocaleString()}</p>
                                 <div className="mt-2 inline-flex items-center gap-2 justify-center">
-                                    {requestsStats.daily.rate >= 0 ? (
+                                    {requestsStats.daily.rate > 0 ? (
                                         <>
                                             <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                            <span className="text-lg md:text-xl font-bold theme-success">+{requestsStats.daily.rate.toFixed(2)}%</span>
+                                            <span className="text-lg md:text-xl font-bold theme-success">+{Math.ceil(requestsStats.daily.rate)}%</span>
+                                        </>
+                                    ) : requestsStats.daily.rate < 0 ? (
+                                        <>
+                                            <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                            <span className="text-lg md:text-xl font-bold theme-error">{Math.ceil(requestsStats.daily.rate)}%</span>
                                         </>
                                     ) : (
                                         <>
-                                            <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                            <span className="text-lg md:text-xl font-bold theme-error">{requestsStats.daily.rate.toFixed(2)}%</span>
+                                            <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="2" rx="1" /></svg>
+                                            <span className="text-lg md:text-xl font-bold text-yellow-500">0%</span>
                                         </>
                                     )}
                                 </div>
@@ -293,15 +254,20 @@ export default function DashboardOverview() {
                             <>
                                 <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.weekly.currentCount.toLocaleString()}</p>
                                 <div className="mt-2 inline-flex items-center gap-2 justify-center">
-                                    {requestsStats.weekly.rate >= 0 ? (
+                                    {requestsStats.weekly.rate > 0 ? (
                                         <>
                                             <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                            <span className="text-lg md:text-xl font-bold theme-success">+{requestsStats.weekly.rate.toFixed(2)}%</span>
+                                            <span className="text-lg md:text-xl font-bold theme-success">+{Math.ceil(requestsStats.weekly.rate)}%</span>
+                                        </>
+                                    ) : requestsStats.weekly.rate < 0 ? (
+                                        <>
+                                            <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                            <span className="text-lg md:text-xl font-bold theme-error">{Math.ceil(requestsStats.weekly.rate)}%</span>
                                         </>
                                     ) : (
                                         <>
-                                            <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                            <span className="text-lg md:text-xl font-bold theme-error">{requestsStats.weekly.rate.toFixed(2)}%</span>
+                                            <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="2" rx="1" /></svg>
+                                            <span className="text-lg md:text-xl font-bold text-yellow-500">0%</span>
                                         </>
                                     )}
                                 </div>
@@ -319,15 +285,20 @@ export default function DashboardOverview() {
                             <>
                                 <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.monthly.currentCount.toLocaleString()}</p>
                                 <div className="mt-2 inline-flex items-center gap-2 justify-center">
-                                    {requestsStats.monthly.rate >= 0 ? (
+                                    {requestsStats.monthly.rate > 0 ? (
                                         <>
                                             <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                            <span className="text-lg md:text-xl font-bold theme-success">+{requestsStats.monthly.rate.toFixed(2)}%</span>
+                                            <span className="text-lg md:text-xl font-bold theme-success">+{Math.ceil(requestsStats.monthly.rate)}%</span>
+                                        </>
+                                    ) : requestsStats.monthly.rate < 0 ? (
+                                        <>
+                                            <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                            <span className="text-lg md:text-xl font-bold theme-error">{Math.ceil(requestsStats.monthly.rate)}%</span>
                                         </>
                                     ) : (
                                         <>
-                                            <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                            <span className="text-lg md:text-xl font-bold theme-error">{requestsStats.monthly.rate.toFixed(2)}%</span>
+                                            <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="2" rx="1" /></svg>
+                                            <span className="text-lg md:text-xl font-bold text-yellow-500">0%</span>
                                         </>
                                     )}
                                 </div>
@@ -422,9 +393,7 @@ export default function DashboardOverview() {
                     </ul>
                 </div>
 
-                {/* 로그 테이블 섹션 제거 */}
             </div>
         </DashboardLayout>
     );
 }
-
