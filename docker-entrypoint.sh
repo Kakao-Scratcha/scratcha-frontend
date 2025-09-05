@@ -2,9 +2,9 @@
 
 echo "🚀 Frontend starting..."
 
-# 극한 파일 디스크립터 제한 설정 (HPA 테스트용)
-ulimit -n 4194304 2>/dev/null || true  # 1,048,576 → 4,194,304로 증가
-ulimit -u 131072 2>/dev/null || true   # 32,768 → 131,072로 증가
+# 2GB RAM 환경 파일 디스크립터 제한 설정
+ulimit -n 262144 2>/dev/null || true   # 1,048,576 → 262,144로 완화
+ulimit -u 32768 2>/dev/null || true    # 65,536 → 32,768로 완화
 echo "📈 File descriptor limit set to: $(ulimit -n)"
 echo "📈 Max processes limit set to: $(ulimit -u)"
 
