@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import DashboardLayout from '../dashboard/DashboardLayout';
 import UsageChart from '../ui/UsageChart';
 import LoadingSpinner from '../ui/LoadingSpinner';
+import Modal from '../ui/Modal';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { useAuthStore } from '../../stores/authStore';
 import { paymentAPI } from '../../services/api';
@@ -28,14 +29,22 @@ export default function DashboardOverview() {
         requestsStats,
         loadAllRequestsStats,
         loadStatisticsSummary,
+        apps,
+        refreshApplications,
+        isAppsLoading,
     } = useDashboardStore();
 
     // 결제 내역 확인을 위한 상태
     const [hasPaymentHistory, setHasPaymentHistory] = useState(false);
+    const [isPaymentHistoryLoading, setIsPaymentHistoryLoading] = useState(true);
 
     // 사용량 경고 설정 상태
     const [usageWarningEnabled, setUsageWarningEnabled] = useState(false);
     const [usageWarningThreshold, setUsageWarningThreshold] = useState(1000);
+
+    // 앱 생성 모달 상태
+    const [showAppCreateModal, setShowAppCreateModal] = useState(false);
+    const [hasShownAppModal, setHasShownAppModal] = useState(false);
 
     // 주기적으로 사용자 정보 갱신
     useEffect(() => {
@@ -50,11 +59,14 @@ export default function DashboardOverview() {
     // 결제 내역 확인 함수
     const checkPaymentHistory = useCallback(async () => {
         try {
+            setIsPaymentHistoryLoading(true);
             const response = await paymentAPI.getPaymentHistory(1, 1);
             const hasHistory = response.data.total > 0;
             setHasPaymentHistory(hasHistory);
         } catch {
             setHasPaymentHistory(false);
+        } finally {
+            setIsPaymentHistoryLoading(false);
         }
     }, []);
 
@@ -101,8 +113,10 @@ export default function DashboardOverview() {
         // 사용자 정보 새로고침
         const { getProfile } = useAuthStore.getState();
         getProfile({ showLoading: false });
+        // 앱 목록 새로고침
+        refreshApplications();
         isInitialLoad.current = false;
-    }, [loadAllRequestsStats, loadStatisticsSummary]);
+    }, [loadAllRequestsStats, loadStatisticsSummary, refreshApplications]);
 
     // 기간 변경 시 데이터 로드 (초기 로드가 아닌 경우에만)
     useEffect(() => {
@@ -131,6 +145,44 @@ export default function DashboardOverview() {
     useEffect(() => {
         checkPaymentHistory();
     }, [checkPaymentHistory]);
+
+    // 앱이 0개일 때 모달 표시 (화면이 뜬 후에 체크)
+    useEffect(() => {
+        // 화면이 뜬 후에만 모달 체크 (초기 로드 완료 후)
+        if (!isInitialLoad.current) {
+            console.log('앱 모달 체크 (화면 로드 후):', {
+                isAppsLoading,
+                appsLength: apps.length,
+                isInitialLoad: isInitialLoad.current,
+                apps: apps,
+                showAppCreateModal,
+                hasShownAppModal
+            });
+
+            // 앱 목록이 로드 완료되고, 앱이 0개이고, 아직 모달을 표시하지 않은 경우에만 모달 표시
+            if (!isAppsLoading && Array.isArray(apps) && apps.length === 0 && !hasShownAppModal) {
+                console.log('모달 표시 조건 만족 - 모달 표시');
+                setShowAppCreateModal(true);
+                setHasShownAppModal(true);
+            } else if (apps.length > 0) {
+                // 앱이 있으면 모달 상태 초기화
+                console.log('앱이 있음 - 모달 상태 초기화');
+                setShowAppCreateModal(false);
+                setHasShownAppModal(false);
+            }
+        }
+    }, [apps.length, isAppsLoading, isInitialLoad, hasShownAppModal]);
+
+    // 앱 생성 모달 닫기
+    const handleCloseAppCreateModal = () => {
+        setShowAppCreateModal(false);
+    };
+
+    // 앱 페이지로 이동
+    const handleGoToAppPage = () => {
+        setShowAppCreateModal(false);
+        window.location.href = '/dashboard/app';
+    };
 
     // 최근 활동 데이터 (7일 통계 데이터 기반으로 변경)
     const avgTokens = 1; // 1호출당 1토큰
@@ -186,11 +238,17 @@ export default function DashboardOverview() {
         return `${s.getFullYear()}년 ${s.getMonth() + 1}월 ~ ${now.getFullYear()}년 ${now.getMonth() + 1}월`;
     })();
 
-    if (isLoading) {
+    // 모든 데이터가 로드될 때까지 로딩 표시
+    const isDataLoading = isLoading || isAppsLoading || isPaymentHistoryLoading || !user || isInitialLoad.current;
+
+    if (isDataLoading) {
         return (
             <DashboardLayout>
-                <div className="flex justify-center items-center h-64">
+                <div className="flex flex-col justify-center items-center h-64 space-y-4">
                     <LoadingSpinner />
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        데이터를 불러오는 중...
+                    </p>
                 </div>
             </DashboardLayout>
         );
@@ -438,6 +496,45 @@ export default function DashboardOverview() {
 
 
             </div>
+
+            {/* 앱 생성 모달 */}
+            <Modal
+                isOpen={showAppCreateModal}
+                onClose={handleCloseAppCreateModal}
+                title="앱을 만들어보세요!"
+                className="max-w-md"
+            >
+                <div className="text-center">
+                    <div className="mb-6">
+                        <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                            <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                            아직 생성된 앱이 없습니다
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">
+                            scratCHA 서비스를 사용하기 위해 먼저 앱을 생성해주세요.
+                        </p>
+                    </div>
+
+                    <div className="flex gap-3">
+                        <button
+                            onClick={handleCloseAppCreateModal}
+                            className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
+                        >
+                            나중에
+                        </button>
+                        <button
+                            onClick={handleGoToAppPage}
+                            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                        >
+                            앱 만들기
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </DashboardLayout>
     );
 }
