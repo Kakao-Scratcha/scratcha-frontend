@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 
-export default function Modal({ isOpen, onClose, title, children, hideClose = false, centerTitle = false, borderless = false, titleClassName = 'text-xl', headerClassName = 'p-6', bodyClassName = 'p-6' }) {
+export default function Modal({ isOpen, onClose, title, children, hideClose = false, centerTitle = false, borderless = false, titleClassName = 'text-xl', headerClassName = 'p-6', bodyClassName = 'p-6', className = '' }) {
     const modalRef = useRef(null);
 
     // ESC 키로 모달 닫기 및 키보드 트랩
@@ -55,7 +55,7 @@ export default function Modal({ isOpen, onClose, title, children, hideClose = fa
             <div
                 ref={modalRef}
                 tabIndex={-1}  // 포커스 불가능하게 유지
-                className={`relative rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 border theme-modal-border ${borderless ? '' : 'border'}`}
+                className={`relative rounded-lg shadow-xl w-full mx-4 max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 border theme-modal-border ${borderless ? '' : 'border'} ${className || 'max-w-md'}`}
                 onKeyDown={(e) => {
                     // 모달 내부에서 Enter 키 처리
                     if (e.key === 'Enter') {

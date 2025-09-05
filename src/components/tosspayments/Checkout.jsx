@@ -4,6 +4,26 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { generateOrderId } from "./common";
 import { useAuthStore } from "../../stores/authStore";
 
+// API 상품명을 UI 표시용 이름으로 변환
+const getDisplayName = (productName) => {
+    const displayMapping = {
+        '1000 토큰': 'Starter',
+        '10000 토큰': 'Standard',
+        '100000 토큰': 'Enterprise'
+    };
+    return displayMapping[productName] || productName;
+};
+
+// API 상품명에서 토큰 수량 추출
+const getTokenAmount = (productName) => {
+    const tokenMapping = {
+        '1000 토큰': '1,000',
+        '10000 토큰': '10,000',
+        '100000 토큰': '100,000'
+    };
+    return tokenMapping[productName] || '0';
+};
+
 // TODO: clientKey는 개발자센터의 결제위젯 연동 키 > 클라이언트 키로 바꾸세요.
 // TODO: 구매자의 고유 아이디를 불러와서 customerKey로 설정하세요. 이메일・전화번호와 같이 유추가 가능한 값은 안전하지 않습니다.
 // @docs https://docs.tosspayments.com/sdk/v2/js#토스페이먼츠-초기화
@@ -190,13 +210,20 @@ export default function CheckoutPage() {
                     <h3 className="text-blue-600 dark:text-blue-400 text-xl font-semibold mb-4 flex items-center">
                         🛒 선택된 상품
                     </h3>
-                    <div>
-                        <h4 className="text-gray-900 dark:text-gray-100 text-lg font-medium mb-2">
-                            {selectedProduct.name}
-                        </h4>
-                        <p className="text-gray-600 dark:text-gray-400 text-base">
-                            결제 금액: <span className="font-semibold text-blue-600 dark:text-blue-400">{amount.value.toLocaleString()}원</span>
-                        </p>
+                    <div className="space-y-3">
+                        <div>
+                            <h4 className="text-gray-900 dark:text-gray-100 text-xl font-bold mb-1">
+                                {getDisplayName(selectedProduct.name)}
+                            </h4>
+                            <p className="text-gray-600 dark:text-gray-400 text-base">
+                                제공 토큰: <span className="font-semibold text-green-600 dark:text-green-400">{getTokenAmount(selectedProduct.name)} 토큰</span>
+                            </p>
+                        </div>
+                        <div className="pt-3 border-t border-blue-200 dark:border-blue-700">
+                            <p className="text-gray-900 dark:text-gray-100 text-lg font-bold">
+                                결제 금액: <span className="text-blue-600 dark:text-blue-400">{amount.value.toLocaleString()}원</span>
+                            </p>
+                        </div>
                     </div>
                 </div>
 

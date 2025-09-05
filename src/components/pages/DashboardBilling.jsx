@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
 import PaymentHistoryTable from '../ui/PaymentHistoryTable';
+import LoadingSpinner from '../ui/LoadingSpinner';
 import { useAuthStore } from '../../stores/authStore';
+import { useDashboardStore } from '../../stores/dashboardStore';
 import { useLocation } from 'react-router-dom';
 
 
@@ -14,6 +16,7 @@ export default function DashboardBilling() {
     };
 
     const { user } = useAuthStore();
+    const { requestsStats, loadAllRequestsStats } = useDashboardStore();
 
     const [isPlanChangeModalOpen, setIsPlanChangeModalOpen] = useState(false);
 
@@ -34,52 +37,10 @@ export default function DashboardBilling() {
         }
     }, [location.state]);
 
-
-
-    // authStore의 user.plan을 기반으로 현재 요금제 정보 생성
-    const getCurrentPlanInfo = () => {
-        const planName = user?.plan || 'free';
-
-        const planConfigs = {
-            'free': {
-                name: 'Free',
-                limit: 1000,
-                price: '₩0',
-                description: '월 1,000 토큰 무료제공',
-                overageRate: 0,
-                features: ['기본 API 통계', '광고 포함']
-            },
-            'starter': {
-                name: 'Starter',
-                limit: 50000,
-                price: '₩29,900',
-                description: '월 50,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
-                overageRate: 2.0,
-                features: ['기본 API & 통계', '광고 제거', '이메일 지원']
-            },
-            'pro': {
-                name: 'Pro',
-                limit: 200000,
-                price: '₩79,900',
-                description: '월 200,000 토큰 무료제공 초과사용시 1,000 토큰당 ₩2.0',
-                overageRate: 2.0,
-                features: ['Starter의 모든 혜택', '커스텀 UI 스킨 지원', '고급 분석 리포트']
-            },
-            'enterprise': {
-                name: 'Enterprise',
-                limit: 999999999,
-                price: '맞춤 견적',
-                description: '월 무제한 또는 대규모 토큰 패키지',
-                overageRate: 0,
-                features: ['Pro의 모든 혜택', '전용 인프라/보안 강화', 'SLA 보장', '24/7 모니터링']
-            }
-        };
-
-        return planConfigs[planName] || planConfigs['free'];
-    };
-
-    // 현재 요금제 정보
-    const currentPlanInfo = getCurrentPlanInfo();
+    // 사용량 통계 데이터 로드
+    useEffect(() => {
+        loadAllRequestsStats();
+    }, [loadAllRequestsStats]);
 
     // 토큰 충전 선택 처리 - 바로 checkout 페이지로 이동
     const handleTokenSelect = (tokenPackage) => {
@@ -184,10 +145,6 @@ export default function DashboardBilling() {
         }
     ];
 
-    // 토큰 사용량 정보 (더미 데이터)
-    const availableTokens = 1000;
-    const usedTokens = 250;
-    const remainingTokens = availableTokens - usedTokens;
 
 
 
@@ -197,10 +154,10 @@ export default function DashboardBilling() {
             subtitle="요금제 및 청구 내역을 관리하세요"
         >
             <div className="space-y-6">
-                {/* 현재 요금제 */}
+                {/* 토큰 현황 및 사용량 통계 */}
                 <div className="theme-card p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className={`${T.sectionTitle} text-gray-900 dark:text-gray-100`}>현재 요금제</h3>
+                        <h3 className={`${T.sectionTitle} text-gray-900 dark:text-gray-100`}>토큰 현황 및 사용량 통계</h3>
                         <button
                             onClick={() => setIsPlanChangeModalOpen(true)}
                             className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white dark:text-gray-900 rounded-lg font-semibold hover:opacity-90 transition"
@@ -210,69 +167,177 @@ export default function DashboardBilling() {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* 현재 요금제 정보 */}
-                        <div className="lg:col-span-2">
-                            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                                <div className="flex items-center justify-between mb-3">
-                                    <h4 className="font-semibold text-blue-900 dark:text-blue-100">
-                                        {currentPlanInfo.name} 플랜
-                                    </h4>
-                                    <span className="text-lg font-bold text-blue-900 dark:text-blue-100">
-                                        {currentPlanInfo.price}
-                                    </span>
+                        {/* 현재 보유 토큰 현황 */}
+                        <div className="lg:col-span-1 bg-blue-50 dark:bg-blue-900/20 p-5 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-4 text-center">현재 보유 토큰 현황</h4>
+
+                            <div className="text-center mb-5">
+                                <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                                    {user?.token ? user.token.toLocaleString() : '0'}
                                 </div>
-                                <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
-                                    {currentPlanInfo.description}
-                                </p>
-                                <div className="space-y-2">
-                                    {currentPlanInfo.features.map((feature, index) => (
-                                        <div key={index} className="flex items-center text-sm text-blue-800 dark:text-blue-200">
-                                            <svg className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                            </svg>
-                                            {feature}
-                                        </div>
-                                    ))}
+                                <div className="text-base text-blue-800 dark:text-blue-200">보유 토큰</div>
+                            </div>
+
+                            {/* 예상 사용 가능 일수 */}
+                            <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-300 dark:border-blue-700">
+                                <div className="text-center">
+                                    <div className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                                        {user?.token && requestsStats.weekly.currentCount > 0 ?
+                                            Math.ceil(user.token / (requestsStats.weekly.currentCount / 7)) :
+                                            '∞'
+                                        }일
+                                    </div>
+                                    <div className="text-xs text-blue-800 dark:text-blue-200">
+                                        예상 사용 가능 일수
+                                    </div>
+                                    <div className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                                        (일평균 {requestsStats.weekly.loading ? '...' : Math.round(requestsStats.weekly.currentCount / 7).toLocaleString()} 토큰 기준)
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* 토큰 잔액 및 구매내역 */}
-                        <div className="space-y-4">
-                            <div className="theme-card p-4 rounded-lg">
-                                <h5 className="font-medium theme-text-primary mb-3">토큰 잔액</h5>
-                                <div className="text-center mb-4">
-                                    <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                                        {availableTokens.toLocaleString()}
+                        {/* 토큰 사용량 통계 */}
+                        <div className="lg:col-span-2 space-y-3">
+                            <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">토큰 사용량 통계</h4>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {/* 오늘 사용량 */}
+                                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <div>
+                                        <div className="text-xs text-gray-600 dark:text-gray-400">오늘 사용량</div>
+                                        <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                                            {requestsStats.daily.loading ? (
+                                                <LoadingSpinner size="sm" />
+                                            ) : (
+                                                requestsStats.daily.currentCount.toLocaleString()
+                                            )}
+                                        </div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-500">토큰</div>
                                     </div>
-                                    <div className="text-sm theme-text-secondary">사용 가능한 토큰</div>
+                                    <div className="text-right">
+                                        {requestsStats.daily.rate > 0 ? (
+                                            <div className="flex items-center text-green-600 dark:text-green-400">
+                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 4l8 16H4L12 4z" />
+                                                </svg>
+                                                <span className="text-xs font-medium">+{Math.ceil(requestsStats.daily.rate)}%</span>
+                                            </div>
+                                        ) : requestsStats.daily.rate < 0 ? (
+                                            <div className="flex items-center text-red-600 dark:text-red-400">
+                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 20l-8-16h16l-8 16z" />
+                                                </svg>
+                                                <span className="text-xs font-medium">{Math.ceil(requestsStats.daily.rate)}%</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center text-yellow-600 dark:text-yellow-400">
+                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                    <rect x="3" y="11" width="18" height="2" rx="1" />
+                                                </svg>
+                                                <span className="text-xs font-medium">0%</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="theme-text-secondary">이번 달 사용</span>
-                                        <span className="theme-text-primary font-medium">
-                                            {usedTokens.toLocaleString()} 토큰
-                                        </span>
+
+                                {/* 이번 주 사용량 */}
+                                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <div>
+                                        <div className="text-xs text-gray-600 dark:text-gray-400">이번 주 사용량</div>
+                                        <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                                            {requestsStats.weekly.loading ? (
+                                                <LoadingSpinner size="sm" />
+                                            ) : (
+                                                requestsStats.weekly.currentCount.toLocaleString()
+                                            )}
+                                        </div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-500">토큰</div>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="theme-text-secondary">남은 토큰</span>
-                                        <span className="text-green-600 dark:text-green-400 font-medium">
-                                            {remainingTokens.toLocaleString()} 토큰
-                                        </span>
+                                    <div className="text-right">
+                                        {requestsStats.weekly.rate > 0 ? (
+                                            <div className="flex items-center text-green-600 dark:text-green-400">
+                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 4l8 16H4L12 4z" />
+                                                </svg>
+                                                <span className="text-xs font-medium">+{Math.ceil(requestsStats.weekly.rate)}%</span>
+                                            </div>
+                                        ) : requestsStats.weekly.rate < 0 ? (
+                                            <div className="flex items-center text-red-600 dark:text-red-400">
+                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 20l-8-16h16l-8 16z" />
+                                                </svg>
+                                                <span className="text-xs font-medium">{Math.ceil(requestsStats.weekly.rate)}%</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center text-yellow-600 dark:text-yellow-400">
+                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                    <rect x="3" y="11" width="18" height="2" rx="1" />
+                                                </svg>
+                                                <span className="text-xs font-medium">0%</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                    <button
-                                        onClick={() => setIsPlanChangeModalOpen(true)}
-                                        className="w-full py-2 px-4 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
-                                    >
-                                        토큰 충전하기
-                                    </button>
+
+                                {/* 이번 달 사용량 */}
+                                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <div>
+                                        <div className="text-xs text-gray-600 dark:text-gray-400">이번 달 사용량</div>
+                                        <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                                            {requestsStats.monthly.loading ? (
+                                                <LoadingSpinner size="sm" />
+                                            ) : (
+                                                requestsStats.monthly.currentCount.toLocaleString()
+                                            )}
+                                        </div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-500">토큰</div>
+                                    </div>
+                                    <div className="text-right">
+                                        {requestsStats.monthly.rate > 0 ? (
+                                            <div className="flex items-center text-green-600 dark:text-green-400">
+                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 4l8 16H4L12 4z" />
+                                                </svg>
+                                                <span className="text-xs font-medium">+{Math.ceil(requestsStats.monthly.rate)}%</span>
+                                            </div>
+                                        ) : requestsStats.monthly.rate < 0 ? (
+                                            <div className="flex items-center text-red-600 dark:text-red-400">
+                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 20l-8-16h16l-8 16z" />
+                                                </svg>
+                                                <span className="text-xs font-medium">{Math.ceil(requestsStats.monthly.rate)}%</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center text-yellow-600 dark:text-yellow-400">
+                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                    <rect x="3" y="11" width="18" height="2" rx="1" />
+                                                </svg>
+                                                <span className="text-xs font-medium">0%</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* 평균 일일 사용량 */}
+                                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <div className="text-center">
+                                        <div className="text-xs text-blue-800 dark:text-blue-200 mb-1">평균 일일 사용량</div>
+                                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                            {requestsStats.weekly.loading ? (
+                                                <LoadingSpinner size="sm" />
+                                            ) : (
+                                                Math.round(requestsStats.weekly.currentCount / 7).toLocaleString()
+                                            )}
+                                        </div>
+                                        <div className="text-xs text-blue-600 dark:text-blue-300">토큰/일</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
 
                 {/* 최근 구매내역 */}
                 <div className="theme-card p-6 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -285,47 +350,96 @@ export default function DashboardBilling() {
                 isOpen={isPlanChangeModalOpen}
                 onClose={() => setIsPlanChangeModalOpen(false)}
                 title="토큰 충전"
+                className="max-w-7xl"
             >
-                <div className="space-y-6">
-                    <p className="text-gray-900 dark:text-gray-100">
+                <div className="space-y-4">
+                    <p className="text-gray-900 dark:text-gray-100 text-center">
                         원하는 토큰 패키지를 선택하세요. 충전된 토큰은 즉시 사용 가능하며 유효기간이 없습니다.
                     </p>
 
                     {/* 토큰 패키지 선택 */}
-                    <div className="space-y-4">
-                        {tokenPackages.map((tokenPackage) => (
-                            <div
-                                key={tokenPackage.id}
-                                onClick={() => handleTokenSelect(tokenPackage)}
-                                className="p-4 rounded-lg border cursor-pointer transition-all theme-card hover:border-blue-400 dark:hover:border-blue-300"
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <h4 className="font-semibold theme-text-primary">{tokenPackage.name}</h4>
-                                    <div className="text-right">
-                                        <div className="text-lg font-bold theme-text-primary">{tokenPackage.price}</div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {tokenPackages.map((tokenPackage, index) => {
+                            // 각 패키지별 고유 스타일 정의
+                            const packageStyles = {
+                                0: { // Starter
+                                    bgColor: 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20',
+                                    borderColor: 'border-blue-200 dark:border-blue-700',
+                                    hoverBorder: 'hover:border-blue-400 dark:hover:border-blue-300',
+                                    accentColor: 'text-blue-600 dark:text-blue-400',
+                                    badge: { text: '시작하기', color: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' },
+                                    icon: '🚀'
+                                },
+                                1: { // Standard
+                                    bgColor: 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20',
+                                    borderColor: 'border-green-200 dark:border-green-700',
+                                    hoverBorder: 'hover:border-green-400 dark:hover:border-green-300',
+                                    accentColor: 'text-green-600 dark:text-green-400',
+                                    badge: { text: '인기', color: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' },
+                                    icon: '⭐'
+                                },
+                                2: { // Enterprise
+                                    bgColor: 'bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20',
+                                    borderColor: 'border-purple-200 dark:border-purple-700',
+                                    hoverBorder: 'hover:border-purple-400 dark:hover:border-purple-300',
+                                    accentColor: 'text-purple-600 dark:text-purple-400',
+                                    badge: { text: '프리미엄', color: 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100' },
+                                    icon: '👑'
+                                }
+                            };
+
+                            const style = packageStyles[index];
+
+                            return (
+                                <div
+                                    key={tokenPackage.id}
+                                    onClick={() => handleTokenSelect(tokenPackage)}
+                                    className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-300 ${style.bgColor} ${style.borderColor} ${style.hoverBorder} hover:shadow-xl hover:scale-105`}
+                                >
+                                    {/* 배지 */}
+                                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${style.badge.color}`}>
+                                            {style.badge.text}
+                                        </span>
+                                    </div>
+
+                                    {/* 아이콘 */}
+                                    <div className="text-center mb-4">
+                                        <div className="text-4xl mb-2">{style.icon}</div>
+                                        <h4 className="font-bold theme-text-primary text-xl mb-2">{tokenPackage.name}</h4>
+                                        <div className={`text-3xl font-bold ${style.accentColor} mb-1`}>{tokenPackage.price}</div>
                                         <div className="text-sm theme-text-secondary">일회성</div>
                                     </div>
+
+                                    <p className="text-sm theme-text-secondary mb-4 text-center leading-relaxed">{tokenPackage.description}</p>
+
+                                    <ul className="space-y-2">
+                                        {tokenPackage.features.map((feature, featureIndex) => (
+                                            <li key={featureIndex} className="flex items-center text-sm theme-text-secondary">
+                                                <svg className={`w-4 h-4 mr-3 ${style.accentColor} flex-shrink-0`} fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                </svg>
+                                                {feature}
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    {/* 선택 버튼 */}
+                                    <div className="mt-6 text-center">
+                                        <div className={`inline-flex items-center px-4 py-2 rounded-lg ${style.accentColor} bg-white dark:bg-gray-800 border-2 ${style.borderColor} font-semibold text-sm transition-all duration-300 hover:bg-opacity-10`}>
+                                            선택하기
+                                        </div>
+                                    </div>
                                 </div>
-                                <p className="text-sm theme-text-secondary mb-3">{tokenPackage.description}</p>
-                                <ul className="space-y-1">
-                                    {tokenPackage.features.map((feature, index) => (
-                                        <li key={index} className="flex items-center text-sm theme-text-secondary">
-                                            <svg className="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                            </svg>
-                                            {feature}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {/* 취소 버튼 */}
-                    <div className="flex gap-3 pt-4">
+                    <div className="flex justify-center pt-4">
                         <button
                             onClick={() => setIsPlanChangeModalOpen(false)}
-                            className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                            className="px-8 py-2 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
                         >
                             취소
                         </button>
