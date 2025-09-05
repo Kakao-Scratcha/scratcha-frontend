@@ -5,7 +5,7 @@ export const PERIOD_TYPE_MAP = {
     '전체': 'yearly',
     '30일': 'monthly',
     '7일': 'weekly',
-    '1일': 'daily'
+    '당일': 'daily'
 };
 
 // API 응답 데이터를 차트 형식으로 변환
@@ -89,7 +89,7 @@ const generateEmptyData = (selectedPeriod) => {
     const data = [];
 
     switch (selectedPeriod) {
-        case '1일': {
+        case '당일': {
             // 오늘 00시부터 현재 시간까지
             const currentHour = now.getHours();
             for (let i = 0; i <= currentHour; i++) {
@@ -158,4 +158,54 @@ const generateEmptyData = (selectedPeriod) => {
 export const processChartData = (apiData, selectedPeriod) => {
     const formattedData = formatStatisticsData(apiData, selectedPeriod);
     return fillEmptyDates(formattedData, selectedPeriod);
+};
+
+// 다중 앱 차트 데이터 처리 함수
+export const processMultiAppChartData = (apiData, selectedPeriod, apps) => {
+    if (!apiData || !apiData.data || !Array.isArray(apiData.data)) {
+        return [];
+    }
+
+    const periodType = PERIOD_TYPE_MAP[selectedPeriod] || 'yearly';
+
+    // 날짜별로 그룹화
+    const dateGroups = {};
+
+    apiData.data.forEach(item => {
+        const dateKey = formatDateForChart(item.date, periodType);
+        if (!dateGroups[dateKey]) {
+            dateGroups[dateKey] = {};
+        }
+
+        // 앱별 데이터 저장
+        if (item.appId) {
+            const app = apps.find(a => a.id === item.appId);
+            const appName = app ? app.name : `앱${item.appId}`;
+            dateGroups[dateKey][appName] = item.totalRequests || 0;
+        } else {
+            // 전체 데이터
+            dateGroups[dateKey]['전체'] = item.totalRequests || 0;
+        }
+    });
+
+    // 빈 날짜 데이터 생성
+    const emptyData = generateEmptyData(selectedPeriod);
+
+    // 최종 데이터 구성
+    return emptyData.map(item => {
+        const dateData = dateGroups[item.date] || {};
+
+        // 기본 구조
+        const result = {
+            date: item.date,
+            전체: dateData['전체'] || 0
+        };
+
+        // 앱별 데이터 추가 (최대 5개)
+        apps.slice(0, 5).forEach(app => {
+            result[app.name] = dateData[app.name] || 0;
+        });
+
+        return result;
+    });
 };

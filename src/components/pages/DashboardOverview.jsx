@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import UsageChart from '../ui/UsageChart';
 import LoadingSpinner from '../ui/LoadingSpinner';
@@ -25,7 +25,6 @@ export default function DashboardOverview() {
         usageData: chartUsageData,
         isLoading,
         setPeriod,
-        planUsageData,
         requestsStats,
         loadAllRequestsStats,
         loadStatisticsSummary,
@@ -33,6 +32,10 @@ export default function DashboardOverview() {
 
     // 결제 내역 확인을 위한 상태
     const [hasPaymentHistory, setHasPaymentHistory] = useState(false);
+
+    // 사용량 경고 설정 상태
+    const [usageWarningEnabled, setUsageWarningEnabled] = useState(false);
+    const [usageWarningThreshold, setUsageWarningThreshold] = useState(1000);
 
     // 주기적으로 사용자 정보 갱신
     useEffect(() => {
@@ -45,7 +48,7 @@ export default function DashboardOverview() {
     }, []);
 
     // 결제 내역 확인 함수
-    const checkPaymentHistory = async () => {
+    const checkPaymentHistory = useCallback(async () => {
         try {
             const response = await paymentAPI.getPaymentHistory(1, 1);
             const hasHistory = response.data.total > 0;
@@ -53,6 +56,12 @@ export default function DashboardOverview() {
         } catch {
             setHasPaymentHistory(false);
         }
+    }, []);
+
+
+    // 사용량 경고를 표시할지 결정하는 함수
+    const shouldShowUsageWarning = () => {
+        return hasPaymentHistory && usageWarningEnabled && user?.token && user.token <= usageWarningThreshold;
     };
 
     // 결제 내역을 기반으로 요금제 정보 생성 (Free/Premium)
@@ -80,13 +89,6 @@ export default function DashboardOverview() {
     // 현재 요금제 정보 (authStore 기반)
     const currentPlanInfo = getCurrentPlanInfo();
 
-    const safePlanUsageData = planUsageData || {
-        current: {
-            tokens: { used: 0, limit: 1000, percentage: 0 },
-            requests: { count: 0, avgTokensPerRequest: 20 }
-        }
-    };
-
     // 초기 로드 여부를 추적하는 ref
     const isInitialLoad = useRef(true);
 
@@ -96,8 +98,6 @@ export default function DashboardOverview() {
         loadStatisticsSummary(null, '전체'); // 초기 로드 시에는 항상 '전체'로 고정
         // 최근 활동용 7일 통계 데이터 로드
         loadStatisticsSummary(null, '7일');
-        // 결제 내역 확인
-        checkPaymentHistory();
         // 사용자 정보 새로고침
         const { getProfile } = useAuthStore.getState();
         getProfile({ showLoading: false });
@@ -111,8 +111,29 @@ export default function DashboardOverview() {
         }
     }, [selectedPeriod, loadStatisticsSummary]);
 
+    // 사용자 정보가 변경될 때마다 설정 불러오기
+    useEffect(() => {
+        if (user?.id) {
+            try {
+                const saved = localStorage.getItem(`usageWarning_${user.id}`);
+                if (saved) {
+                    const settings = JSON.parse(saved);
+                    setUsageWarningEnabled(settings.enabled || false);
+                    setUsageWarningThreshold(settings.threshold || 1000);
+                }
+            } catch (error) {
+                console.error('사용량 경고 설정 불러오기 실패:', error);
+            }
+        }
+    }, [user?.id]);
+
+    // 결제 내역 확인
+    useEffect(() => {
+        checkPaymentHistory();
+    }, [checkPaymentHistory]);
+
     // 최근 활동 데이터 (7일 통계 데이터 기반으로 변경)
-    const avgTokens = safePlanUsageData.current?.requests?.avgTokensPerRequest || 20;
+    const avgTokens = 1; // 1호출당 1토큰
     const ICONS = {
         success: greenCheckIcon,
         info: blueCheckIcon,
@@ -181,6 +202,38 @@ export default function DashboardOverview() {
             subtitle="현재 플랜과 사용량을 확인하세요"
         >
             <div className="space-y-6">
+                {/* 토큰 사용량 경고 */}
+                {shouldShowUsageWarning() && (
+                    <div className="p-6 rounded-lg border-2 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20">
+                        <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0">
+                                <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                                    토큰 사용량 경고
+                                </h3>
+                                <p className="text-yellow-700 dark:text-yellow-300 mb-4">
+                                    보유 토큰이 설정한 경고 임계값({usageWarningThreshold.toLocaleString()} 토큰) 이하로 떨어졌습니다.
+                                </p>
+                                <div className="flex items-center justify-between">
+                                    <div className="text-sm text-yellow-600 dark:text-yellow-400">
+                                        현재 보유: <span className="font-semibold">{user?.token?.toLocaleString() || 0} 토큰</span>
+                                    </div>
+                                    <button
+                                        onClick={() => window.location.href = '/dashboard/billing'}
+                                        className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors"
+                                    >
+                                        토큰 충전하기
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* 현재 요금제 */}
                 <div className="p-5 rounded-lg theme-card">
                     <div className="flex items-center justify-between">
@@ -380,18 +433,9 @@ export default function DashboardOverview() {
                             </div>
                             <div className="text-sm theme-text-secondary">총 {activity.totalFail.toLocaleString()}회 ({(activity.totalFail * avgTokens).toLocaleString()} 토큰)</div>
                         </li>
-                        <li className="py-4 flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <img src={ICONS.warning} alt="경고" className="w-7 h-7 rounded-full" />
-                                <div>
-                                    <p className="font-semibold theme-text-primary">토큰 사용량 경고</p>
-                                    <p className="text-sm theme-text-secondary">현재</p>
-                                </div>
-                            </div>
-                            <div className="text-sm theme-text-secondary">{(safePlanUsageData.current?.tokens?.percentage || 0)}% 도달</div>
-                        </li>
                     </ul>
                 </div>
+
 
             </div>
         </DashboardLayout>

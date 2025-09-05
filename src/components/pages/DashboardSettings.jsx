@@ -1,32 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
-import { useDashboardStore } from '../../stores/dashboardStore';
 import { useAuth } from '../../hooks/useAuth';
-import { authAPI } from '../../services/api';
+import { authAPI, paymentAPI } from '../../services/api';
 import { validateUserName } from '../../utils/validators';
 import { devLog, devError } from '../../utils/logger';
-import { applicationAPI } from '../../services/api';
 
 export default function DashboardSettings() {
-    const {
-        apps,
-        selectedAppId,
-        selectApp,
-        updateAppSettings,
-        refreshApplications,
-        isAppsLoading,
-    } = useDashboardStore();
-
     const { user, updateUser, logout } = useAuth();
+
+    // 프리미엄 유저 확인 (결제 내역이 있는지 확인)
+    const [isPremiumUser, setIsPremiumUser] = useState(false);
 
     const getServerUserName = (u) => (u?.userName ?? u?.username ?? u?.name ?? u?.email ?? '');
 
     const [isNameModalOpen, setIsNameModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
-    const [saveSuccess, setSaveSuccess] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // 사용량 경고 설정 상태
+    const [usageWarningEnabled, setUsageWarningEnabled] = useState(false);
+    const [usageWarningThreshold, setUsageWarningThreshold] = useState(1000);
 
     // 비밀번호 변경 폼 (주석처리)
     // const [passwordForm, setPasswordForm] = useState({
@@ -47,17 +42,6 @@ export default function DashboardSettings() {
         confirmPassword: ''
     });
 
-    // 초기 앱 목록 로드
-    useEffect(() => {
-        (async () => {
-            try {
-                await refreshApplications();
-            } catch (e) {
-                devError('❌ 앱 목록 로드 실패:', e);
-            }
-        })();
-    }, [refreshApplications]);
-
     // 사용자 정보가 변경될 때마다 이름 폼 업데이트
     useEffect(() => {
         const serverName = getServerUserName(user);
@@ -69,105 +53,60 @@ export default function DashboardSettings() {
         }
     }, [user, nameForm.currentName]);
 
-    // 임시 설정 상태 관리
-    const [appSettings, setAppSettings] = useState({});
-
-    // 선택된 APP
-    const selectedApp = apps.find(app => app.id === selectedAppId);
-
-    // 현재 설정 (임시 설정이 있으면 임시 설정, 없으면 원본 설정)
-    const currentSettings = selectedApp ? {
-        ...selectedApp.settings,
-        ...appSettings[selectedApp.id]
-    } : {};
-
-    // 변경된 필드 하이라이트 감지
-    // const changedModel = !!(selectedApp && tempSettings[selectedApp.id]?.model !== undefined && tempSettings[selectedApp.id]?.model !== selectedApp.settings.model);
-    const changedDifficulty = !!(selectedApp && appSettings[selectedApp.id]?.difficulty !== undefined && appSettings[selectedApp.id]?.difficulty !== selectedApp.settings.difficulty);
-    // const changedHeuristic = !!(selectedApp && tempSettings[selectedApp.id]?.heuristicLevel !== undefined && tempSettings[selectedApp.id]?.heuristicLevel !== selectedApp.settings.heuristicLevel);
-
-    // 서비스 설정 옵션
-    // const modelOptions = [
-    //     { value: 'gpt-4', label: 'GPT-4 (고성능)' },
-    //     { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (균형)' },
-    //     { value: 'claude-3', label: 'Claude-3 (안정성)' },
-    //     { value: 'custom', label: '커스텀 모델' }
-    // ];
+    // 사용량 경고 설정 저장/불러오기 함수들
+    const saveUsageWarningSettings = useCallback((enabled, threshold) => {
+        if (user?.id) {
+            const settings = {
+                enabled,
+                threshold,
+                userId: user.id,
+                updatedAt: new Date().toISOString()
+            };
+            localStorage.setItem(`usageWarning_${user.id}`, JSON.stringify(settings));
+            devLog('✅ 사용량 경고 설정 저장:', settings);
+        }
+    }, [user?.id]);
 
 
+    // 프리미엄 유저 확인 함수
+    const checkPremiumStatus = useCallback(async () => {
+        try {
+            const response = await paymentAPI.getPaymentHistory(1, 1);
+            const hasPaymentHistory = response.data.total > 0;
+            setIsPremiumUser(hasPaymentHistory);
+            devLog('✅ 프리미엄 유저 확인:', { hasPaymentHistory, isPremium: hasPaymentHistory });
+        } catch (error) {
+            devError('❌ 프리미엄 유저 확인 실패:', error);
+            setIsPremiumUser(false);
+        }
+    }, []);
 
-    // const heuristicLevelOptions = [
-    //     { value: '상', label: '상 (높은 휴리스틱)' },
-    //     { value: '중', label: '중 (보통 휴리스틱)' },
-    //     { value: '하', label: '하 (낮은 휴리스틱)' },
-    //     { value: '없음', label: '없음 (휴리스틱 비활성화)' }
-    // ];
-
-    // 설정 적용 처리
-    const handleApplySettings = async () => {
-        if (selectedApp && appSettings[selectedApp.id]) {
-            const settingsToApply = appSettings[selectedApp.id];
-
-            setIsUpdating(true);
+    // 사용자 정보가 변경될 때마다 설정 불러오기
+    useEffect(() => {
+        if (user?.id) {
             try {
-                // 난이도 설정이 변경된 경우 API 호출
-                if (settingsToApply.difficulty && settingsToApply.difficulty !== selectedApp.settings.difficulty) {
-                    devLog('🔄 난이도 설정 API 호출:', {
-                        appId: selectedApp.id,
-                        difficulty: settingsToApply.difficulty
-                    });
-
-                    // 해당 앱의 API 키들에 난이도 설정 적용
-                    const appApiKeys = useDashboardStore.getState().apiKeys.filter(key => key.appId === selectedApp.id);
-
-                    for (const apiKey of appApiKeys) {
-                        try {
-                            await applicationAPI.updateApiKeyDifficulty(apiKey.id, settingsToApply.difficulty);
-                            devLog('✅ API 키 난이도 업데이트 성공:', { keyId: apiKey.id, difficulty: settingsToApply.difficulty });
-                        } catch (error) {
-                            devError('❌ API 키 난이도 업데이트 실패:', { keyId: apiKey.id, error });
-                            throw error;
-                        }
-                    }
+                const saved = localStorage.getItem(`usageWarning_${user.id}`);
+                if (saved) {
+                    const settings = JSON.parse(saved);
+                    setUsageWarningEnabled(settings.enabled || false);
+                    setUsageWarningThreshold(settings.threshold || 1000);
                 }
-
-                // 실제 APP 설정 업데이트
-                updateAppSettings(selectedApp.id, settingsToApply);
-
-                // 임시 설정 제거
-                setAppSettings(prev => {
-                    const newTemp = { ...prev };
-                    delete newTemp[selectedApp.id];
-                    return newTemp;
-                });
-
-                // 설정이 변경되면 실제 API 호출로 설정 적용
-                devLog('설정 적용:', settingsToApply);
-                setSaveSuccess(true);
-                // 성공 배너 자동 숨김 (3초)
-                setTimeout(() => setSaveSuccess(false), 3000);
-
             } catch (error) {
-                devError('❌ 설정 저장 실패:', error);
-                alert('설정 저장에 실패했습니다. 다시 시도해주세요.');
-            } finally {
-                setIsUpdating(false);
+                console.error('사용량 경고 설정 불러오기 실패:', error);
             }
         }
-    };
+    }, [user?.id]);
 
-    // APP 설정 변경 (임시 저장)
-    const handleAppSettingChange = (field, value) => {
-        if (selectedApp) {
-            setSaveSuccess(false);
-            setAppSettings(prev => ({
-                ...prev,
-                [selectedApp.id]: {
-                    ...prev[selectedApp.id],
-                    [field]: value
-                }
-            }));
-        }
+    // 프리미엄 상태 확인
+    useEffect(() => {
+        checkPremiumStatus();
+    }, [checkPremiumStatus]);
+
+    // 사용량 경고 설정 변경 핸들러
+    const handleUsageWarningChange = (enabled, threshold) => {
+        setUsageWarningEnabled(enabled);
+        setUsageWarningThreshold(threshold);
+        saveUsageWarningSettings(enabled, threshold);
     };
 
     // 이름 변경 처리 (API 연동)
@@ -299,252 +238,65 @@ export default function DashboardSettings() {
         }
     };
 
-    // 설정 상태 텍스트 생성 (원본 설정 기준)
-    const getSettingsText = (app) => {
-        const difficulty = app.settings.difficulty || 'low';
-        const difficultyText = difficulty === 'low' ? '쉬움' :
-            difficulty === 'middle' ? '보통' :
-                difficulty === 'high' ? '어려움' : '쉬움';
-
-        const difficultyColor = difficulty === 'low'
-            ? 'text-green-600 dark:text-green-400'
-            : difficulty === 'middle'
-                ? 'text-yellow-600 dark:text-yellow-400'
-                : 'text-red-600 dark:text-red-400';
-
-        return (
-            <span>
-                난이도: <span className={`font-medium ${difficultyColor}`}>{difficultyText}</span>
-            </span>
-        );
-    };
-
-    // 임시 설정이 있는지 확인 (실제 변경사항이 있는 경우에만)
-    const hasTempSettings = selectedApp && appSettings[selectedApp.id] && (
-        (appSettings[selectedApp.id].difficulty !== undefined &&
-            appSettings[selectedApp.id].difficulty !== (selectedApp.settings.difficulty || 'low'))
-    );
 
     return (
         <DashboardLayout
             title="설정"
-            subtitle="APP 서비스 및 계정 설정을 관리하세요"
+            subtitle="계정 설정을 관리하세요"
         >
             <div className="space-y-8">
-                {/* APP 설정 + My Scratcha 설정 (2컬럼) */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* 좌측: APP 설정 */}
+                {/* 사용량 경고 설정 */}
+                {isPremiumUser && (
                     <div className="p-6 rounded-lg theme-card">
-                        <h3 className="text-xl font-semibold theme-text-primary mb-6">APP 설정</h3>
-                        <div className="space-y-3">
-                            {isAppsLoading && (
-                                <div className="text-center py-6">
-                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                    <p className="mt-2 text-gray-600 dark:text-gray-400">데이터를 불러오는 중...</p>
+                        <h3 className="text-xl font-semibold theme-text-primary mb-6">사용량 경고 설정</h3>
+
+                        <div className="space-y-6">
+                            {/* 경고 활성화 토글 */}
+                            <div className="flex items-center justify-between p-4 theme-layout-secondary rounded-lg">
+                                <div>
+                                    <h4 className="font-medium theme-text-primary">토큰 사용량 경고</h4>
+                                    <p className="text-sm theme-text-secondary">보유 토큰이 설정한 수치 이하로 떨어지면 경고를 표시합니다</p>
                                 </div>
-                            )}
-                            {!isAppsLoading && apps.length === 0 && (
-                                <div className="text-sm text-gray-600 dark:text-gray-400">등록된 APP이 없습니다.</div>
-                            )}
-                            {!isAppsLoading && apps.map((app) => (
-                                <div
-                                    key={app.id}
-                                    onClick={() => selectApp(selectedAppId === app.id ? null : app.id)}
-                                    className={`p-4 rounded-lg border cursor-pointer transition-all ${selectedAppId === app.id
-                                        ? 'border-blue-600 dark:border-blue-500 bg-blue-100 dark:bg-blue-900/20'
-                                        : 'theme-card hover:border-blue-400 dark:hover:border-blue-300'
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h5 className="font-medium theme-text-primary">{app.name}</h5>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${app.status === 'active'
-                                            ? 'bg-green-100 text-green-800'
-                                            : 'bg-gray-100 text-gray-800'
-                                            }`}>
-                                            {app.status === 'active' ? '활성' : '비활성'}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm theme-text-secondary mb-2">{app.description}</p>
-                                    <div className="space-y-2">
-                                        <div className="text-xs text-gray-600 dark:text-gray-400">
-                                            <span className="font-medium">현재 설정:</span> {getSettingsText(app)}
-                                        </div>
-                                        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-                                            <span>생성일: {app.createdAt}</span>
-                                            <span>오늘: {Math.round(app.usage.today / 20)}회 ({app.usage.today} 토큰)</span>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={usageWarningEnabled}
+                                        onChange={(e) => handleUsageWarningChange(e.target.checked, usageWarningThreshold)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+
+                            {/* 경고 임계값 설정 */}
+                            {usageWarningEnabled && (
+                                <div className="p-4 theme-layout-secondary rounded-lg">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div>
+                                            <h4 className="font-medium theme-text-primary">경고 임계값</h4>
+                                            <p className="text-sm theme-text-secondary">이 수치 이하로 토큰이 떨어지면 경고가 표시됩니다</p>
                                         </div>
                                     </div>
+                                    <div className="flex items-center gap-4">
+                                        <select
+                                            value={usageWarningThreshold}
+                                            onChange={(e) => handleUsageWarningChange(usageWarningEnabled, parseInt(e.target.value))}
+                                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        >
+                                            <option value={1000}>1,000 토큰</option>
+                                            <option value={3000}>3,000 토큰</option>
+                                            <option value={5000}>5,000 토큰</option>
+                                            <option value={10000}>10,000 토큰</option>
+                                        </select>
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                                            현재 설정: <span className="font-medium text-blue-600 dark:text-blue-400">{usageWarningThreshold.toLocaleString()} 토큰</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
-
-                    {/* 우측: My Scratcha 설정 */}
-                    <div className="p-6 rounded-lg theme-card flex flex-col min-h-[420px]">
-                        {selectedApp && (
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-semibold theme-text-primary">My Scratcha 설정</h3>
-                                <button
-                                    onClick={handleApplySettings}
-                                    disabled={!hasTempSettings || isUpdating}
-                                    className={`px-4 py-2 rounded-lg font-semibold transition ${hasTempSettings && !isUpdating
-                                        ? 'bg-blue-600 dark:bg-blue-500 text-white hover:opacity-90'
-                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                        }`}
-                                >
-                                    {isUpdating ? '저장 중...' : '설정 저장'}
-                                </button>
-                            </div>
-                        )}
-                        {selectedApp ? (
-                            <div>
-                                {/* 변경 경고는 하단으로 이동 */}
-
-                                <div className="space-y-6">
-                                    {/* APP 캡차 서비스 모델 설정 - 임시 주석 처리 */}
-                                    {/* <div>
-                                        <div className="flex items-center gap-2">
-                                            <label className="block text-sm font-medium theme-text-primary">
-                                                APP 캡차 서비스 모델
-                                            </label>
-                                            <div className="relative group">
-                                                <button
-                                                    type="button"
-                                                    className="w-5 h-5 inline-flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs"
-                                                    aria-label="도움말"
-                                                >
-                                                    ?
-                                                </button>
-                                                <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 absolute z-10 left-6 top-1 w-64 px-3 py-2 rounded-md bg-gray-900 text-gray-100 text-xs shadow-lg border border-gray-700 whitespace-normal break-words text-left transition-opacity duration-150">
-                                                    모델을 선택하면 해당 모델 엔진으로 캡차 검증을 수행합니다. 성능/비용을 고려해 선택하세요.
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm theme-text-secondary mt-1 mb-2">
-                                            캡차 검증에 사용할 AI 모델을 선택하세요
-                                        </p>
-                                        <select
-                                            value={currentSettings.model || selectedApp.settings.model}
-                                            onChange={(e) => handleAppSettingChange('model', e.target.value)}
-                                            className={`w-full px-3 py-2 theme-input focus:outline-none focus:ring-2 ${changedModel
-                                                ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                                : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
-                                                }`}
-                                        >
-                                            {modelOptions.map((option) => (
-                                                <option key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div> */}
-
-
-                                    {/* 난이도 설정 */}
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <label className="block text-sm font-medium theme-text-primary">
-                                                난이도
-                                            </label>
-                                            <div className="relative group">
-                                                <button
-                                                    type="button"
-                                                    className="w-5 h-5 inline-flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs"
-                                                    aria-label="도움말"
-                                                >
-                                                    ?
-                                                </button>
-                                                <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 absolute z-10 left-6 top-1 w-64 px-3 py-2 rounded-md bg-gray-900 text-gray-100 text-xs shadow-lg border border-gray-700 whitespace-normal break-words text-left transition-opacity duration-150">
-                                                    난이도가 높을수록 캡차가 어려워지지만 보안성이 향상됩니다.
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm theme-text-secondary mt-1 mb-2">
-                                            캡차의 난이도를 설정하세요
-                                        </p>
-                                        <select
-                                            value={currentSettings.difficulty || selectedApp.settings.difficulty || 'low'}
-                                            onChange={(e) => handleAppSettingChange('difficulty', e.target.value)}
-                                            className={`w-full px-3 py-2 theme-input focus:outline-none focus:ring-2 ${changedDifficulty
-                                                ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                                : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
-                                                }`}
-                                        >
-                                            <option value="low">쉬움</option>
-                                            <option value="middle">보통</option>
-                                            <option value="high">어려움</option>
-                                        </select>
-                                    </div>
-
-                                    {/* 휴리스틱 강도 설정 - 임시 주석 처리 */}
-                                    {/* <div>
-                                        <div className="flex items-center gap-2">
-                                            <label className="block text-sm font-medium theme-text-primary">
-                                                휴리스틱 강도
-                                            </label>
-
-                                            <div className="relative group">
-                                                <button
-                                                    type="button"
-                                                    className="w-5 h-5 inline-flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs"
-                                                    aria-label="도움말"
-                                                >
-                                                    ?
-                                                </button>
-                                                <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 absolute z-10 left-6 top-1 w-64 px-3 py-2 rounded-md bg-gray-900 text-gray-100 text-xs shadow-lg border border-gray-700 whitespace-normal break-words text-left transition-opacity duration-150">
-                                                    휴리스틱은 추가 규칙 기반 검사를 수행합니다. 상으로 갈수록 오탐지 가능성도 증가할 수 있습니다.
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm theme-text-secondary mt-1 mb-2">
-                                            캡차 검증에 사용할 휴리스틱 알고리즘의 강도를 설정하세요
-                                        </p>
-                                        <select
-                                            value={currentSettings.heuristicLevel || selectedApp.settings.heuristicLevel}
-                                            onChange={(e) => handleAppSettingChange('heuristicLevel', e.target.value)}
-                                            className={`w-full px-3 py-2 theme-input focus:outline-none focus:ring-2 ${changedHeuristic
-                                                ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                                : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
-                                                }`}
-                                        >
-                                            {heuristicLevelOptions.map((option) => (
-                                                <option key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div> */}
-
-                                    {hasTempSettings && (
-                                        <div className="mt-6 p-3 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2">
-                                            <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M10.29 3.86l-8.4 14.55A1.5 1.5 0 003.1 21h17.8a1.5 1.5 0 001.21-2.59L13.71 3.86a1.5 1.5 0 00-2.42 0z" />
-                                            </svg>
-                                            <span>아직 저장되지 않은 변경사항이 있습니다.</span>
-                                        </div>
-                                    )}
-                                    {saveSuccess && !hasTempSettings && (
-                                        <div className="mt-3 p-3 rounded-md bg-green-50 border border-green-200 text-green-700 text-sm flex items-start gap-2">
-                                            <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            <span>설정이 성공적으로 저장되었습니다.</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex-1 flex items-center justify-center">
-                                <div className="text-center">
-                                    <svg className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    <p className="text-gray-600 dark:text-gray-400">설정할 APP을 선택해주세요</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                )}
 
                 {/* 회원 설정 */}
                 <div className="p-6 rounded-lg theme-card">

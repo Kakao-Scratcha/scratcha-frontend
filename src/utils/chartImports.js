@@ -6,6 +6,7 @@ export {
     YAxis,
     CartesianGrid,
     Tooltip,
+    Legend,
     ResponsiveContainer,
     AreaChart,
     Area,
