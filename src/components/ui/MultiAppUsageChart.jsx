@@ -1,6 +1,6 @@
 import React from 'react';
 import Chart from './Chart';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from '../../utils/chartImports';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from '../../utils/chartImports';
 
 // 기간별 X축 라벨 포맷터
 const createXTickFormatter = (selectedPeriod) => (value) => {
@@ -57,16 +57,21 @@ const formatDataByPeriod = (data, selectedPeriod) => {
     });
 };
 
-// 공통 사용량 차트 컴포넌트
-export default function UsageChart({
+// 색상 팔레트 (다중 라인용)
+const COLORS = [
+    'rgb(59 130 246)',   // 파란색 (전체)
+    'rgb(16 185 129)',   // 초록색
+    'rgb(245 158 11)',   // 주황색
+    'rgb(239 68 68)',    // 빨간색
+    'rgb(139 92 246)',   // 보라색
+    'rgb(236 72 153)',   // 핑크색
+];
+
+// 다중 앱 사용량 차트 컴포넌트
+export default function MultiAppUsageChart({
     data,
     selectedPeriod = '전체',
     height = "h-80",
-    dataKey = "usage",
-    strokeColor = "rgb(59 130 246)",
-    strokeWidth = 3,
-    dotRadius = 4,
-    activeDotRadius = 6,
     margin = { top: 40, right: 12, bottom: 40, left: 12 },
     showGrid = true,
     allowDecimals = false,
@@ -74,6 +79,18 @@ export default function UsageChart({
 }) {
     const xTickFormatter = createXTickFormatter(selectedPeriod);
     const formattedData = formatDataByPeriod(data, selectedPeriod);
+
+    // 데이터에서 라인 키 추출 (date 제외) - 전체를 맨 앞에 정렬
+    const lineKeys = formattedData.length > 0
+        ? (() => {
+            const keys = Object.keys(formattedData[0]).filter(key => key !== 'date');
+            const totalKey = keys.find(key => key === '전체');
+            const otherKeys = keys.filter(key => key !== '전체').sort();
+
+            // '전체'를 맨 앞에, 나머지는 알파벳 순서로
+            return totalKey ? [totalKey, ...otherKeys] : otherKeys;
+        })()
+        : [];
 
     return (
         <Chart height={height} className={className}>
@@ -112,15 +129,26 @@ export default function UsageChart({
                         color: 'rgb(243 244 246)'
                     }}
                 />
-                <Line
-                    type="monotone"
-                    dataKey={dataKey}
-                    stroke={strokeColor}
-                    strokeWidth={strokeWidth}
-                    dot={{ r: dotRadius }}
-                    activeDot={{ r: activeDotRadius }}
-                    connectNulls={false}
+                <Legend
+                    wrapperStyle={{
+                        paddingTop: '20px',
+                        fontSize: '12px',
+                        color: 'rgb(156 163 175)'
+                    }}
                 />
+                {lineKeys.map((key, index) => (
+                    <Line
+                        key={key}
+                        type="monotone"
+                        dataKey={key}
+                        stroke={COLORS[index % COLORS.length]}
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                        connectNulls={false}
+                        name={key}
+                    />
+                ))}
             </LineChart>
         </Chart>
     );

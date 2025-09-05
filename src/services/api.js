@@ -156,6 +156,7 @@ export const dashboardAPI = {
         console.log('📊 통계 요약 API 호출:', { keyId, periodType });
         return apiClient.get(`/dashboard/statistics/summary?${queryParams.toString()}`);
     },
+
 };
 
 // 요금제 관련 API

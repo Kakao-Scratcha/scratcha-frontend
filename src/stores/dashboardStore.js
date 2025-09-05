@@ -1,31 +1,21 @@
 import { create } from 'zustand';
 import {
-    DEFAULT_PLAN,
     PLAN_USAGE_DATA,
 } from '../data/dashboardDummy';
-import { applicationAPI, dashboardAPI, billingAPI } from '../services/api';
+import { applicationAPI, dashboardAPI } from '../services/api';
 import { useAuthStore } from './authStore';
-import { PERIOD_TYPE_MAP, processChartData } from '../utils/chartDataUtils';
+import { PERIOD_TYPE_MAP, processChartData, processMultiAppChartData } from '../utils/chartDataUtils';
 import { devLog, devError } from '../utils/logger';
 
 // 초기 상태 준비
 const INITIAL_PERIOD = '전체';
-const INITIAL_AVG_TOKENS = (PLAN_USAGE_DATA.current?.requests?.avgTokensPerRequest) || 20;
-const INITIAL_LIMIT = (PLAN_USAGE_DATA.current?.tokens?.limit) || DEFAULT_PLAN.limit;
 
 export const useDashboardStore = create((set, get) => ({
     // 기존 상태 유지
-    chartType: 'line',
     selectedPeriod: INITIAL_PERIOD,
     usageData: [],
-    stats: {
-        today: { value: 0, change: 0 },
-        week: { value: 0, change: 0 },
-        month: { value: 0, change: 0 },
-    },
     isLoading: false,
     apps: [],
-    selectedAppId: null,
     apiKeys: [],
     isAppsLoading: false,
 
@@ -53,17 +43,6 @@ export const useDashboardStore = create((set, get) => ({
     // 기존 액션들 유지
     setApps: (apps) => set({ apps }),
     setApiKeys: (apiKeys) => set({ apiKeys }),
-    selectApp: (appId) => set({ selectedAppId: appId }),
-    updateAppSettings: (appId, settings) => set((state) => ({
-        apps: state.apps.map(app =>
-            app.id === appId
-                ? { ...app, settings: { ...app.settings, ...settings } }
-                : app
-        )
-    })),
-
-    // 로그 관련 액션 추가
-    setSelectedKeyId: (keyId) => set({ selectedKeyId: keyId }),
 
     // 통계 데이터 로드
     loadRequestsStats: async (periodType) => {
@@ -281,9 +260,6 @@ export const useDashboardStore = create((set, get) => ({
         set({ selectedPeriod: period });
     },
 
-    setChartType: (chartType) => set({ chartType }),
-    setLoading: (isLoading) => set({ isLoading }),
-    setSelectedAppId: (appId) => set({ selectedAppId: appId }),
 
     // 최근 활동
     recentActivities: [
@@ -316,6 +292,80 @@ export const useDashboardStore = create((set, get) => ({
             devLog('✅ 통계 요약 로드 완료:', { keyId, selectedPeriod, chartData });
         } catch (error) {
             devError('❌ 통계 요약 로드 실패:', error);
+            set({
+                usageData: [],
+                isLoading: false
+            });
+        }
+    },
+
+    // 다중 앱 통계 로드 (전체 선택 시)
+    loadMultiAppStatistics: async (selectedPeriod = '전체') => {
+        const periodType = PERIOD_TYPE_MAP[selectedPeriod] || 'yearly';
+        const { apps, apiKeys } = get();
+
+        devLog('📊 다중 앱 통계 로드 시작:', { selectedPeriod, periodType, appsCount: apps.length });
+
+        set({ isLoading: true });
+
+        try {
+            // 전체 통계 + 최대 5개 앱의 통계를 병렬로 가져오기
+            const promises = [];
+            const appKeyMapping = []; // 앱과 API 키 매핑 정보 저장
+
+            // 1. 전체 통계 (keyId = null)
+            promises.push(dashboardAPI.getStatisticsSummary(null, periodType));
+            appKeyMapping.push({ appId: null, appName: '전체', keyId: null });
+
+            // 2. 각 앱별 통계 (최대 5개)
+            const targetApps = apps.slice(0, 5);
+            targetApps.forEach(app => {
+                // 각 앱의 첫 번째 API 키를 찾기
+                const appApiKey = apiKeys.find(key => String(key.appId) === String(app.id));
+                const keyId = appApiKey ? appApiKey.id : null;
+
+                promises.push(dashboardAPI.getStatisticsSummary(keyId, periodType));
+                appKeyMapping.push({
+                    appId: app.id,
+                    appName: app.name,
+                    keyId: keyId
+                });
+            });
+
+            const responses = await Promise.all(promises);
+            devLog('📊 다중 앱 통계 API 응답들:', responses);
+
+            // 응답 데이터를 합쳐서 다중 라인 차트 형식으로 변환
+            const combinedData = {
+                data: []
+            };
+
+            // 각 응답을 순서대로 처리
+            responses.forEach((response, index) => {
+                const mapping = appKeyMapping[index];
+                if (response?.data?.data) {
+                    response.data.data.forEach(item => {
+                        combinedData.data.push({
+                            ...item,
+                            appId: mapping.appId,
+                            appName: mapping.appName,
+                            keyId: mapping.keyId
+                        });
+                    });
+                }
+            });
+
+            // API 응답 데이터를 다중 라인 차트 형식으로 변환
+            const multiAppData = processMultiAppChartData(combinedData, selectedPeriod, apps);
+
+            set({
+                usageData: multiAppData,
+                isLoading: false
+            });
+
+            devLog('✅ 다중 앱 통계 로드 완료:', { selectedPeriod, multiAppData });
+        } catch (error) {
+            devError('❌ 다중 앱 통계 로드 실패:', error);
             set({
                 usageData: [],
                 isLoading: false

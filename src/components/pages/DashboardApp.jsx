@@ -26,6 +26,12 @@ export default function DashboardApp() {
     const [expandedApps, setExpandedApps] = useState(new Set());
     const [togglingKeyIds, setTogglingKeyIds] = useState(new Set());
 
+    // APP 설정 관련 상태
+    const [selectedAppForSettings, setSelectedAppForSettings] = useState(null);
+    const [appSettings, setAppSettings] = useState({});
+    const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
+    const [saveSuccess, setSaveSuccess] = useState(false);
+
     // API 관련 상태
     const [loading, setLoading] = useState(false);
     const [errorModal, setErrorModal] = useState({ isOpen: false, message: '' });
@@ -318,6 +324,87 @@ export default function DashboardApp() {
         if (!key) return '';
         return key.substring(0, 8) + '...' + key.substring(key.length - 4);
     };
+
+    // APP 설정 관련 함수들
+    const handleAppSettingChange = (field, value) => {
+        if (selectedAppForSettings) {
+            setSaveSuccess(false);
+            setAppSettings(prev => ({
+                ...prev,
+                [selectedAppForSettings.id]: {
+                    ...prev[selectedAppForSettings.id],
+                    [field]: value
+                }
+            }));
+        }
+    };
+
+    const handleApplySettings = async () => {
+        if (selectedAppForSettings && appSettings[selectedAppForSettings.id]) {
+            const settingsToApply = appSettings[selectedAppForSettings.id];
+
+            setIsUpdatingSettings(true);
+            try {
+                // 난이도 설정이 변경된 경우 API 호출
+                if (settingsToApply.difficulty && settingsToApply.difficulty !== selectedAppForSettings.settings.difficulty) {
+                    devLog('🔄 난이도 설정 API 호출:', {
+                        appId: selectedAppForSettings.id,
+                        difficulty: settingsToApply.difficulty
+                    });
+
+                    // 해당 앱의 API 키들에 난이도 설정 적용
+                    const appApiKeys = useDashboardStore.getState().apiKeys.filter(key => key.appId === selectedAppForSettings.id);
+
+                    for (const apiKey of appApiKeys) {
+                        try {
+                            await applicationAPI.updateApiKeyDifficulty(apiKey.id, settingsToApply.difficulty);
+                            devLog('✅ API 키 난이도 업데이트 성공:', { keyId: apiKey.id, difficulty: settingsToApply.difficulty });
+                        } catch (error) {
+                            devError('❌ API 키 난이도 업데이트 실패:', { keyId: apiKey.id, error });
+                            throw error;
+                        }
+                    }
+                }
+
+                // 임시 설정 제거
+                setAppSettings(prev => {
+                    const newTemp = { ...prev };
+                    delete newTemp[selectedAppForSettings.id];
+                    return newTemp;
+                });
+
+                // 설정이 변경되면 실제 API 호출로 설정 적용
+                devLog('설정 적용:', settingsToApply);
+                setSaveSuccess(true);
+                // 성공 배너 자동 숨김 (3초)
+                setTimeout(() => setSaveSuccess(false), 3000);
+
+                // 데이터 다시 조회
+                await loadApplications();
+
+            } catch (error) {
+                devError('❌ 설정 저장 실패:', error);
+                alert('설정 저장에 실패했습니다. 다시 시도해주세요.');
+            } finally {
+                setIsUpdatingSettings(false);
+            }
+        }
+    };
+
+    // 현재 설정 (임시 설정이 있으면 임시 설정, 없으면 원본 설정)
+    const currentSettings = selectedAppForSettings ? {
+        ...selectedAppForSettings.settings,
+        ...appSettings[selectedAppForSettings.id]
+    } : {};
+
+    // 변경된 필드 하이라이트 감지
+    const changedDifficulty = !!(selectedAppForSettings && appSettings[selectedAppForSettings.id]?.difficulty !== undefined && appSettings[selectedAppForSettings.id]?.difficulty !== selectedAppForSettings.settings.difficulty);
+
+    // 임시 설정이 있는지 확인 (실제 변경사항이 있는 경우에만)
+    const hasTempSettings = selectedAppForSettings && appSettings[selectedAppForSettings.id] && (
+        (appSettings[selectedAppForSettings.id].difficulty !== undefined &&
+            appSettings[selectedAppForSettings.id].difficulty !== (selectedAppForSettings.settings.difficulty || 'low'))
+    );
 
     // HTTP 환경에서 사용할 fallback 복사 함수
     const copyToClipboardFallback = async (text) => {
@@ -690,6 +777,154 @@ export default function DashboardApp() {
                         )}
                     </div>
                 )}
+
+                {/* APP 설정 섹션 */}
+                <div className="p-6 rounded-lg theme-card">
+                    <h3 className="text-xl font-semibold theme-text-primary mb-6">APP 설정</h3>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* 좌측: APP 선택 */}
+                        <div>
+                            <h4 className="text-lg font-medium theme-text-primary mb-4">APP 선택</h4>
+                            <div className="space-y-3">
+                                {isAppsLoading && (
+                                    <div className="text-center py-6">
+                                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                        <p className="mt-2 text-gray-600 dark:text-gray-400">데이터를 불러오는 중...</p>
+                                    </div>
+                                )}
+                                {!isAppsLoading && apps.length === 0 && (
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">등록된 APP이 없습니다.</div>
+                                )}
+                                {!isAppsLoading && apps.map((app) => (
+                                    <div
+                                        key={app.id}
+                                        onClick={() => setSelectedAppForSettings(selectedAppForSettings?.id === app.id ? null : app)}
+                                        className={`p-4 rounded-lg border cursor-pointer transition-all ${selectedAppForSettings?.id === app.id
+                                            ? 'border-blue-600 dark:border-blue-500 bg-blue-100 dark:bg-blue-900/20'
+                                            : 'theme-card hover:border-blue-400 dark:hover:border-blue-300'
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h5 className="font-medium theme-text-primary">{app.name}</h5>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${app.status === 'active'
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-gray-100 text-gray-800'
+                                                }`}>
+                                                {app.status === 'active' ? '활성' : '비활성'}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm theme-text-secondary mb-2">{app.description}</p>
+                                        <div className="space-y-2">
+                                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                                                <span className="font-medium">현재 설정:</span>
+                                                <span className="ml-1">
+                                                    난이도: <span className={`font-medium ${(app.settings.difficulty || 'low') === 'low' ? 'text-green-600 dark:text-green-400' :
+                                                        (app.settings.difficulty || 'low') === 'middle' ? 'text-yellow-600 dark:text-yellow-400' :
+                                                            'text-red-600 dark:text-red-400'
+                                                        }`}>
+                                                        {(app.settings.difficulty || 'low') === 'low' ? '쉬움' :
+                                                            (app.settings.difficulty || 'low') === 'middle' ? '보통' : '어려움'}
+                                                    </span>
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+                                                <span>생성일: {app.createdAt}</span>
+                                                <span>오늘: {Math.round(app.usage.today / 20)}회 ({app.usage.today} 토큰)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 우측: 설정 변경 */}
+                        <div className="flex flex-col min-h-[420px]">
+                            {selectedAppForSettings && (
+                                <div className="flex items-center justify-between mb-6">
+                                    <h4 className="text-lg font-medium theme-text-primary">설정 변경</h4>
+                                    <button
+                                        onClick={handleApplySettings}
+                                        disabled={!hasTempSettings || isUpdatingSettings}
+                                        className={`px-4 py-2 rounded-lg font-semibold transition ${hasTempSettings && !isUpdatingSettings
+                                            ? 'bg-blue-600 dark:bg-blue-500 text-white hover:opacity-90'
+                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            }`}
+                                    >
+                                        {isUpdatingSettings ? '저장 중...' : '설정 저장'}
+                                    </button>
+                                </div>
+                            )}
+                            {selectedAppForSettings ? (
+                                <div>
+                                    <div className="space-y-6">
+                                        {/* 난이도 설정 */}
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <label className="block text-sm font-medium theme-text-primary">
+                                                    난이도
+                                                </label>
+                                                <div className="relative group">
+                                                    <button
+                                                        type="button"
+                                                        className="w-5 h-5 inline-flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs"
+                                                        aria-label="도움말"
+                                                    >
+                                                        ?
+                                                    </button>
+                                                    <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 absolute z-10 left-6 top-1 w-64 px-3 py-2 rounded-md bg-gray-900 text-gray-100 text-xs shadow-lg border border-gray-700 whitespace-normal break-words text-left transition-opacity duration-150">
+                                                        난이도가 높을수록 캡차가 어려워지지만 보안성이 향상됩니다.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <p className="text-sm theme-text-secondary mt-1 mb-2">
+                                                캡차의 난이도를 설정하세요
+                                            </p>
+                                            <select
+                                                value={currentSettings.difficulty || selectedAppForSettings.settings.difficulty || 'low'}
+                                                onChange={(e) => handleAppSettingChange('difficulty', e.target.value)}
+                                                className={`w-full px-3 py-2 theme-input focus:outline-none focus:ring-2 ${changedDifficulty
+                                                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                                                    : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
+                                                    }`}
+                                            >
+                                                <option value="low">쉬움</option>
+                                                <option value="middle">보통</option>
+                                                <option value="high">어려움</option>
+                                            </select>
+                                        </div>
+
+                                        {hasTempSettings && (
+                                            <div className="mt-6 p-3 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2">
+                                                <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M10.29 3.86l-8.4 14.55A1.5 1.5 0 003.1 21h17.8a1.5 1.5 0 001.21-2.59L13.71 3.86a1.5 1.5 0 00-2.42 0z" />
+                                                </svg>
+                                                <span>아직 저장되지 않은 변경사항이 있습니다.</span>
+                                            </div>
+                                        )}
+                                        {saveSuccess && !hasTempSettings && (
+                                            <div className="mt-3 p-3 rounded-md bg-green-50 border border-green-200 text-green-700 text-sm flex items-start gap-2">
+                                                <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span>설정이 성공적으로 저장되었습니다.</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex items-center justify-center">
+                                    <div className="text-center">
+                                        <svg className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <p className="text-gray-600 dark:text-gray-400">설정할 APP을 선택해주세요</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* APP 추가 모달 */}
