@@ -22,7 +22,7 @@ const PRICING_DATA = {
             popular: false
         },
         {
-            name: "1000 토큰 구매",
+            name: "Starter",
             price: "₩ 5,000",
             description: "1,000 토큰 제공 (토큰당 5원)",
             features: [
@@ -34,7 +34,7 @@ const PRICING_DATA = {
             popular: true
         },
         {
-            name: "10000 토큰 구매",
+            name: "Standard",
             price: "₩ 40,000",
             description: "10,000 토큰 제공 (토큰당 4원)",
             features: [
@@ -46,7 +46,7 @@ const PRICING_DATA = {
             popular: false
         },
         {
-            name: "100000 토큰 구매",
+            name: "Enterprise",
             price: "₩ 300,000",
             description: "100,000 토큰 제공 (토큰당 3원)",
             features: [
