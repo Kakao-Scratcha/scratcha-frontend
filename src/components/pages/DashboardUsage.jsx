@@ -387,15 +387,11 @@ export default function DashboardUsage() {
     ];
 
     return (
-        <DashboardLayout>
+        <DashboardLayout
+            title="사용량"
+            subtitle="API 호출 로그 및 상세 통계를 확인하세요"
+        >
             <div className="space-y-6">
-                {/* 헤더 */}
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h1 className={`${T.sectionTitle} theme-text-primary`}>사용량 상세</h1>
-                        <p className="text-sm theme-text-secondary">API 호출 로그 및 상세 통계를 확인하세요</p>
-                    </div>
-                </div>
 
                 {/* 필터 */}
                 <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
