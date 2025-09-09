@@ -8,17 +8,21 @@ let configCache = null;
 const getApiBaseUrl = async () => {
     console.log('🔧 getApiBaseUrl 함수 실행');
 
-    // // 개발 환경에서는 /api/config 호출 건너뛰기
-    // if (import.meta.env.DEV) {
-    //     console.log('🔧 개발 환경 감지, /api/config 호출 건너뛰기');
-    //     // 개발 환경에서 동적 감지
-    //     const protocol = window.location.protocol;
-    //     const hostname = window.location.hostname;
-    //     const port = '8001';
-    //     const url = `${protocol}//${hostname}:${port}/api`;
-    //     console.log('✅ 개발 환경 API URL:', url);
-    //     return url;
-    // }
+    // 개발 환경에서는 .env 파일의 VITE_API_URL 우선 사용
+    if (import.meta.env.DEV) {
+        console.log('🔧 개발 환경 감지, /api/config 호출 건너뛰기');
+
+        // 1. .env 파일의 VITE_API_URL 우선 사용
+        if (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL !== 'undefined') {
+            const envApiUrl = import.meta.env.VITE_API_URL;
+            console.log('✅ .env 파일의 VITE_API_URL 사용:', envApiUrl);
+
+            // /api 경로가 없으면 자동으로 추가
+            const apiUrl = envApiUrl.endsWith('/api') ? envApiUrl : `${envApiUrl}/api`;
+            console.log('✅ 최종 API URL:', apiUrl);
+            return apiUrl;
+        }
+    }
 
 
     // 1. 설정 API에서 런타임 설정 가져오기 (캐시 활용)
@@ -71,17 +75,6 @@ const getApiBaseUrl = async () => {
         const apiUrl = import.meta.env.VITE_API_URL.endsWith('/api') ? import.meta.env.VITE_API_URL : `${import.meta.env.VITE_API_URL}/api`;
         return apiUrl;
     }
-
-    // 3. 개발 환경에서 동적 감지
-    if (import.meta.env.DEV) {
-        const protocol = window.location.protocol;
-        const hostname = window.location.hostname;
-        const port = '8001';
-        const url = `${protocol}//${hostname}:${port}/api`;
-        console.log('⚠️ 동적 감지 사용:', url);
-        return url;
-    }
-
     // 4. 프로덕션에서 상대 경로 사용 (nginx 프록시 활용)
     console.log('⚠️ 상대 경로 사용: /api');
     return '/api';
