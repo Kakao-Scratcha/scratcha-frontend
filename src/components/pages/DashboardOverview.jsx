@@ -6,10 +6,10 @@ import Modal from '../ui/Modal';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { useAuthStore } from '../../stores/authStore';
 import { paymentAPI } from '../../services/api';
-import greenCheckIcon from '@/assets/images/green_check_icon.png';
-import blueCheckIcon from '@/assets/images/blue_check_icon.png';
-import yellowAlertIcon from '@/assets/images/yellow_alert_icon.png';
-import redFailIcon from '@/assets/images/red_fail_icon.png';
+import greenCheckIcon from '@/assets/images/green_check_icon.png?format=webp&q=90';
+import blueCheckIcon from '@/assets/images/blue_check_icon.png?format=webp&q=90';
+import yellowAlertIcon from '@/assets/images/yellow_alert_icon.png?format=webp&q=90';
+import redFailIcon from '@/assets/images/red_fail_icon.png?format=webp&q=90';
 
 export default function DashboardOverview() {
     // Typography scale (dashboard-wide consistency)

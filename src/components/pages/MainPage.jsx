@@ -1,8 +1,8 @@
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import mainSelectImage from '../../assets/images/main-select.png';
-import mainScratchaImage from '../../assets/images/main-scratcha.png';
+import mainSelectImage from '../../assets/images/main-select.png?format=webp&q=85';
+import mainScratchaImage from '../../assets/images/main-scratcha.png?format=webp&q=85';
 
 // SVG 아이콘들을 상수로 분리 (재렌더링 방지)
 const ARROW_ICON = (

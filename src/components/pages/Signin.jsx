@@ -4,7 +4,7 @@ import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
 import FormField from '../forms/FormField';
 import { useAuth } from '../../hooks/useAuth';
-import signinBackground from '@/assets/images/signin-background.png';
+import signinBackground from '@/assets/images/signin-background.png?format=webp&q=80';
 import logo from '@/assets/images/scratchalogo.svg';
 
 
