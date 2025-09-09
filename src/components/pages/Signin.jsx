@@ -9,7 +9,12 @@ import logo from '@/assets/images/scratchalogo.svg';
 
 
 // 배경 스타일 상수 (재렌더링 시 새 객체 생성 방지)
-const backgroundStyle = { backgroundImage: `url(${signinBackground})` };
+const backgroundStyle = {
+    backgroundImage: `url(${signinBackground})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat'
+};
 
 // SVG 아이콘들을 JSX 상수로 분리 (재렌더링 방지)
 const CHECK_ICON = (

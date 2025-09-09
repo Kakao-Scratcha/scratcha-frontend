@@ -463,7 +463,7 @@ export default function DashboardOverview() {
                     <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                         <li className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <img src={ICONS.info} alt="전체호출" className="w-7 h-7 rounded-full" />
+                                <img src={ICONS.info} alt="전체호출" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
                                 <div>
                                     <p className="font-semibold theme-text-primary">API 호출 성공</p>
                                     <p className="text-sm theme-text-secondary">최근 7일</p>
@@ -473,7 +473,7 @@ export default function DashboardOverview() {
                         </li>
                         <li className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <img src={ICONS.success} alt="성공" className="w-7 h-7 rounded-full" />
+                                <img src={ICONS.success} alt="성공" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
                                 <div>
                                     <p className="font-semibold theme-text-primary">CAPTCHA 검증 성공</p>
                                     <p className="text-sm theme-text-secondary">최근 7일</p>
@@ -483,7 +483,7 @@ export default function DashboardOverview() {
                         </li>
                         <li className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <img src={ICONS.error} alt="실패" className="w-7 h-7 rounded-full" />
+                                <img src={ICONS.error} alt="실패" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
                                 <div>
                                     <p className="font-semibold theme-text-primary">CAPTCHA 검증 실패</p>
                                     <p className="text-sm theme-text-secondary">최근 7일</p>
