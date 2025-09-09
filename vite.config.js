@@ -39,7 +39,7 @@ export default defineConfig({
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
 
-        // 하이브리드 청크 분리 전략
+        // 균형잡힌 청크 분리 전략 (성능과 유지보수성 균형)
         manualChunks: {
           // 1. 라이브러리 분리 (공통 의존성)
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
@@ -47,19 +47,25 @@ export default defineConfig({
           'payment-vendor': ['@tosspayments/tosspayments-sdk'],
           'utils-vendor': ['axios', 'zustand', 'prismjs'],
 
-          // 2. 라우트 기반 분리 (사용자 플로우)
+          // 2. 메인 페이지 개별 분리 (LCP 최적화)
+          'main-page': ['./src/components/pages/MainPage.jsx'],
+
+          // 3. 공개 페이지 그룹화 (로그인 전)
           'public-pages': [
-            './src/components/pages/MainPage.jsx',
             './src/components/pages/Overview.jsx',
             './src/components/pages/Pricing.jsx',
             './src/components/pages/Demo.jsx',
             './src/components/pages/ApiDocs.jsx',
-            './src/components/pages/Contact.jsx',
+            './src/components/pages/Contact.jsx'
+          ],
+
+          // 4. 인증 페이지 그룹화
+          'auth-pages': [
             './src/components/pages/Signin.jsx',
             './src/components/pages/Signup.jsx'
           ],
 
-          // 3. 대시보드 분리 (로그인 후)
+          // 5. 대시보드 분리 (로그인 후)
           'dashboard-pages': [
             './src/components/pages/DashboardOverview.jsx',
             './src/components/pages/DashboardUsage.jsx',
@@ -67,10 +73,10 @@ export default defineConfig({
             './src/components/pages/DashboardSettings.jsx'
           ],
 
-          // 4. 큰 컴포넌트 개별 분리
+          // 6. 큰 컴포넌트 개별 분리
           'dashboard-app': ['./src/components/pages/DashboardApp.jsx'],
 
-          // 5. 결제 관련 분리
+          // 7. 결제 관련 분리
           'payment-pages': [
             './src/components/tosspayments/Checkout.jsx',
             './src/components/tosspayments/Success.jsx',

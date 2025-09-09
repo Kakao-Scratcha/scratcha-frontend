@@ -6,15 +6,17 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import NotFound from './components/pages/NotFound';
 
-// 로그인 전 페이지들 - 즉시 로드 (작은 파일들)
+// 메인 페이지만 즉시 로드 (LCP 최적화)
 import MainPage from './components/pages/MainPage';
-import Overview from './components/pages/Overview';
-import Pricing from './components/pages/Pricing';
-import Demo from './components/pages/Demo';
-import ApiDocs from './components/pages/ApiDocs';
-import Contact from './components/pages/Contact';
-import Signin from './components/pages/Signin';
-import Signup from './components/pages/Signup';
+
+// 로그인 전 페이지들 - 지연 로드 (코드 스플리팅)
+const Overview = lazy(() => import('./components/pages/Overview'));
+const Pricing = lazy(() => import('./components/pages/Pricing'));
+const Demo = lazy(() => import('./components/pages/Demo'));
+const ApiDocs = lazy(() => import('./components/pages/ApiDocs'));
+const Contact = lazy(() => import('./components/pages/Contact'));
+const Signin = lazy(() => import('./components/pages/Signin'));
+const Signup = lazy(() => import('./components/pages/Signup'));
 
 // 대시보드 페이지들 - 지연 로드 (큰 파일들)
 const DashboardOverview = lazy(() => import('./components/pages/DashboardOverview'));
@@ -45,11 +47,31 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<MainPage />} />
-            <Route path="overview" element={<Overview />} />
-            <Route path="pricing" element={<Pricing />} />
-            <Route path="demo" element={<Demo />} />
-            <Route path="api-docs" element={<ApiDocs />} />
-            <Route path="contact" element={<Contact />} />
+            <Route path="overview" element={
+              <Suspense fallback={<PageLoader />}>
+                <Overview />
+              </Suspense>
+            } />
+            <Route path="pricing" element={
+              <Suspense fallback={<PageLoader />}>
+                <Pricing />
+              </Suspense>
+            } />
+            <Route path="demo" element={
+              <Suspense fallback={<PageLoader />}>
+                <Demo />
+              </Suspense>
+            } />
+            <Route path="api-docs" element={
+              <Suspense fallback={<PageLoader />}>
+                <ApiDocs />
+              </Suspense>
+            } />
+            <Route path="contact" element={
+              <Suspense fallback={<PageLoader />}>
+                <Contact />
+              </Suspense>
+            } />
           </Route>
           <Route path="dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
             <Route index element={
@@ -100,8 +122,16 @@ function App() {
               </Suspense>
             </ProtectedRoute>
           } />
-          <Route path="signin" element={<Signin />} />
-          <Route path="signup" element={<Signup />} />
+          <Route path="signin" element={
+            <Suspense fallback={<PageLoader />}>
+              <Signin />
+            </Suspense>
+          } />
+          <Route path="signup" element={
+            <Suspense fallback={<PageLoader />}>
+              <Signup />
+            </Suspense>
+          } />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
