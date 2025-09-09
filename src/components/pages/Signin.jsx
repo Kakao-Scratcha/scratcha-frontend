@@ -4,7 +4,7 @@ import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
 import FormField from '../forms/FormField';
 import { useAuth } from '../../hooks/useAuth';
-import signinBackground from '@/assets/images/signin-background.png';
+import signinBackground from '@/assets/images/signin-background.png?format=webp&q=80';
 import logo from '@/assets/images/scratchalogo.svg';
 
 
@@ -43,6 +43,8 @@ const LOGO_LINK = (
             src={logo}
             alt="Scratcha"
             className="h-48 w-auto mx-auto cursor-pointer hover:opacity-80 transition-opacity dark:brightness-0 dark:invert"
+            width={192}
+            height={48}
         />
     </Link>
 );

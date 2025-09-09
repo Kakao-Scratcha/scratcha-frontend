@@ -12,6 +12,8 @@ export default function Logo({ className = "" }) {
                 src={logo}
                 alt="Scratcha"
                 className="h-12 w-auto dark:brightness-0 dark:invert"
+                width={48}
+                height={12}
             />
         </Link>
     );

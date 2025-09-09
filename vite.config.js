@@ -1,12 +1,27 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { imagetools } from 'vite-imagetools'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    imagetools({
+      // 이미지 최적화 기본 설정
+      defaultDirectives: (url) => {
+        const params = new URLSearchParams()
+
+        // WebP 형식 기본 설정 (PNG, JPG인 경우)
+        if (url.pathname.match(/\.(png|jpg|jpeg)$/i)) {
+          params.set('format', 'webp')
+          params.set('quality', '85')
+        }
+
+        return params
+      }
+    }),
   ],
   resolve: {
     alias: {

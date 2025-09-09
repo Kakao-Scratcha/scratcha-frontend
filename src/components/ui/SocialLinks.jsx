@@ -18,6 +18,8 @@ export default function SocialLinks() {
                     src={ntFavicon}
                     alt="Notion"
                     className="w-5 h-5"
+                    width={20}
+                    height={20}
                 />
             </a>
 
@@ -33,6 +35,8 @@ export default function SocialLinks() {
                     src={ghFavicon}
                     alt="GitHub"
                     className="w-5 h-5"
+                    width={20}
+                    height={20}
                 />
             </a>
 
@@ -48,6 +52,8 @@ export default function SocialLinks() {
                     src={spFavicon}
                     alt="SniperFactory"
                     className="w-5 h-5"
+                    width={20}
+                    height={20}
                 />
             </a>
         </div>

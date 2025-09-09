@@ -6,7 +6,7 @@ import FormField from '../forms/FormField';
 import SignupButton from '../forms/SignupButton';
 import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
-import signupBackground from '@/assets/images/signup-background.webp';
+import signupBackground from '@/assets/images/signup-background.webp?q=80';
 import logo from '@/assets/images/scratchalogo.svg';
 
 // 배경 스타일 상수 (재렌더링 방지)
@@ -22,6 +22,8 @@ const LOGO_LINK = (
             src={logo}
             alt="Scratcha"
             className="h-20 w-auto mx-auto cursor-pointer hover:opacity-80 transition-opacity dark:brightness-0 dark:invert"
+            width={80}
+            height={20}
         />
     </Link>
 );
