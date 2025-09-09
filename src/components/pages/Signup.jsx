@@ -22,6 +22,8 @@ const LOGO_LINK = (
             src={logo}
             alt="Scratcha"
             className="h-20 w-auto mx-auto cursor-pointer hover:opacity-80 transition-opacity dark:brightness-0 dark:invert"
+            width={80}
+            height={20}
         />
     </Link>
 );
