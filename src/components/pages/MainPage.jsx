@@ -108,7 +108,6 @@ export default function MainPage() {
                                             className="w-full h-full object-cover"
                                             width={400}
                                             height={300}
-                                            loading="lazy"
                                         />
                                     </div>
                                 </div>
