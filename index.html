@@ -30,10 +30,19 @@
         src: url("/fonts/NotoSans-Medium.woff2") format("woff2");
       }
 
+      /* SemiBold (600) 대신 Medium (500) 사용 */
       @font-face {
         font-family: "Noto Sans KR";
         font-style: normal;
         font-weight: 600;
+        font-display: swap;
+        src: url("/fonts/NotoSans-Medium.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Noto Sans KR";
+        font-style: normal;
+        font-weight: 350;
         font-display: swap;
         src: url("/fonts/NotoSans-DemiLight.woff2") format("woff2");
       }
