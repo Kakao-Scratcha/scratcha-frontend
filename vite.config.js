@@ -6,12 +6,7 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss({
-      // Tailwind CSS 최적화 설정
-      content: ['./src/**/*.{js,jsx,ts,tsx}', './index.html'],
-      // JIT 모드 자동 활성화 (Tailwind CSS 4 기본값)
-      // PurgeCSS 자동 최적화 (미사용 CSS 제거)
-    }),
+    tailwindcss(),
   ],
   resolve: {
     alias: {
@@ -21,7 +16,7 @@ export default defineConfig({
   build: {
     assetsInlineLimit: 4096, // 4KB 이하 이미지는 인라인으로 처리
     // CSS 최적화 강화
-    cssCodeSplit: true, // CSS 코드 분할 활성화
+    cssCodeSplit: true, // CSS 코드 분할 활성화 (개발환경에서도 안정적으로 작동)
     rollupOptions: {
       output: {
         // 청크 파일명 설정
