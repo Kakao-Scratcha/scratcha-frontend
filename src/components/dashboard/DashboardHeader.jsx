@@ -71,6 +71,7 @@ export default function DashboardHeader() {
                         onClick={toggle}
                         className="px-4 py-2 rounded-lg transition-all duration-200 hover:scale-110 theme-button-secondary"
                         title={isDark ? '라이트 모드' : '다크 모드'}
+                        aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
                     >
                         {isDark ? (
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
