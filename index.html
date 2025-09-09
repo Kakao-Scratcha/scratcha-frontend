@@ -8,14 +8,37 @@
     <meta name="keywords" content="캡차, 보안, 인증" />
     <meta name="author" content="scratCHA Team" />
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts - 비동기 로딩으로 렌더링 차단 제거 -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=block"
+      rel="preload"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
     <title>scratCHA</title>
+
+    <!-- Fallback 폰트 설정으로 FOUT 방지 -->
+    <style>
+      /* 시스템 폰트 fallback으로 FOUT 방지 */
+      body {
+        font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
+          "Droid Sans", "Helvetica Neue", sans-serif;
+      }
+
+      /* 폰트 로딩 중에도 일관된 레이아웃 유지 */
+      .font-loading {
+        font-display: block;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
