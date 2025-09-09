@@ -106,6 +106,9 @@ export default function MainPage() {
                                             src={mainScratchaImage}
                                             alt="스크래치 캡차 스크래치"
                                             className="w-full h-full object-cover"
+                                            width={400}
+                                            height={300}
+                                            loading="lazy"
                                         />
                                     </div>
                                 </div>
@@ -130,6 +133,9 @@ export default function MainPage() {
                                             src={mainSelectImage}
                                             alt="스크래치 캡차 정답선택"
                                             className="w-full object-cover"
+                                            width={400}
+                                            height={300}
+                                            loading="lazy"
                                         /></div>
                                 </div>
                                 <div className="flex items-center justify-center gap-3">
