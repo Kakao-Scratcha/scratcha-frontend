@@ -52,10 +52,10 @@ export default function MainPage() {
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="text-left max-w-4xl mx-auto">
                         <h1 className="text-5xl md:text-7xl font-bold mb-6 theme-text-primary">
-                            SCRATCHA.
+                            scratCHA.
                         </h1>
                         <p className="text-xl md:text-2xl mb-8 max-w-3xl theme-text-secondary">
-                            Scratch는 이미지를 긁어 확인하고 정답을 맞추는 2단계 인증으로,<br />
+                            scratCHA는 이미지를 긁어 확인하고 정답을 맞추는 2단계 인증으로,<br />
                             기존 CAPTCHA를 뛰어넘는 강력한 보안을 제공합니다
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-start">
@@ -92,7 +92,7 @@ export default function MainPage() {
 
                     <div className="text-left max-w-4xl mx-auto mb-12">
                         <h3 className="text-2xl md:text-3xl font-bold mb-8 text-gray-900 dark:text-white">
-                            Scratcha, 사람은 쉽게 / 봇은 불가능하게
+                            scratCHA, 사람은 쉽게 / 봇은 불가능하게
                         </h3>
                     </div>
 
@@ -208,7 +208,7 @@ export default function MainPage() {
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="text-left max-w-4xl mx-auto">
                         <h2 className="text-center text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white">
-                            이제, CAPTCHA는 Scratcha로 바꿔보세요.
+                            이제, CAPTCHA는 scratCHA로 바꿔보세요.
                         </h2>
                         <p className="text-center text-xl text-gray-600 dark:text-gray-300 mb-8">
                             더 쉽고, 더 안전하고, 더 강력한 사용자 인증을 경험하세요.

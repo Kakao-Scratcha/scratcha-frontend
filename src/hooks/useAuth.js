@@ -139,11 +139,13 @@ export const useAuth = () => {
         // 사용자 정보 헬퍼
         getUserDisplayName: () => {
             if (!user) return '사용자';
-            return user.name || user.email || '사용자';
+            // 백엔드 필드 구조에 맞게 우선순위 설정
+            return user.userName || user.name || user.username || user.email || '사용자';
         },
         getUserInitial: () => {
             if (!user) return 'U';
-            return (user.name || user.email || 'U').charAt(0).toUpperCase();
+            // 백엔드 필드 구조에 맞게 우선순위 설정
+            return (user.userName || user.name || user.username || user.email || 'U').charAt(0).toUpperCase();
         },
     };
 };

@@ -18,10 +18,11 @@ export default function Header() {
 
     const {
         isAuthenticated,
-        getUserDisplayName,
+        user,
         getUserInitial,
         logout
     } = useAuth();
+
 
     // 외부 클릭 시 드롭다운 닫기
     useEffect(() => {
@@ -120,10 +121,10 @@ export default function Header() {
                                             </div>
                                             <div>
                                                 <p className="font-semibold theme-text-primary">
-                                                    {getUserDisplayName().split('@')[0]}
+                                                    {user?.userName}
                                                 </p>
                                                 <p className="text-sm theme-text-secondary">
-                                                    {getUserDisplayName()}
+                                                    {user?.email || '이메일 없음'}
                                                 </p>
                                             </div>
                                         </div>

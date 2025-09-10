@@ -13,8 +13,8 @@ export default function DashboardHeader() {
 
     const {
         isAuthenticated,
+        user,
         logout,
-        getUserDisplayName,
         getUserInitial
     } = useAuth();
 
@@ -115,10 +115,10 @@ export default function DashboardHeader() {
                                             </div>
                                             <div>
                                                 <p className="font-semibold theme-text-primary">
-                                                    {getUserDisplayName().split('@')[0]}
+                                                    {user?.userName}
                                                 </p>
                                                 <p className="text-sm theme-text-secondary">
-                                                    {getUserDisplayName()}
+                                                    {user?.email || '이메일 없음'}
                                                 </p>
                                             </div>
                                         </div>

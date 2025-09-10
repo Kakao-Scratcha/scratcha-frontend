@@ -16,10 +16,11 @@ export default function ApiDocs() {
             <div className="max-w-7xl mx-auto px-4 py-16">
                 <div className="text-center mb-16">
                     <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-                        Scratcha SDK 문서
+                        scratCHA SDK 문서
                     </h1>
                     <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                        React 애플리케이션을 위한 Scratcha SDK입니다. 캔버스 기반 이미지 처리, 캡차 시스템, API 통신 기능을 제공합니다.
+                        React 애플리케이션을 위한 scratCHA SDK입니다.<br />
+                        캔버스 기반 이미지 처리, 캡차 시스템, API 통신 기능을 제공합니다.
                     </p>
                 </div>
 
@@ -34,7 +35,7 @@ export default function ApiDocs() {
                                 1. 설치
                             </h3>
                             <p className="text-gray-600 dark:text-gray-300 mb-4">
-                                npm을 사용하여 Scratcha SDK를 설치하세요.
+                                npm을 사용하여 scratCHA SDK를 설치하세요.
                             </p>
                             <div>
                                 <pre className="text-sm rounded-lg">

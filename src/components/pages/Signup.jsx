@@ -6,7 +6,7 @@ import FormField from '../forms/FormField';
 import SignupButton from '../forms/SignupButton';
 import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
-import signupBackground from '@/assets/images/signup-background.webp?q=80';
+import signupBackground from '@/assets/images/signup-background.png?w=800&h=600&format=webp&quality=85';
 import logo from '@/assets/images/scratchalogo.svg';
 
 // 배경 스타일 상수 (재렌더링 방지)

@@ -55,7 +55,7 @@ export default function Contact() {
                         문의하기
                     </h1>
                     <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                        Scratcha에 대한 궁금한 점이나 기술 지원이 필요하시면 언제든 연락주세요.
+                        scratCHA에 대한 궁금한 점이나 기술 지원이 필요하시면 언제든 연락주세요.<br />
                         빠른 시일 내에 답변드리겠습니다.
                     </p>
                 </div>
