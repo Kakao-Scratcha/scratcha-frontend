@@ -1,18 +1,55 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
+import ErrorModal from '../ui/ErrorModal';
+import LoadingSpinner from '../ui/LoadingSpinner';
 import { useAuth } from '../../hooks/useAuth';
 import { authAPI, paymentAPI } from '../../services/api';
 import { validateUserName } from '../../utils/validators';
 import { devLog, devError } from '../../utils/logger';
+import useErrorHandler from '../../hooks/useErrorHandler';
 
 export default function DashboardSettings() {
     const { user, updateUser, logout } = useAuth();
+
+    // 에러 처리 훅 (투트랙 시스템)
+    const { errorState, closeError, handleRetry, executeAllWithErrorHandling, isRetrying } = useErrorHandler();
+
+    // 액션별 에러 모달 상태 (개별 에러 처리용)
+    const [_errorModal, setErrorModal] = useState({ isOpen: false, message: '' });
+
+    // 초기 로드 완료 여부 추적
+    const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
 
     // 프리미엄 유저 확인 (결제 내역이 있는지 확인)
     const [isPremiumUser, setIsPremiumUser] = useState(false);
 
     const getServerUserName = (u) => (u?.userName ?? u?.username ?? u?.name ?? u?.email ?? '');
+
+    // 액션별 에러 처리 함수
+    const handleApiError = (error, operation) => {
+        console.error(`❌ ${operation} 실패:`, error);
+        let errorMessage = '작업을 수행하는데 실패했습니다.';
+
+        if (error.response?.status === 404) {
+            errorMessage = '요청한 데이터를 찾을 수 없습니다.';
+        } else if (error.response?.status === 500) {
+            errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        } else if (error.response?.status === 401) {
+            errorMessage = '인증이 필요합니다. 다시 로그인해주세요.';
+        } else if (error.response?.status === 409) {
+            errorMessage = '이미 사용 중인 이름입니다.';
+        } else if (error.response?.status === 400) {
+            errorMessage = '입력 정보를 확인해주세요.';
+        } else if (error.response?.status === 422) {
+            errorMessage = '입력 정보를 확인해주세요.';
+        }
+
+        setErrorModal({
+            isOpen: true,
+            message: errorMessage
+        });
+    };
 
     const [isNameModalOpen, setIsNameModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -97,10 +134,34 @@ export default function DashboardSettings() {
         }
     }, [user?.id]);
 
-    // 프리미엄 상태 확인
+    // 초기 데이터 로드 (투트랙 시스템 - 페이지 로드 에러)
     useEffect(() => {
-        checkPremiumStatus();
-    }, [checkPremiumStatus]);
+        const loadInitialData = async () => {
+            try {
+                // 모든 API 호출을 에러 처리와 함께 실행 (모든 API가 성공해야만 완료)
+                const allSuccessful = await executeAllWithErrorHandling([
+                    {
+                        apiCall: () => checkPremiumStatus(),
+                        operation: '프리미엄 상태 확인',
+                        onSuccess: () => console.log('✅ 프리미엄 상태 확인 완료')
+                    }
+                ]);
+
+                if (allSuccessful) {
+                    console.log('✅ 모든 초기 데이터 로드 완료');
+                    setIsInitialLoadComplete(true); // 성공한 경우에만 초기 로드 완료
+                } else {
+                    console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
+                    // 실패한 경우에는 초기 로드 상태 유지 (isInitialLoadComplete = false)
+                }
+            } catch (error) {
+                console.error('❌ 초기 데이터 로드 중 예상치 못한 오류:', error);
+                // 예상치 못한 오류의 경우에도 초기 로드 상태 유지
+            }
+        };
+
+        loadInitialData();
+    }, [checkPremiumStatus, executeAllWithErrorHandling]);
 
     // 사용량 경고 설정 변경 핸들러
     const handleUsageWarningChange = (enabled, threshold) => {
@@ -109,7 +170,7 @@ export default function DashboardSettings() {
         saveUsageWarningSettings(enabled, threshold);
     };
 
-    // 이름 변경 처리 (API 연동)
+    // 이름 변경 처리 (투트랙 시스템 - 액션별 에러)
     const handleNameChange = async (e) => {
         e.preventDefault();
         devLog('정보 수정:', { nameForm, passwordForm });
@@ -119,30 +180,45 @@ export default function DashboardSettings() {
 
         // 이름 유효성 검사
         if (!trimmedName) {
-            alert('이름을 입력해주세요.');
+            setErrorModal({
+                isOpen: true,
+                message: '이름을 입력해주세요.'
+            });
             return;
         }
 
         const { isValid, error } = validateUserName(trimmedName);
         if (!isValid) {
-            alert(error);
+            setErrorModal({
+                isOpen: true,
+                message: error
+            });
             return;
         }
 
         // 비밀번호 변경이 있는 경우 유효성 검사
         if (currentPassword || newPassword || confirmPassword) {
             if (!currentPassword || !newPassword || !confirmPassword) {
-                alert('비밀번호 변경을 위해서는 모든 비밀번호 필드를 입력해주세요.');
+                setErrorModal({
+                    isOpen: true,
+                    message: '비밀번호 변경을 위해서는 모든 비밀번호 필드를 입력해주세요.'
+                });
                 return;
             }
 
             if (newPassword !== confirmPassword) {
-                alert('새 비밀번호와 확인 비밀번호가 일치하지 않습니다.');
+                setErrorModal({
+                    isOpen: true,
+                    message: '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.'
+                });
                 return;
             }
 
             if (newPassword.length < 8) {
-                alert('새 비밀번호는 8자 이상이어야 합니다.');
+                setErrorModal({
+                    isOpen: true,
+                    message: '새 비밀번호는 8자 이상이어야 합니다.'
+                });
                 return;
             }
         }
@@ -180,20 +256,14 @@ export default function DashboardSettings() {
                 confirmPassword: ''
             });
 
-            alert('정보가 성공적으로 수정되었습니다!');
+            // 성공 메시지도 에러 모달로 표시
+            setErrorModal({
+                isOpen: true,
+                message: '정보가 성공적으로 수정되었습니다!'
+            });
         } catch (error) {
             devError('❌ 정보 수정 실패:', error);
-
-            let errorMessage = '정보 수정에 실패했습니다.';
-            if (error.response?.status === 409) {
-                errorMessage = '이미 사용 중인 이름입니다.';
-            } else if (error.response?.status === 400) {
-                errorMessage = '현재 비밀번호가 올바르지 않습니다.';
-            } else if (error.response?.status === 422) {
-                errorMessage = '입력 정보를 확인해주세요.';
-            }
-
-            alert(errorMessage);
+            handleApiError(error, '정보 수정');
         } finally {
             setIsUpdating(false);
         }
@@ -201,7 +271,7 @@ export default function DashboardSettings() {
 
 
 
-    // 회원 탈퇴 처리
+    // 회원 탈퇴 처리 (투트랙 시스템 - 액션별 에러)
     const handleAccountDelete = async () => {
         devLog('🗑️ 회원 탈퇴 시도');
 
@@ -218,127 +288,137 @@ export default function DashboardSettings() {
             // 모달 닫기
             setIsDeleteModalOpen(false);
 
-            // 성공 메시지
-            alert('회원 탈퇴가 완료되었습니다. 로그인 페이지로 이동합니다.');
+            // 성공 메시지도 에러 모달로 표시
+            setErrorModal({
+                isOpen: true,
+                message: '회원 탈퇴가 완료되었습니다. 로그인 페이지로 이동합니다.'
+            });
             devLog('✅ 회원 탈퇴 완료');
 
         } catch (error) {
             devError('❌ 회원 탈퇴 실패:', error);
-
-            let errorMessage = '회원 탈퇴에 실패했습니다.';
-            if (error.response?.status === 401) {
-                errorMessage = '인증이 만료되었습니다. 다시 로그인해주세요.';
-            } else if (error.response?.status === 403) {
-                errorMessage = '권한이 없습니다.';
-            }
-
-            alert(errorMessage);
+            handleApiError(error, '회원 탈퇴');
         } finally {
             setIsDeleting(false);
         }
     };
 
 
+    // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
+    const isDataLoading = !user || !isInitialLoadComplete;
+
     return (
         <DashboardLayout
             title="설정"
-            subtitle="계정 설정을 관리하세요"
+            subtitle="설정을 관리하세요"
         >
-            <div className="space-y-8">
-                {/* 사용량 경고 설정 */}
-                {isPremiumUser && (
-                    <div className="p-6 rounded-lg theme-card">
-                        <h3 className="text-xl font-semibold theme-text-primary mb-6">사용량 경고 설정</h3>
+            {isDataLoading ? (
+                <div className="flex flex-col justify-center items-center h-64 space-y-4 bg-transparent">
+                    <LoadingSpinner />
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        설정 정보를 불러오는 중...
+                    </p>
+                </div>
+            ) : (
+                <div className="space-y-8">
+                    {/* 사용량 경고 설정 */}
+                    {isPremiumUser && (
+                        <div className="p-6 rounded-lg theme-card">
+                            <h3 className="text-xl font-semibold theme-text-primary mb-6">사용량 경고 설정</h3>
 
-                        <div className="space-y-6">
-                            {/* 경고 활성화 토글 */}
+                            <div className="space-y-6">
+                                {/* 경고 활성화 토글 */}
+                                <div className="flex items-center justify-between p-4 theme-layout-secondary rounded-lg">
+                                    <div>
+                                        <h4 className="font-medium theme-text-primary">토큰 사용량 경고</h4>
+                                        <p className="text-sm theme-text-secondary">보유 토큰이 설정한 수치 이하로 떨어지면 경고를 표시합니다</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={usageWarningEnabled}
+                                            onChange={(e) => handleUsageWarningChange(e.target.checked, usageWarningThreshold)}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+
+                                {/* 경고 임계값 설정 */}
+                                {usageWarningEnabled && (
+                                    <div className="p-4 theme-layout-secondary rounded-lg">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div>
+                                                <h4 className="font-medium theme-text-primary">경고 임계값</h4>
+                                                <p className="text-sm theme-text-secondary">이 수치 이하로 토큰이 떨어지면 경고가 표시됩니다</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <select
+                                                value={usageWarningThreshold}
+                                                onChange={(e) => handleUsageWarningChange(usageWarningEnabled, parseInt(e.target.value))}
+                                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            >
+                                                <option value={1000}>1,000 토큰</option>
+                                                <option value={3000}>3,000 토큰</option>
+                                                <option value={5000}>5,000 토큰</option>
+                                                <option value={10000}>10,000 토큰</option>
+                                                <option value={30000}>30,000 토큰</option>
+                                                <option value={50000}>50,000 토큰</option>
+                                                <option value={100000}>100,000 토큰</option>
+                                            </select>
+                                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                                                현재 설정: <span className="font-medium text-blue-600 dark:text-blue-400">{usageWarningThreshold.toLocaleString()} 토큰</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 회원 설정 */}
+                    <div className="p-6 rounded-lg theme-card">
+                        <h3 className="text-xl font-semibold theme-text-primary mb-6">회원 설정</h3>
+
+                        <div className="space-y-4">
+                            {/* 이름 변경 */}
                             <div className="flex items-center justify-between p-4 theme-layout-secondary rounded-lg">
                                 <div>
-                                    <h4 className="font-medium theme-text-primary">토큰 사용량 경고</h4>
-                                    <p className="text-sm theme-text-secondary">보유 토큰이 설정한 수치 이하로 떨어지면 경고를 표시합니다</p>
+                                    <h4 className="font-medium theme-text-primary">회원 정보 수정</h4>
+                                    <p className="text-sm theme-text-secondary">현재 이름 : {getServerUserName(user) || '설정되지 않음'}</p>
                                 </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={usageWarningEnabled}
-                                        onChange={(e) => handleUsageWarningChange(e.target.checked, usageWarningThreshold)}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                </label>
+                                <button
+                                    onClick={() => {
+                                        const serverName = getServerUserName(user);
+                                        setNameForm(prev => ({ ...prev, currentName: serverName, newName: serverName }));
+                                        setIsNameModalOpen(true);
+                                    }}
+                                    className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-700 dark:hover:bg-blue-600 transition"
+                                >
+                                    변경하기
+                                </button>
                             </div>
 
-                            {/* 경고 임계값 설정 */}
-                            {usageWarningEnabled && (
-                                <div className="p-4 theme-layout-secondary rounded-lg">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div>
-                                            <h4 className="font-medium theme-text-primary">경고 임계값</h4>
-                                            <p className="text-sm theme-text-secondary">이 수치 이하로 토큰이 떨어지면 경고가 표시됩니다</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <select
-                                            value={usageWarningThreshold}
-                                            onChange={(e) => handleUsageWarningChange(usageWarningEnabled, parseInt(e.target.value))}
-                                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        >
-                                            <option value={1000}>1,000 토큰</option>
-                                            <option value={3000}>3,000 토큰</option>
-                                            <option value={5000}>5,000 토큰</option>
-                                            <option value={10000}>10,000 토큰</option>
-                                        </select>
-                                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                                            현재 설정: <span className="font-medium text-blue-600 dark:text-blue-400">{usageWarningThreshold.toLocaleString()} 토큰</span>
-                                        </div>
-                                    </div>
+
+
+                            {/* 회원 탈퇴 */}
+                            <div className="flex items-center justify-between p-4 theme-layout-secondary rounded-lg">
+                                <div>
+                                    <h4 className="font-medium theme-text-primary">회원 탈퇴</h4>
+                                    <p className="text-sm theme-text-secondary">계정을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다</p>
                                 </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* 회원 설정 */}
-                <div className="p-6 rounded-lg theme-card">
-                    <h3 className="text-xl font-semibold theme-text-primary mb-6">회원 설정</h3>
-
-                    <div className="space-y-4">
-                        {/* 이름 변경 */}
-                        <div className="flex items-center justify-between p-4 theme-layout-secondary rounded-lg">
-                            <div>
-                                <h4 className="font-medium theme-text-primary">회원 정보 수정</h4>
-                                <p className="text-sm theme-text-secondary">현재 이름 : {getServerUserName(user) || '설정되지 않음'}</p>
+                                <button
+                                    onClick={() => setIsDeleteModalOpen(true)}
+                                    className="px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition"
+                                >
+                                    탈퇴하기
+                                </button>
                             </div>
-                            <button
-                                onClick={() => {
-                                    const serverName = getServerUserName(user);
-                                    setNameForm(prev => ({ ...prev, currentName: serverName, newName: serverName }));
-                                    setIsNameModalOpen(true);
-                                }}
-                                className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-700 dark:hover:bg-blue-600 transition"
-                            >
-                                변경하기
-                            </button>
-                        </div>
-
-
-
-                        {/* 회원 탈퇴 */}
-                        <div className="flex items-center justify-between p-4 theme-layout-secondary rounded-lg">
-                            <div>
-                                <h4 className="font-medium theme-text-primary">회원 탈퇴</h4>
-                                <p className="text-sm theme-text-secondary">계정을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다</p>
-                            </div>
-                            <button
-                                onClick={() => setIsDeleteModalOpen(true)}
-                                className="px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition"
-                            >
-                                탈퇴하기
-                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* 이름 변경 모달 */}
             <Modal
@@ -353,12 +433,6 @@ export default function DashboardSettings() {
                 bodyClassName="pt-2 pb-6 px-6"
             >
                 <form onSubmit={handleNameChange} className="space-y-4">
-                    {/* 아바타 */}
-                    <div className="flex justify-center mt-0">
-                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-xl md:text-2xl font-semibold text-gray-700 dark:text-gray-200">
-                            {getServerUserName(user).charAt(0).toUpperCase() || 'U'}
-                        </div>
-                    </div>
 
                     {/* 아이디(이메일) */}
                     <div>
@@ -462,7 +536,7 @@ export default function DashboardSettings() {
                             <li>탈퇴 후 30일간 데이터 보관, 이후 완전 삭제되어 복구 불가</li>
                             <li>남은 토큰은 환불·이전 불가 (30일 경과 시 즉시 소멸)</li>
                             <li>30일 이내 복구 시 문의 절차 필수</li>
-                            <li>탈퇴 시, 모든 데이터와 권한이 사라집니다</li>
+                            <li>탈퇴 시, 30일 후 모든 데이터와 권한이 완전히 삭제됩니다</li>
                         </ul>
                     </div>
 
@@ -490,6 +564,44 @@ export default function DashboardSettings() {
                     </div>
                 </div>
             </Modal>
+
+            {/* 액션별 에러 모달 (정보 수정, 회원 탈퇴 등) */}
+            <Modal
+                isOpen={_errorModal.isOpen}
+                onClose={() => setErrorModal({ isOpen: false, message: '' })}
+                title="알림"
+            >
+                <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center gap-2">
+                            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="font-medium text-blue-800">알림</span>
+                        </div>
+                        <p className="text-blue-700 mt-2">{_errorModal.message}</p>
+                    </div>
+
+                    <div className="flex justify-end pt-4">
+                        <button
+                            onClick={() => setErrorModal({ isOpen: false, message: '' })}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+                        >
+                            확인
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* 페이지 로드 에러 모달 (통합 ErrorModal) */}
+            <ErrorModal
+                isOpen={errorState.isOpen}
+                onClose={closeError}
+                onRetry={handleRetry}
+                message={errorState.message}
+                isRetrying={isRetrying}
+                title={errorState.title || "데이터 로드 실패"}
+            />
         </DashboardLayout>
     );
 } 

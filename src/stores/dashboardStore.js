@@ -158,6 +158,8 @@ export const useDashboardStore = create((set, get) => ({
                     error: error.message
                 }
             }));
+            // 에러를 다시 throw하여 상위 컴포넌트에서 처리할 수 있도록 함
+            throw error;
         }
     },
 
@@ -244,12 +246,12 @@ export const useDashboardStore = create((set, get) => ({
                 difficulty: key.difficulty,
                 hasKey: !!key.key
             })));
-            set({ apps: freshApps, apiKeys: freshKeys });
+            set({ apps: freshApps, apiKeys: freshKeys, isAppsLoading: false });
         } catch (error) {
             devError('📱 애플리케이션 데이터 로드 실패:', error);
             // 에러 발생 시에도 기존 데이터 유지 (상태 초기화하지 않음)
-        } finally {
-            set({ isAppsLoading: false });
+            // isAppsLoading을 true로 유지하여 로딩 화면 계속 표시
+            throw error; // 에러를 다시 throw하여 상위에서 처리할 수 있도록 함
         }
     },
 
@@ -294,6 +296,7 @@ export const useDashboardStore = create((set, get) => ({
                 usageData: [],
                 isLoading: false
             });
+            throw error; // 에러를 다시 throw하여 상위에서 처리할 수 있도록 함
         }
     },
 
@@ -368,6 +371,7 @@ export const useDashboardStore = create((set, get) => ({
                 usageData: [],
                 isLoading: false
             });
+            throw error; // 에러를 다시 throw하여 상위에서 처리할 수 있도록 함
         }
     },
 

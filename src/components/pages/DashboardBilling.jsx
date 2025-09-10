@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
+import ErrorModal from '../ui/ErrorModal';
 import PaymentHistoryTable from '../ui/PaymentHistoryTable';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { useAuthStore } from '../../stores/authStore';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { useLocation } from 'react-router-dom';
+import useErrorHandler from '../../hooks/useErrorHandler';
 
 
 export default function DashboardBilling() {
@@ -16,13 +18,17 @@ export default function DashboardBilling() {
     };
 
     const { user } = useAuthStore();
-    const { requestsStats, loadAllRequestsStats } = useDashboardStore();
+    const { requestsStats, loadAllRequestsStats, isLoading } = useDashboardStore();
+
+    // 에러 처리 훅
+    const { errorState, closeError, handleRetry, executeWithErrorHandling, isRetrying } = useErrorHandler();
 
     const [isPlanChangeModalOpen, setIsPlanChangeModalOpen] = useState(false);
 
     // 결제 결과 모달 상태
     const [showPaymentResultModal, setShowPaymentResultModal] = useState(false);
     const [paymentResult, setPaymentResult] = useState(null);
+
 
     const location = useLocation();
 
@@ -39,8 +45,11 @@ export default function DashboardBilling() {
 
     // 사용량 통계 데이터 로드
     useEffect(() => {
-        loadAllRequestsStats();
-    }, [loadAllRequestsStats]);
+        executeWithErrorHandling(
+            () => loadAllRequestsStats(),
+            '사용량 통계 로드'
+        );
+    }, [loadAllRequestsStats, executeWithErrorHandling]);
 
     // 토큰 충전 선택 처리 - 바로 checkout 페이지로 이동
     const handleTokenSelect = (tokenPackage) => {
@@ -148,202 +157,196 @@ export default function DashboardBilling() {
 
 
 
+    // 모든 데이터가 로드될 때까지 로딩 표시 (구매내역은 별도 로딩 처리)
+    const isDataLoading = isLoading || !user;
+
     return (
         <DashboardLayout
             title="요금"
-            subtitle="요금제 및 청구 내역을 관리하세요"
+            subtitle="토큰을 충전하고 구매 내역을 확인하세요"
         >
-            <div className="space-y-6">
-                {/* 토큰 현황 및 사용량 통계 */}
-                <div className="theme-card p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className={`${T.sectionTitle} text-gray-900 dark:text-gray-100`}>토큰 현황 및 사용량 통계</h3>
-                        <button
-                            onClick={() => setIsPlanChangeModalOpen(true)}
-                            className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white dark:text-gray-900 rounded-lg font-semibold hover:opacity-90 transition"
-                        >
-                            토큰 충전
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* 현재 보유 토큰 현황 */}
-                        <div className="lg:col-span-1 bg-blue-50 dark:bg-blue-900/20 p-5 rounded-lg border border-blue-200 dark:border-blue-800">
-                            <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-4 text-center">현재 보유 토큰 현황</h4>
-
-                            <div className="text-center mb-5">
-                                <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
-                                    {user?.token ? user.token.toLocaleString() : '0'}
-                                </div>
-                                <div className="text-base text-blue-800 dark:text-blue-200">보유 토큰</div>
-                            </div>
-
-                            {/* 예상 사용 가능 일수 */}
-                            <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-300 dark:border-blue-700">
-                                <div className="text-center">
-                                    <div className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-                                        {user?.token && requestsStats.weekly.currentCount > 0 ?
-                                            Math.ceil(user.token / (requestsStats.weekly.currentCount / 7)) :
-                                            '∞'
-                                        }일
-                                    </div>
-                                    <div className="text-xs text-blue-800 dark:text-blue-200">
-                                        예상 사용 가능 일수
-                                    </div>
-                                    <div className="text-xs text-blue-600 dark:text-blue-300 mt-1">
-                                        (일평균 {requestsStats.weekly.loading ? '...' : Math.round(requestsStats.weekly.currentCount / 7).toLocaleString()} 토큰 기준)
-                                    </div>
-                                </div>
-                            </div>
+            {isDataLoading ? (
+                <div className="flex flex-col justify-center items-center h-64 space-y-4 bg-transparent">
+                    <LoadingSpinner />
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        결제 정보를 불러오는 중...
+                    </p>
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    {/* 토큰 현황 및 사용량 통계 */}
+                    <div className="theme-card p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className={`${T.sectionTitle} text-gray-900 dark:text-gray-100`}>토큰 현황 및 사용량 통계</h3>
+                            <button
+                                onClick={() => setIsPlanChangeModalOpen(true)}
+                                className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white dark:text-gray-900 rounded-lg font-semibold hover:opacity-90 transition"
+                            >
+                                토큰 충전
+                            </button>
                         </div>
 
-                        {/* 토큰 사용량 통계 */}
-                        <div className="lg:col-span-2 space-y-3">
-                            <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">토큰 사용량 통계</h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* 현재 보유 토큰 현황 */}
+                            <div className="lg:col-span-1 bg-blue-50 dark:bg-blue-900/20 p-5 rounded-lg border border-blue-200 dark:border-blue-800 flex flex-col justify-center">
+                                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-4 text-center">현재 보유 토큰 현황</h4>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {/* 오늘 사용량 */}
-                                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                    <div>
-                                        <div className="text-xs text-gray-600 dark:text-gray-400">오늘 사용량</div>
-                                        <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                            {requestsStats.daily.loading ? (
-                                                <LoadingSpinner size="sm" />
-                                            ) : (
-                                                requestsStats.daily.currentCount.toLocaleString()
-                                            )}
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-500">토큰</div>
+                                <div className="text-center mb-5">
+                                    <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                                        {user?.token ? user.token.toLocaleString() : '0'}
                                     </div>
-                                    <div className="text-right">
-                                        {requestsStats.daily.rate > 0 ? (
-                                            <div className="flex items-center text-green-600 dark:text-green-400">
-                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 4l8 16H4L12 4z" />
-                                                </svg>
-                                                <span className="text-xs font-medium">+{Math.ceil(requestsStats.daily.rate)}%</span>
-                                            </div>
-                                        ) : requestsStats.daily.rate < 0 ? (
-                                            <div className="flex items-center text-red-600 dark:text-red-400">
-                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 20l-8-16h16l-8 16z" />
-                                                </svg>
-                                                <span className="text-xs font-medium">{Math.ceil(requestsStats.daily.rate)}%</span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center text-yellow-600 dark:text-yellow-400">
-                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                                    <rect x="3" y="11" width="18" height="2" rx="1" />
-                                                </svg>
-                                                <span className="text-xs font-medium">0%</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <div className="text-base text-blue-800 dark:text-blue-200">보유 토큰</div>
                                 </div>
 
-                                {/* 이번 주 사용량 */}
-                                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                    <div>
-                                        <div className="text-xs text-gray-600 dark:text-gray-400">이번 주 사용량</div>
-                                        <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                            {requestsStats.weekly.loading ? (
-                                                <LoadingSpinner size="sm" />
-                                            ) : (
-                                                requestsStats.weekly.currentCount.toLocaleString()
-                                            )}
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-500">토큰</div>
-                                    </div>
-                                    <div className="text-right">
-                                        {requestsStats.weekly.rate > 0 ? (
-                                            <div className="flex items-center text-green-600 dark:text-green-400">
-                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 4l8 16H4L12 4z" />
-                                                </svg>
-                                                <span className="text-xs font-medium">+{Math.ceil(requestsStats.weekly.rate)}%</span>
-                                            </div>
-                                        ) : requestsStats.weekly.rate < 0 ? (
-                                            <div className="flex items-center text-red-600 dark:text-red-400">
-                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 20l-8-16h16l-8 16z" />
-                                                </svg>
-                                                <span className="text-xs font-medium">{Math.ceil(requestsStats.weekly.rate)}%</span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center text-yellow-600 dark:text-yellow-400">
-                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                                    <rect x="3" y="11" width="18" height="2" rx="1" />
-                                                </svg>
-                                                <span className="text-xs font-medium">0%</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* 이번 달 사용량 */}
-                                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                    <div>
-                                        <div className="text-xs text-gray-600 dark:text-gray-400">이번 달 사용량</div>
-                                        <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                            {requestsStats.monthly.loading ? (
-                                                <LoadingSpinner size="sm" />
-                                            ) : (
-                                                requestsStats.monthly.currentCount.toLocaleString()
-                                            )}
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-500">토큰</div>
-                                    </div>
-                                    <div className="text-right">
-                                        {requestsStats.monthly.rate > 0 ? (
-                                            <div className="flex items-center text-green-600 dark:text-green-400">
-                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 4l8 16H4L12 4z" />
-                                                </svg>
-                                                <span className="text-xs font-medium">+{Math.ceil(requestsStats.monthly.rate)}%</span>
-                                            </div>
-                                        ) : requestsStats.monthly.rate < 0 ? (
-                                            <div className="flex items-center text-red-600 dark:text-red-400">
-                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 20l-8-16h16l-8 16z" />
-                                                </svg>
-                                                <span className="text-xs font-medium">{Math.ceil(requestsStats.monthly.rate)}%</span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center text-yellow-600 dark:text-yellow-400">
-                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                                    <rect x="3" y="11" width="18" height="2" rx="1" />
-                                                </svg>
-                                                <span className="text-xs font-medium">0%</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* 평균 일일 사용량 */}
-                                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                {/* 예상 사용 가능 일수 */}
+                                <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-300 dark:border-blue-700">
                                     <div className="text-center">
-                                        <div className="text-xs text-blue-800 dark:text-blue-200 mb-1">평균 일일 사용량</div>
-                                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                                            {requestsStats.weekly.loading ? (
-                                                <LoadingSpinner size="sm" />
+                                        <div className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                                            {user?.token && requestsStats.weekly.currentCount > 0 ?
+                                                Math.ceil(user.token / (requestsStats.weekly.currentCount / 7)) :
+                                                '∞'
+                                            }일
+                                        </div>
+                                        <div className="text-xs text-blue-800 dark:text-blue-200">
+                                            예상 사용 가능 일수
+                                        </div>
+                                        <div className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                                            (일평균 {Math.round(requestsStats.weekly.currentCount / 7).toLocaleString()} 토큰 기준)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 토큰 사용량 통계 */}
+                            <div className="lg:col-span-2">
+                                <div className="grid grid-cols-2 gap-3 h-full">
+                                    {/* 오늘 사용량 */}
+                                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg h-full">
+                                        <div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-400">오늘 사용량</div>
+                                            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                                {requestsStats.daily.currentCount.toLocaleString()}
+                                            </div>
+                                            <div className="text-sm text-gray-500 dark:text-gray-500">토큰</div>
+                                        </div>
+                                        <div className="text-right">
+                                            {requestsStats.daily.rate > 0 ? (
+                                                <div className="flex items-center text-green-600 dark:text-green-400">
+                                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M12 4l8 16H4L12 4z" />
+                                                    </svg>
+                                                    <span className="text-sm font-medium">+{Math.ceil(requestsStats.daily.rate)}%</span>
+                                                </div>
+                                            ) : requestsStats.daily.rate < 0 ? (
+                                                <div className="flex items-center text-red-600 dark:text-red-400">
+                                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M12 20l-8-16h16l-8 16z" />
+                                                    </svg>
+                                                    <span className="text-sm font-medium">{Math.ceil(requestsStats.daily.rate)}%</span>
+                                                </div>
                                             ) : (
-                                                Math.round(requestsStats.weekly.currentCount / 7).toLocaleString()
+                                                <div className="flex items-center text-yellow-600 dark:text-yellow-400">
+                                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <rect x="3" y="11" width="18" height="2" rx="1" />
+                                                    </svg>
+                                                    <span className="text-sm font-medium">0%</span>
+                                                </div>
                                             )}
                                         </div>
-                                        <div className="text-xs text-blue-600 dark:text-blue-300">토큰/일</div>
+                                    </div>
+
+                                    {/* 이번 주 사용량 */}
+                                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg h-full">
+                                        <div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-400">이번 주 사용량</div>
+                                            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                                {requestsStats.weekly.currentCount.toLocaleString()}
+                                            </div>
+                                            <div className="text-sm text-gray-500 dark:text-gray-500">토큰</div>
+                                        </div>
+                                        <div className="text-right">
+                                            {requestsStats.weekly.rate > 0 ? (
+                                                <div className="flex items-center text-green-600 dark:text-green-400">
+                                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M12 4l8 16H4L12 4z" />
+                                                    </svg>
+                                                    <span className="text-sm font-medium">+{Math.ceil(requestsStats.weekly.rate)}%</span>
+                                                </div>
+                                            ) : requestsStats.weekly.rate < 0 ? (
+                                                <div className="flex items-center text-red-600 dark:text-red-400">
+                                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M12 20l-8-16h16l-8 16z" />
+                                                    </svg>
+                                                    <span className="text-sm font-medium">{Math.ceil(requestsStats.weekly.rate)}%</span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center text-yellow-600 dark:text-yellow-400">
+                                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <rect x="3" y="11" width="18" height="2" rx="1" />
+                                                    </svg>
+                                                    <span className="text-sm font-medium">0%</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* 이번 달 사용량 */}
+                                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg h-full">
+                                        <div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-400">이번 달 사용량</div>
+                                            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                                {requestsStats.monthly.currentCount.toLocaleString()}
+                                            </div>
+                                            <div className="text-sm text-gray-500 dark:text-gray-500">토큰</div>
+                                        </div>
+                                        <div className="text-right">
+                                            {requestsStats.monthly.rate > 0 ? (
+                                                <div className="flex items-center text-green-600 dark:text-green-400">
+                                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M12 4l8 16H4L12 4z" />
+                                                    </svg>
+                                                    <span className="text-sm font-medium">+{Math.ceil(requestsStats.monthly.rate)}%</span>
+                                                </div>
+                                            ) : requestsStats.monthly.rate < 0 ? (
+                                                <div className="flex items-center text-red-600 dark:text-red-400">
+                                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M12 20l-8-16h16l-8 16z" />
+                                                    </svg>
+                                                    <span className="text-sm font-medium">{Math.ceil(requestsStats.monthly.rate)}%</span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center text-yellow-600 dark:text-yellow-400">
+                                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <rect x="3" y="11" width="18" height="2" rx="1" />
+                                                    </svg>
+                                                    <span className="text-sm font-medium">0%</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* 평균 일일 사용량 */}
+                                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 h-full flex items-center justify-center">
+                                        <div className="text-center">
+                                            <div className="text-sm text-blue-800 dark:text-blue-200 mb-1">평균 일일 사용량</div>
+                                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                                {Math.round(requestsStats.weekly.currentCount / 7).toLocaleString()}
+                                            </div>
+                                            <div className="text-sm text-blue-600 dark:text-blue-300">토큰/일</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
 
-                {/* 최근 구매내역 */}
-                <div className="theme-card p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <PaymentHistoryTable />
+                    {/* 최근 구매내역 */}
+                    <div className="theme-card p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <PaymentHistoryTable />
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* 토큰 충전 모달 */}
             <Modal
@@ -524,6 +527,16 @@ export default function DashboardBilling() {
                     </div>
                 </div>
             </Modal>
+
+            {/* 에러 모달 */}
+            <ErrorModal
+                isOpen={errorState.isOpen}
+                onClose={closeError}
+                onRetry={handleRetry}
+                message={errorState.message}
+                isRetrying={isRetrying}
+                title={errorState.title || "데이터 로드 실패"}
+            />
         </DashboardLayout>
     );
 }  

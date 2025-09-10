@@ -3,9 +3,11 @@ import DashboardLayout from '../dashboard/DashboardLayout';
 import UsageChart from '../ui/UsageChart';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import Modal from '../ui/Modal';
+import ErrorModal from '../ui/ErrorModal';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { useAuthStore } from '../../stores/authStore';
 import { paymentAPI } from '../../services/api';
+import useErrorHandler from '../../hooks/useErrorHandler';
 import greenCheckIcon from '@/assets/images/green_check_icon.png?format=webp&q=90';
 import blueCheckIcon from '@/assets/images/blue_check_icon.png?format=webp&q=90';
 import yellowAlertIcon from '@/assets/images/yellow_alert_icon.png?format=webp&q=90';
@@ -21,6 +23,9 @@ export default function DashboardOverview() {
     };
 
     const { user } = useAuthStore();
+
+    // 에러 처리 훅
+    const { errorState, closeError, handleRetry, executeWithErrorHandling, executeAllWithErrorHandling, isRetrying } = useErrorHandler();
     const {
         selectedPeriod,
         usageData: chartUsageData,
@@ -106,24 +111,66 @@ export default function DashboardOverview() {
 
     // 컴포넌트 마운트 시 통계 데이터 로드 (초기에는 항상 '전체' 기간으로)
     useEffect(() => {
-        loadAllRequestsStats();
-        loadStatisticsSummary(null, '전체'); // 초기 로드 시에는 항상 '전체'로 고정
-        // 최근 활동용 7일 통계 데이터 로드
-        loadStatisticsSummary(null, '7일');
-        // 사용자 정보 새로고침
-        const { getProfile } = useAuthStore.getState();
-        getProfile({ showLoading: false });
-        // 앱 목록 새로고침
-        refreshApplications();
-        isInitialLoad.current = false;
-    }, [loadAllRequestsStats, loadStatisticsSummary, refreshApplications]);
+        const loadInitialData = async () => {
+            try {
+                // 모든 API 호출을 에러 처리와 함께 실행 (모든 API가 성공해야만 완료)
+                const allSuccessful = await executeAllWithErrorHandling([
+                    {
+                        apiCall: () => loadAllRequestsStats(),
+                        operation: '사용량 통계 로드',
+                        onSuccess: () => console.log('✅ 사용량 통계 로드 완료')
+                    },
+                    {
+                        apiCall: () => loadStatisticsSummary(null, '전체'),
+                        operation: '전체 기간 통계 로드',
+                        onSuccess: () => console.log('✅ 전체 기간 통계 로드 완료')
+                    },
+                    {
+                        apiCall: () => loadStatisticsSummary(null, '7일'),
+                        operation: '최근 활동 통계 로드',
+                        onSuccess: () => console.log('✅ 최근 활동 통계 로드 완료')
+                    },
+                    {
+                        apiCall: () => {
+                            const { getProfile } = useAuthStore.getState();
+                            return getProfile({ showLoading: false });
+                        },
+                        operation: '사용자 정보 로드',
+                        onSuccess: () => console.log('✅ 사용자 정보 로드 완료')
+                    },
+                    {
+                        apiCall: () => refreshApplications(),
+                        operation: '앱 목록 로드',
+                        onSuccess: () => console.log('✅ 앱 목록 로드 완료')
+                    }
+                ]);
+
+                if (allSuccessful) {
+                    console.log('✅ 모든 초기 데이터 로드 완료');
+                    isInitialLoad.current = false; // 성공한 경우에만 로딩 완료
+                } else {
+                    console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
+                    // 실패한 경우에는 로딩 상태 유지 (isInitialLoad.current = true)
+                }
+            } catch (error) {
+                console.error('❌ 초기 데이터 로드 중 예상치 못한 오류:', error);
+                // 예상치 못한 오류의 경우에도 로딩 상태 유지 (에러 모달 표시를 위해)
+                // isInitialLoad.current는 그대로 true로 유지
+            }
+        };
+
+        loadInitialData();
+    }, [loadAllRequestsStats, loadStatisticsSummary, refreshApplications, executeAllWithErrorHandling]);
 
     // 기간 변경 시 데이터 로드 (초기 로드가 아닌 경우에만)
     useEffect(() => {
         if (!isInitialLoad.current) {
-            loadStatisticsSummary(null, selectedPeriod);
+            executeWithErrorHandling(
+                () => loadStatisticsSummary(null, selectedPeriod),
+                '기간별 통계 로드'
+            );
         }
-    }, [selectedPeriod, loadStatisticsSummary]);
+    }, [selectedPeriod, loadStatisticsSummary, executeWithErrorHandling]);
 
     // 사용자 정보가 변경될 때마다 설정 불러오기
     useEffect(() => {
@@ -143,8 +190,11 @@ export default function DashboardOverview() {
 
     // 결제 내역 확인
     useEffect(() => {
-        checkPaymentHistory();
-    }, [checkPaymentHistory]);
+        executeWithErrorHandling(
+            () => checkPaymentHistory(),
+            '결제 내역 확인'
+        );
+    }, [checkPaymentHistory, executeWithErrorHandling]);
 
     // 앱이 0개일 때 모달 표시 (화면이 뜬 후에 체크)
     useEffect(() => {
@@ -171,7 +221,7 @@ export default function DashboardOverview() {
                 setHasShownAppModal(false);
             }
         }
-    }, [apps.length, isAppsLoading, isInitialLoad, hasShownAppModal]);
+    }, [apps, isAppsLoading, isInitialLoad, hasShownAppModal, showAppCreateModal]);
 
     // 앱 생성 모달 닫기
     const handleCloseAppCreateModal = () => {
@@ -241,261 +291,257 @@ export default function DashboardOverview() {
     // 모든 데이터가 로드될 때까지 로딩 표시
     const isDataLoading = isLoading || isAppsLoading || isPaymentHistoryLoading || !user || isInitialLoad.current;
 
-    if (isDataLoading) {
-        return (
-            <DashboardLayout>
-                <div className="flex flex-col justify-center items-center h-64 space-y-4">
-                    <LoadingSpinner />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                        데이터를 불러오는 중...
-                    </p>
-                </div>
-            </DashboardLayout>
-        );
-    }
-
     return (
         <DashboardLayout
             title="대시보드 개요"
             subtitle="서비스 이용 현황과 계정 정보를 확인하세요"
         >
-            <div className="space-y-6">
-                {/* 토큰 사용량 경고 */}
-                {shouldShowUsageWarning() && (
-                    <div className="p-6 rounded-lg border-2 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20">
-                        <div className="flex items-start gap-4">
-                            <div className="flex-shrink-0">
-                                <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                </svg>
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
-                                    토큰 사용량 경고
-                                </h3>
-                                <p className="text-yellow-700 dark:text-yellow-300 mb-4">
-                                    보유 토큰이 설정한 경고 임계값({usageWarningThreshold.toLocaleString()} 토큰) 이하로 떨어졌습니다.
-                                </p>
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm text-yellow-600 dark:text-yellow-400">
-                                        현재 보유: <span className="font-semibold">{user?.token?.toLocaleString() || 0} 토큰</span>
+            {isDataLoading ? (
+                <div className="flex flex-col justify-center items-center h-64 space-y-4 bg-transparent">
+                    <LoadingSpinner />
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        데이터를 불러오는 중...
+                    </p>
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    {/* 토큰 사용량 경고 */}
+                    {shouldShowUsageWarning() && (
+                        <div className="p-6 rounded-lg border-2 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20">
+                            <div className="flex items-start gap-4">
+                                <div className="flex-shrink-0">
+                                    <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                                        토큰 사용량 경고
+                                    </h3>
+                                    <p className="text-yellow-700 dark:text-yellow-300 mb-4">
+                                        보유 토큰이 설정한 경고 임계값({usageWarningThreshold.toLocaleString()} 토큰) 이하로 떨어졌습니다.
+                                    </p>
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-sm text-yellow-600 dark:text-yellow-400">
+                                            현재 보유: <span className="font-semibold">{user?.token?.toLocaleString() || 0} 토큰</span>
+                                        </div>
+                                        <button
+                                            onClick={() => window.location.href = '/dashboard/billing'}
+                                            className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors"
+                                        >
+                                            토큰 충전하기
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={() => window.location.href = '/dashboard/billing'}
-                                        className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors"
-                                    >
-                                        토큰 충전하기
-                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* 현재 요금제 */}
-                <div className="p-5 rounded-lg theme-card">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-2xl">{currentPlanInfo.icon}</span>
-                                <p className="text-2xl md:text-3xl font-bold theme-text-primary">{currentPlanInfo.name}</p>
+                    {/* 현재 요금제 */}
+                    <div className="p-5 rounded-lg theme-card">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-2xl">{currentPlanInfo.icon}</span>
+                                    <p className="text-2xl md:text-3xl font-bold theme-text-primary">{currentPlanInfo.name}</p>
+                                </div>
+                                <p className="text-base theme-text-secondary mb-3">{currentPlanInfo.description}</p>
+
+                                {/* 기능 목록 */}
+                                <div className="space-y-1">
+                                    {currentPlanInfo.features.map((feature, index) => (
+                                        <div key={index} className="flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                                            <span className="text-sm theme-text-secondary">{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            <p className="text-base theme-text-secondary mb-3">{currentPlanInfo.description}</p>
+                            <div className="text-right">
+                                <p className="text-sm theme-text-secondary">보유 토큰</p>
+                                <p className="text-3xl md:text-4xl font-bold theme-blue-accent">
+                                    {user?.token ? user.token.toLocaleString() : '0'}
+                                </p>
+                                <p className="text-sm theme-text-secondary">토큰</p>
+                            </div>
+                        </div>
+                    </div>
 
-                            {/* 기능 목록 */}
-                            <div className="space-y-1">
-                                {currentPlanInfo.features.map((feature, index) => (
-                                    <div key={index} className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                                        <span className="text-sm theme-text-secondary">{feature}</span>
+                    {/* 전체 사용량 (API 데이터 연동) */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-5 rounded-lg theme-card text-center">
+                            <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>당일</h3>
+                            {requestsStats.daily.loading ? (
+                                <div className="flex justify-center items-center h-20">
+                                    <LoadingSpinner />
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.daily.currentCount.toLocaleString()}</p>
+                                    <div className="mt-2 inline-flex items-center gap-2 justify-center">
+                                        {requestsStats.daily.rate > 0 ? (
+                                            <>
+                                                <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
+                                                <span className="text-lg md:text-xl font-bold theme-success">+{Math.ceil(requestsStats.daily.rate)}%</span>
+                                            </>
+                                        ) : requestsStats.daily.rate < 0 ? (
+                                            <>
+                                                <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                                <span className="text-lg md:text-xl font-bold theme-error">{Math.ceil(requestsStats.daily.rate)}%</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="2" rx="1" /></svg>
+                                                <span className="text-lg md:text-xl font-bold text-yellow-500">0%</span>
+                                            </>
+                                        )}
                                     </div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="p-5 rounded-lg theme-card text-center">
+                            <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>이번 주</h3>
+                            {requestsStats.weekly.loading ? (
+                                <div className="flex justify-center items-center h-20">
+                                    <LoadingSpinner />
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.weekly.currentCount.toLocaleString()}</p>
+                                    <div className="mt-2 inline-flex items-center gap-2 justify-center">
+                                        {requestsStats.weekly.rate > 0 ? (
+                                            <>
+                                                <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
+                                                <span className="text-lg md:text-xl font-bold theme-success">+{Math.ceil(requestsStats.weekly.rate)}%</span>
+                                            </>
+                                        ) : requestsStats.weekly.rate < 0 ? (
+                                            <>
+                                                <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                                <span className="text-lg md:text-xl font-bold theme-error">{Math.ceil(requestsStats.weekly.rate)}%</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="2" rx="1" /></svg>
+                                                <span className="text-lg md:text-xl font-bold text-yellow-500">0%</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="p-5 rounded-lg theme-card text-center">
+                            <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>이번 달</h3>
+                            {requestsStats.monthly.loading ? (
+                                <div className="flex justify-center items-center h-20">
+                                    <LoadingSpinner />
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.monthly.currentCount.toLocaleString()}</p>
+                                    <div className="mt-2 inline-flex items-center gap-2 justify-center">
+                                        {requestsStats.monthly.rate > 0 ? (
+                                            <>
+                                                <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
+                                                <span className="text-lg md:text-xl font-bold theme-success">+{Math.ceil(requestsStats.monthly.rate)}%</span>
+                                            </>
+                                        ) : requestsStats.monthly.rate < 0 ? (
+                                            <>
+                                                <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
+                                                <span className="text-lg md:text-xl font-bold theme-error">{Math.ceil(requestsStats.monthly.rate)}%</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="2" rx="1" /></svg>
+                                                <span className="text-lg md:text-xl font-bold text-yellow-500">0%</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* 사용량 그래프 */}
+                    <div className="p-6 rounded-lg theme-card">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량</h3>
+                                {!isLoading && (
+                                    <span className={`${T.label} theme-text-secondary`}>{rangeLabel}</span>
+                                )}
+
+                            </div>
+                            <div className="flex gap-2">
+                                {periodOptions.map((period) => (
+                                    <button
+                                        key={period}
+                                        onClick={() => setPeriod(period)}
+                                        disabled={isLoading}
+                                        className={`px-3 py-1 rounded-lg text-sm font-medium transition ${selectedPeriod === period
+                                            ? 'theme-button-primary'
+                                            : 'theme-button-secondary'
+                                            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        {period}
+                                    </button>
                                 ))}
                             </div>
                         </div>
-                        <div className="text-right">
-                            <p className="text-sm theme-text-secondary">보유 토큰</p>
-                            <p className="text-3xl md:text-4xl font-bold theme-blue-accent">
-                                {user?.token ? user.token.toLocaleString() : '0'}
-                            </p>
-                            <p className="text-sm theme-text-secondary">토큰</p>
-                        </div>
-                    </div>
-                </div>
 
-                {/* 전체 사용량 (API 데이터 연동) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-5 rounded-lg theme-card text-center">
-                        <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>당일</h3>
-                        {requestsStats.daily.loading ? (
-                            <div className="flex justify-center items-center h-20">
-                                <LoadingSpinner />
-                            </div>
-                        ) : (
-                            <>
-                                <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.daily.currentCount.toLocaleString()}</p>
-                                <div className="mt-2 inline-flex items-center gap-2 justify-center">
-                                    {requestsStats.daily.rate > 0 ? (
-                                        <>
-                                            <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                            <span className="text-lg md:text-xl font-bold theme-success">+{Math.ceil(requestsStats.daily.rate)}%</span>
-                                        </>
-                                    ) : requestsStats.daily.rate < 0 ? (
-                                        <>
-                                            <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                            <span className="text-lg md:text-xl font-bold theme-error">{Math.ceil(requestsStats.daily.rate)}%</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="2" rx="1" /></svg>
-                                            <span className="text-lg md:text-xl font-bold text-yellow-500">0%</span>
-                                        </>
-                                    )}
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    <div className="p-5 rounded-lg theme-card text-center">
-                        <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>이번 주</h3>
-                        {requestsStats.weekly.loading ? (
-                            <div className="flex justify-center items-center h-20">
-                                <LoadingSpinner />
-                            </div>
-                        ) : (
-                            <>
-                                <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.weekly.currentCount.toLocaleString()}</p>
-                                <div className="mt-2 inline-flex items-center gap-2 justify-center">
-                                    {requestsStats.weekly.rate > 0 ? (
-                                        <>
-                                            <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                            <span className="text-lg md:text-xl font-bold theme-success">+{Math.ceil(requestsStats.weekly.rate)}%</span>
-                                        </>
-                                    ) : requestsStats.weekly.rate < 0 ? (
-                                        <>
-                                            <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                            <span className="text-lg md:text-xl font-bold theme-error">{Math.ceil(requestsStats.weekly.rate)}%</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="2" rx="1" /></svg>
-                                            <span className="text-lg md:text-xl font-bold text-yellow-500">0%</span>
-                                        </>
-                                    )}
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    <div className="p-5 rounded-lg theme-card text-center">
-                        <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>이번 달</h3>
-                        {requestsStats.monthly.loading ? (
-                            <div className="flex justify-center items-center h-20">
-                                <LoadingSpinner />
-                            </div>
-                        ) : (
-                            <>
-                                <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.monthly.currentCount.toLocaleString()}</p>
-                                <div className="mt-2 inline-flex items-center gap-2 justify-center">
-                                    {requestsStats.monthly.rate > 0 ? (
-                                        <>
-                                            <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                            <span className="text-lg md:text-xl font-bold theme-success">+{Math.ceil(requestsStats.monthly.rate)}%</span>
-                                        </>
-                                    ) : requestsStats.monthly.rate < 0 ? (
-                                        <>
-                                            <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                            <span className="text-lg md:text-xl font-bold theme-error">{Math.ceil(requestsStats.monthly.rate)}%</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="2" rx="1" /></svg>
-                                            <span className="text-lg md:text-xl font-bold text-yellow-500">0%</span>
-                                        </>
-                                    )}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
-
-                {/* 사용량 그래프 */}
-                <div className="p-6 rounded-lg theme-card">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량 현황</h3>
-                            {!isLoading && (
-                                <span className={`${T.label} theme-text-secondary`}>{rangeLabel}</span>
+                        <div className="h-80 min-w-0">
+                            {isLoading ? (
+                                <LoadingSpinner message="데이터를 불러오는 중..." className="h-full" />
+                            ) : (
+                                <UsageChart
+                                    data={chartUsageData}
+                                    selectedPeriod={selectedPeriod}
+                                />
                             )}
-
-                        </div>
-                        <div className="flex gap-2">
-                            {periodOptions.map((period) => (
-                                <button
-                                    key={period}
-                                    onClick={() => setPeriod(period)}
-                                    disabled={isLoading}
-                                    className={`px-3 py-1 rounded-lg text-sm font-medium transition ${selectedPeriod === period
-                                        ? 'theme-button-primary'
-                                        : 'theme-button-secondary'
-                                        } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    {period}
-                                </button>
-                            ))}
                         </div>
                     </div>
 
-                    <div className="h-80 min-w-0">
-                        {isLoading ? (
-                            <LoadingSpinner message="데이터를 불러오는 중..." className="h-full" />
-                        ) : (
-                            <UsageChart
-                                data={chartUsageData}
-                                selectedPeriod={selectedPeriod}
-                            />
-                        )}
+                    {/* 최근 활동 */}
+                    <div className="p-6 rounded-lg theme-card">
+                        <h3 className={`${T.sectionTitle} theme-text-primary mb-4`}>최근 7일 활동</h3>
+                        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                            <li className="py-4 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <img src={ICONS.info} alt="전체호출" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
+                                    <div>
+                                        <p className="font-semibold theme-text-primary">API 호출 성공</p>
+                                        <p className="text-sm theme-text-secondary">최근 7일</p>
+                                    </div>
+                                </div>
+                                <div className="text-sm theme-text-secondary">총 {activity.totalRequests.toLocaleString()}회 ({(activity.totalRequests * avgTokens).toLocaleString()} 토큰)</div>
+                            </li>
+                            <li className="py-4 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <img src={ICONS.success} alt="성공" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
+                                    <div>
+                                        <p className="font-semibold theme-text-primary">CAPTCHA 검증 성공</p>
+                                        <p className="text-sm theme-text-secondary">최근 7일</p>
+                                    </div>
+                                </div>
+                                <div className="text-sm theme-text-secondary">총 {activity.totalSuccess.toLocaleString()}회 ({(activity.totalSuccess * avgTokens).toLocaleString()} 토큰)</div>
+                            </li>
+                            <li className="py-4 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <img src={ICONS.error} alt="실패" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
+                                    <div>
+                                        <p className="font-semibold theme-text-primary">CAPTCHA 검증 실패</p>
+                                        <p className="text-sm theme-text-secondary">최근 7일</p>
+                                    </div>
+                                </div>
+                                <div className="text-sm theme-text-secondary">총 {activity.totalFail.toLocaleString()}회 ({(activity.totalFail * avgTokens).toLocaleString()} 토큰)</div>
+                            </li>
+                        </ul>
                     </div>
+
+
                 </div>
-
-                {/* 최근 활동 */}
-                <div className="p-6 rounded-lg theme-card">
-                    <h3 className={`${T.sectionTitle} theme-text-primary mb-4`}>최근 7일 활동</h3>
-                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                        <li className="py-4 flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <img src={ICONS.info} alt="전체호출" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
-                                <div>
-                                    <p className="font-semibold theme-text-primary">API 호출 성공</p>
-                                    <p className="text-sm theme-text-secondary">최근 7일</p>
-                                </div>
-                            </div>
-                            <div className="text-sm theme-text-secondary">총 {activity.totalRequests.toLocaleString()}회 ({(activity.totalRequests * avgTokens).toLocaleString()} 토큰)</div>
-                        </li>
-                        <li className="py-4 flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <img src={ICONS.success} alt="성공" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
-                                <div>
-                                    <p className="font-semibold theme-text-primary">CAPTCHA 검증 성공</p>
-                                    <p className="text-sm theme-text-secondary">최근 7일</p>
-                                </div>
-                            </div>
-                            <div className="text-sm theme-text-secondary">총 {activity.totalSuccess.toLocaleString()}회 ({(activity.totalSuccess * avgTokens).toLocaleString()} 토큰)</div>
-                        </li>
-                        <li className="py-4 flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <img src={ICONS.error} alt="실패" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
-                                <div>
-                                    <p className="font-semibold theme-text-primary">CAPTCHA 검증 실패</p>
-                                    <p className="text-sm theme-text-secondary">최근 7일</p>
-                                </div>
-                            </div>
-                            <div className="text-sm theme-text-secondary">총 {activity.totalFail.toLocaleString()}회 ({(activity.totalFail * avgTokens).toLocaleString()} 토큰)</div>
-                        </li>
-                    </ul>
-                </div>
-
-
-            </div>
+            )}
 
             {/* 앱 생성 모달 */}
             <Modal
@@ -535,6 +581,16 @@ export default function DashboardOverview() {
                     </div>
                 </div>
             </Modal>
+
+            {/* 에러 모달 */}
+            <ErrorModal
+                isOpen={errorState.isOpen}
+                onClose={closeError}
+                onRetry={handleRetry}
+                message={errorState.message}
+                isRetrying={isRetrying}
+                title={errorState.title || "데이터 로드 실패"}
+            />
         </DashboardLayout>
     );
 }
