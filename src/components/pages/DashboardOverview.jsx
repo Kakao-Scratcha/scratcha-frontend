@@ -51,6 +51,27 @@ export default function DashboardOverview() {
     const [showAppCreateModal, setShowAppCreateModal] = useState(false);
     const [hasShownAppModal, setHasShownAppModal] = useState(false);
 
+    // 이미지 프리로딩 (페이지 로딩 속도 개선)
+    useEffect(() => {
+        const preloadImages = () => {
+            const imageUrls = [
+                greenCheckIcon,
+                blueCheckIcon,
+                yellowAlertIcon,
+                redFailIcon
+            ];
+
+            imageUrls.forEach(url => {
+                const img = new Image();
+                img.src = url;
+            });
+
+            console.log('🖼️ 통계 아이콘 이미지 프리로딩 완료');
+        };
+
+        preloadImages();
+    }, []);
+
     // 주기적으로 사용자 정보 갱신
     useEffect(() => {
         const interval = setInterval(() => {
