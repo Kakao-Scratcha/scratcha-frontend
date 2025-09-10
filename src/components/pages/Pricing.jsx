@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 const PRICING_DATA = {
     title: "비즈니스 규모와 사용량에 맞춰 유연하게 선택하세요",
     subtitle: [
-        "Scratcha는 토큰 기반 과금으로, 사용한 만큼만 지불합니다.",
+        "scratCHA는 토큰 기반 과금으로, 사용한 만큼만 지불합니다.",
         "모든 요금제는 AI보안 CAPTCHA API와 기본 대시보드를 포함합니다."
     ],
     plans: [
@@ -62,16 +62,16 @@ const PRICING_DATA = {
         title: "자주 묻는 질문",
         questions: [
             {
-                question: "어떤 요금제로 변경할 수 있나요?",
-                answer: "Starter, Pro, Enterprise 중에 원하는 요금제로 언제든지 변경할 수 있습니다. 마이 페이지에서 관리하세요"
+                question: "어떤 요금제를 사용할 수 있나요?",
+                answer: "Starter, Pro, Enterprise 중에 원하는 요금제로 언제든지 토큰을 충전하여 사용할 수 있습니다."
             },
             {
-                question: "무료 플랜의 제약사항은 무엇인가요?",
-                answer: "무료 플랜은 매일 정해진 수의 토큰을 사용할 수 있으며, 일부 기능에 접근이 제한됩니다. 또한, 기본 UI에 광고가 포함됩니다."
+                question: "Free 요금제의 제약사항은 무엇인가요?",
+                answer: "Free 요금제는 정해진 수의 토큰을 사용할 수 있으며, 일부 기능에 접근이 제한됩니다."
             },
             {
-                question: "청구는 어떻게 되나요?",
-                answer: "이용 전 원하는 만큼 토큰을 선결제해 사용하실 수 있으며,\n모두 소진 시 추가로 결제하여 구매하실 수 있습니다."
+                question: "결제는 어떻게 되나요?",
+                answer: "이용 전 원하는 만큼 토큰을 선결제해 사용하실 수 있으며,\n모두 소진 시 추가로 결제하여 충전하실 수 있습니다."
             },
             {
                 question: "기술 지원을 받을 수 있나요?",

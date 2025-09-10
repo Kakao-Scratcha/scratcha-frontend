@@ -84,13 +84,13 @@ export default function DashboardOverview() {
             'free': {
                 name: 'Free',
                 icon: '🟦',
-                description: '기본 기능을 무료로 이용하세요',
+                description: '기본 기능을 무료로 체험해보세요',
                 features: ['기본 API 통계', '커뮤니티 지원']
             },
             'premium': {
                 name: 'Premium',
                 icon: '⭐',
-                description: '결제한 사용자 전용 혜택',
+                description: '프리미엄 사용자만의 특별한 혜택',
                 features: ['우선 지원', '고급 분석']
             }
         };
@@ -257,7 +257,7 @@ export default function DashboardOverview() {
     return (
         <DashboardLayout
             title="대시보드 개요"
-            subtitle="현재 플랜과 사용량을 확인하세요"
+            subtitle="서비스 이용 현황과 계정 정보를 확인하세요"
         >
             <div className="space-y-6">
                 {/* 토큰 사용량 경고 */}
@@ -325,7 +325,7 @@ export default function DashboardOverview() {
                 {/* 전체 사용량 (API 데이터 연동) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-5 rounded-lg theme-card text-center">
-                        <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>오늘 사용량</h3>
+                        <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>당일</h3>
                         {requestsStats.daily.loading ? (
                             <div className="flex justify-center items-center h-20">
                                 <LoadingSpinner />
@@ -422,7 +422,7 @@ export default function DashboardOverview() {
                 <div className="p-6 rounded-lg theme-card">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
-                            <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량 추이</h3>
+                            <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량 현황</h3>
                             {!isLoading && (
                                 <span className={`${T.label} theme-text-secondary`}>{rangeLabel}</span>
                             )}

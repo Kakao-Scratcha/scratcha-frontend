@@ -15,14 +15,14 @@ export default function Footer() {
                 {/* 좌측: 로고, 소셜 */}
                 <div className="flex flex-col gap-4 min-w-[180px] text-left">
                     <div className="font-bold text-xl theme-text-primary">
-                        SCRATCHA
+                        scratCHA
                     </div>
                     <p className="text-sm theme-text-secondary">
                         더 쉽고, 더 안전하고, 더 강력한 사용자 인증
                     </p>
                     <SocialLinks />
                     <span className="text-xs mt-4 theme-text-tertiary">
-                        © 2025 SCRATCHA. All rights reserved.
+                        © 2025 scratCHA. All rights reserved.
                     </span>
                 </div>
 

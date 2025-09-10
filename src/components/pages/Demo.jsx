@@ -14,7 +14,7 @@ export default function Demo() {
                         데모 체험
                     </h1>
                     <p className="text-xl md:text-2xl theme-text-secondary mb-8 max-w-3xl mx-auto">
-                        Scratcha 캡차의 실제 동작을 직접 체험해보세요
+                        scratCHA 캡차의 실제 동작을 직접 체험해보세요
                     </p>
                 </div>
 

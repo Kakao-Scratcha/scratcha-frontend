@@ -504,26 +504,31 @@ export default function DashboardApp() {
                                 return filteredApps;
                             })().map((app, index) => (
                                 <div key={`integrated_app_${app.id}`} className="relative">
-                                    {/* 연결선 (첫 번째가 아닌 경우) */}
-                                    {index > 0 && (
-                                        <div className="absolute -top-3 left-8 w-0.5 h-6 bg-gradient-to-b from-blue-200 to-transparent dark:from-blue-800"></div>
-                                    )}
-
                                     <div className="theme-card border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
                                         {/* APP 헤더 - 통합 버전 */}
                                         <div className="p-6">
                                             <div className="flex items-center justify-between mb-4">
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-4 min-w-0 flex-1">
                                                     {/* APP 번호 표시 */}
-                                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-sm">
+                                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-sm flex-shrink-0">
                                                         {index + 1}
                                                     </div>
-                                                    <div>
-                                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{app.name}</h3>
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400">{app.description}</p>
+                                                    <div className="min-w-0 flex-1">
+                                                        <h3
+                                                            className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate cursor-help"
+                                                            title={app.name}
+                                                        >
+                                                            {app.name}
+                                                        </h3>
+                                                        <p
+                                                            className="text-sm text-gray-600 dark:text-gray-400 truncate"
+                                                            title={app.description}
+                                                        >
+                                                            {app.description}
+                                                        </p>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-3 flex-shrink-0">
                                                     {/* 난이도 표시 - API 키가 있을 때만 표시 */}
                                                     {apiKeys.filter(key => key.appId === app.id).length > 0 && (
                                                         <button
@@ -716,7 +721,7 @@ export default function DashboardApp() {
                                                                             >
                                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                     {apiKey.status === 'active' ? (
-                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM15 9l-6 6M9 9l6 6" />
                                                                                     ) : (
                                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                                                     )}
@@ -924,8 +929,18 @@ export default function DashboardApp() {
                     {selectedApp && (
                         <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                             <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">선택한 APP</p>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">{selectedApp.name}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{selectedApp.description}</p>
+                            <p
+                                className="font-medium text-gray-900 dark:text-gray-100 truncate cursor-help"
+                                title={selectedApp.name}
+                            >
+                                {selectedApp.name}
+                            </p>
+                            <p
+                                className="text-sm text-gray-600 dark:text-gray-400 truncate cursor-help"
+                                title={selectedApp.description}
+                            >
+                                {selectedApp.description}
+                            </p>
                         </div>
                     )}
                     <div>
@@ -999,8 +1014,18 @@ export default function DashboardApp() {
                     {selectedApp && (
                         <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                             <p className="font-medium text-gray-900 dark:text-gray-100 mb-1">삭제할 APP:</p>
-                            <p className="text-gray-900 dark:text-gray-100">{selectedApp.name}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{selectedApp.description}</p>
+                            <p
+                                className="text-gray-900 dark:text-gray-100 truncate cursor-help"
+                                title={selectedApp.name}
+                            >
+                                {selectedApp.name}
+                            </p>
+                            <p
+                                className="text-sm text-gray-600 dark:text-gray-400 truncate cursor-help"
+                                title={selectedApp.description}
+                            >
+                                {selectedApp.description}
+                            </p>
                         </div>
                     )}
 
@@ -1095,8 +1120,16 @@ export default function DashboardApp() {
                     {selectedApiKey && (
                         <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                             <p className="font-medium text-gray-900 dark:text-gray-100 mb-1">삭제할 API 키:</p>
-                            <p className="text-gray-900 dark:text-gray-100">{selectedApiKey.name}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                            <p
+                                className="text-gray-900 dark:text-gray-100 truncate cursor-help"
+                                title={selectedApiKey.name}
+                            >
+                                {selectedApiKey.name}
+                            </p>
+                            <p
+                                className="text-sm text-gray-600 dark:text-gray-400 font-mono truncate cursor-help"
+                                title={selectedApiKey.key}
+                            >
                                 {maskApiKey(selectedApiKey.key)}
                             </p>
                         </div>
@@ -1157,7 +1190,10 @@ export default function DashboardApp() {
                 {selectedAppForDifficulty && (
                     <div className="space-y-4">
                         <div>
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                            <h3
+                                className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 truncate cursor-help"
+                                title={selectedAppForDifficulty.name}
+                            >
                                 {selectedAppForDifficulty.name}
                             </h3>
                             <p className="text-sm text-gray-600 dark:text-gray-400">

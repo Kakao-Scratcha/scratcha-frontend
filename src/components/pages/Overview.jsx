@@ -14,7 +14,7 @@ export default function Overview() {
                             AI가 뚫을 수 없는 새로운 CAPTCHA.
                         </h2>
                         <p className="text-lg theme-text-secondary mb-12 text-left">
-                            Scratcha는 이미지를 긁어 숨겨진 그림을 확인하고, 정답을 맞추는 2단계 인증 방식으로<br />
+                            scratCHA는 이미지를 긁어 숨겨진 그림을 확인하고, 정답을 맞추는 2단계 인증 방식으로<br />
                             기존 문자 입력·그림 클릭 CAPTCHA보다 빠르고 안전한 보안을 제공합니다.
                         </p>
                     </div>
@@ -90,7 +90,7 @@ export default function Overview() {
                                 초고속 인증
                             </h3>
                             <p className="theme-text-secondary">
-                                평균 d.d초 이내 인증 완료<br />
+                                평균 3.2초 이내 인증 완료<br />
                                 사용자 이탈률을 최소화합니다.
                             </p>
                         </div>
@@ -181,10 +181,10 @@ export default function Overview() {
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
-                            Scratcha 작동 방식
+                            scratCHA 작동 방식
                         </h2>
                         <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                            Scratcha는 행동 데이터와 정답 결과를 함께 검증해<br />
+                            scratCHA는 행동 데이터와 정답 결과를 함께 검증해<br />
                             봇을 차단합니다.
                         </p>
                     </div>
