@@ -173,7 +173,7 @@ export default function PaymentHistoryTable() {
 
     return (
         <DataTable
-            title="최근 구매내역"
+            title="구매 내역"
             subtitle={(() => {
                 const total = paymentHistory.total || 0;
                 const page = currentPage || 1;

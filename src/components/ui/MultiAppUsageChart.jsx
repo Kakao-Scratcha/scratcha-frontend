@@ -2,6 +2,25 @@ import React from 'react';
 import Chart from './Chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from '../../utils/chartImports';
 
+// 커스텀 툴팁 컴포넌트
+const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg">
+                <p className="text-gray-200 font-medium mb-2">
+                    {label && label.length > 15 ? `${label.substring(0, 15)}...` : label}
+                </p>
+                {payload.map((entry, index) => (
+                    <p key={index} className="text-sm" style={{ color: entry.color }}>
+                        {entry.name && entry.name.length > 15 ? `${entry.name.substring(0, 15)}...` : entry.name}: {entry.value}
+                    </p>
+                ))}
+            </div>
+        );
+    }
+    return null;
+};
+
 // 기간별 X축 라벨 포맷터
 const createXTickFormatter = (selectedPeriod) => (value) => {
     if (selectedPeriod === '당일') {
@@ -121,14 +140,7 @@ export default function MultiAppUsageChart({
                     domain={[0, (dataMax) => (Math.max(1, dataMax))]}
                     allowDataOverflow={false}
                 />
-                <Tooltip
-                    contentStyle={{
-                        backgroundColor: 'rgb(31 41 55)',
-                        border: '1px solid rgb(75 85 99)',
-                        borderRadius: '8px',
-                        color: 'rgb(243 244 246)'
-                    }}
-                />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend
                     wrapperStyle={{
                         paddingTop: '20px',

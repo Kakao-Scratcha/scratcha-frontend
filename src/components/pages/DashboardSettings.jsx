@@ -242,7 +242,7 @@ export default function DashboardSettings() {
     return (
         <DashboardLayout
             title="설정"
-            subtitle="계정 설정을 관리하세요"
+            subtitle="설정을 관리하세요"
         >
             <div className="space-y-8">
                 {/* 사용량 경고 설정 */}
@@ -287,6 +287,9 @@ export default function DashboardSettings() {
                                             <option value={3000}>3,000 토큰</option>
                                             <option value={5000}>5,000 토큰</option>
                                             <option value={10000}>10,000 토큰</option>
+                                            <option value={30000}>30,000 토큰</option>
+                                            <option value={50000}>50,000 토큰</option>
+                                            <option value={100000}>100,000 토큰</option>
                                         </select>
                                         <div className="text-sm text-gray-600 dark:text-gray-400">
                                             현재 설정: <span className="font-medium text-blue-600 dark:text-blue-400">{usageWarningThreshold.toLocaleString()} 토큰</span>
@@ -353,12 +356,6 @@ export default function DashboardSettings() {
                 bodyClassName="pt-2 pb-6 px-6"
             >
                 <form onSubmit={handleNameChange} className="space-y-4">
-                    {/* 아바타 */}
-                    <div className="flex justify-center mt-0">
-                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-xl md:text-2xl font-semibold text-gray-700 dark:text-gray-200">
-                            {getServerUserName(user).charAt(0).toUpperCase() || 'U'}
-                        </div>
-                    </div>
 
                     {/* 아이디(이메일) */}
                     <div>
@@ -462,7 +459,7 @@ export default function DashboardSettings() {
                             <li>탈퇴 후 30일간 데이터 보관, 이후 완전 삭제되어 복구 불가</li>
                             <li>남은 토큰은 환불·이전 불가 (30일 경과 시 즉시 소멸)</li>
                             <li>30일 이내 복구 시 문의 절차 필수</li>
-                            <li>탈퇴 시, 모든 데이터와 권한이 사라집니다</li>
+                            <li>탈퇴 시, 30일 후 모든 데이터와 권한이 완전히 삭제됩니다</li>
                         </ul>
                     </div>
 

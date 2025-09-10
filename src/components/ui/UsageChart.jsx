@@ -2,6 +2,25 @@ import React from 'react';
 import Chart from './Chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from '../../utils/chartImports';
 
+// 커스텀 툴팁 컴포넌트
+const CustomTooltip = ({ active, payload, label, appName }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg">
+                <p className="text-gray-200 font-medium mb-2">
+                    {label && label.length > 15 ? `${label.substring(0, 15)}...` : label}
+                </p>
+                {appName && (
+                    <p className="text-sm" style={{ color: payload[0]?.color || 'rgb(59 130 246)' }}>
+                        {appName.length > 15 ? `${appName.substring(0, 15)}...` : appName}: {payload[0]?.value}
+                    </p>
+                )}
+            </div>
+        );
+    }
+    return null;
+};
+
 // 기간별 X축 라벨 포맷터
 const createXTickFormatter = (selectedPeriod) => (value) => {
     if (selectedPeriod === '당일') {
@@ -70,7 +89,8 @@ export default function UsageChart({
     margin = { top: 40, right: 12, bottom: 40, left: 12 },
     showGrid = true,
     allowDecimals = false,
-    className = ""
+    className = "",
+    appName = null
 }) {
     const xTickFormatter = createXTickFormatter(selectedPeriod);
     const formattedData = formatDataByPeriod(data, selectedPeriod);
@@ -104,14 +124,7 @@ export default function UsageChart({
                     domain={[0, (dataMax) => (Math.max(1, dataMax))]}
                     allowDataOverflow={false}
                 />
-                <Tooltip
-                    contentStyle={{
-                        backgroundColor: 'rgb(31 41 55)',
-                        border: '1px solid rgb(75 85 99)',
-                        borderRadius: '8px',
-                        color: 'rgb(243 244 246)'
-                    }}
-                />
+                <Tooltip content={(props) => <CustomTooltip {...props} appName={appName} />} />
                 <Line
                     type="monotone"
                     dataKey={dataKey}

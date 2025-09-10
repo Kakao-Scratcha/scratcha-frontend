@@ -422,7 +422,7 @@ export default function DashboardOverview() {
                 <div className="p-6 rounded-lg theme-card">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
-                            <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량 현황</h3>
+                            <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량</h3>
                             {!isLoading && (
                                 <span className={`${T.label} theme-text-secondary`}>{rangeLabel}</span>
                             )}

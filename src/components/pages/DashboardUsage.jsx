@@ -389,7 +389,7 @@ export default function DashboardUsage() {
     return (
         <DashboardLayout
             title="사용량"
-            subtitle="API 호출 로그 및 상세 통계를 확인하세요"
+            subtitle="API 사용 현황을 한눈에 확인해보세요"
         >
             <div className="space-y-6">
 
@@ -408,7 +408,13 @@ export default function DashboardUsage() {
                                 >
                                     <option value="all">전체</option>
                                     {apps.map(app => (
-                                        <option key={app.id} value={app.id}>{app.name}</option>
+                                        <option
+                                            key={app.id}
+                                            value={app.id}
+                                            title={app.name}
+                                        >
+                                            {app.name.length > 15 ? `${app.name.substring(0, 15)}...` : app.name}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
@@ -468,7 +474,7 @@ export default function DashboardUsage() {
                                 <div className="p-6 rounded-lg theme-card">
                                     <div className="flex justify-between items-center mb-6">
                                         <div className="flex items-center gap-4">
-                                            <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량 추이</h3>
+                                            <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량</h3>
                                             {!isLoading && (
                                                 <span className={`${T.label} theme-text-secondary`}>{rangeLabel}</span>
                                             )}
@@ -495,6 +501,7 @@ export default function DashboardUsage() {
                                                         data={usageData}
                                                         selectedPeriod={selectedPeriod}
                                                         height="h-80"
+                                                        appName={apps.find(app => String(app.id) === String(selectedAppId))?.name}
                                                     />
                                                 </div>
                                             )
