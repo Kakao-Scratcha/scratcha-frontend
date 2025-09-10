@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { paymentAPI } from '../../services/api';
 import DataTable from './DataTable';
 
-export default function PaymentHistoryTable() {
+export default function PaymentHistoryTable({ onLoadingChange }) {
     const [paymentHistory, setPaymentHistory] = useState({
         data: [],
         total: 0,
@@ -19,6 +19,7 @@ export default function PaymentHistoryTable() {
     const loadPaymentHistory = async (page = 1, limit = 20) => {
         setPaymentHistory(prev => ({ ...prev, loading: true, error: null }));
         setCurrentPage(page); // 현재 페이지 업데이트
+        onLoadingChange?.(true); // 부모 컴포넌트에 로딩 시작 알림
 
         try {
             const response = await paymentAPI.getPaymentHistory(page, limit);
@@ -35,6 +36,7 @@ export default function PaymentHistoryTable() {
                 loading: false,
                 error: null
             });
+            onLoadingChange?.(false); // 부모 컴포넌트에 로딩 완료 알림
         } catch (error) {
             console.error('구매내역 로드 오류:', error);
             setPaymentHistory(prev => ({
@@ -42,6 +44,7 @@ export default function PaymentHistoryTable() {
                 loading: false,
                 error: error.response?.data?.detail || '구매내역을 불러오는데 실패했습니다.'
             }));
+            onLoadingChange?.(false); // 부모 컴포넌트에 로딩 완료 알림
         }
     };
 

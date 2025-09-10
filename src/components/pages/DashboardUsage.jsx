@@ -4,7 +4,10 @@ import UsageChart from '../ui/UsageChart';
 import MultiAppUsageChart from '../ui/MultiAppUsageChart';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import DataTable from '../ui/DataTable';
+import Modal from '../ui/Modal';
+import ErrorModal from '../ui/ErrorModal';
 import { useDashboardStore } from '../../stores/dashboardStore';
+import useErrorHandler from '../../hooks/useErrorHandler';
 
 export default function DashboardUsage() {
     // Typography scale for consistency with Overview
@@ -12,6 +15,13 @@ export default function DashboardUsage() {
         sectionTitle: 'text-lg font-semibold',
         label: 'text-sm'
     };
+
+    // 에러 처리 훅 (투트랙 시스템)
+    const { errorState, closeError, handleRetry, executeAllWithErrorHandling, isRetrying } = useErrorHandler();
+
+    // 액션별 에러 모달 상태 (개별 에러 처리용)
+    const [_errorModal, setErrorModal] = useState({ isOpen: false, message: '' });
+
     const {
         apps,
         apiKeys,
@@ -23,19 +33,41 @@ export default function DashboardUsage() {
         changeLogPage,
         refreshApplications,
         loadStatisticsSummary,
-        loadMultiAppStatistics
+        loadMultiAppStatistics,
+        isLoading
     } = useDashboardStore();
 
     const [selectedAppId, setSelectedAppId] = useState('all');
     const [selectedApiKeyId, setSelectedApiKeyId] = useState('all');
     const [selectedPeriod, setSelectedPeriod] = useState('전체');
     const [viewMode, setViewMode] = useState('graph'); // 'graph' or 'table'
-    const [isLoading, setIsLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
 
+    // 초기 로드 완료 여부 추적
+    const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+
     // 선택된 APP의 API 키들 (전체 선택 시 모든 API 키)
     const appApiKeys = selectedAppId === 'all' ? apiKeys : apiKeys.filter(key => String(key.appId) === String(selectedAppId));
+
+    // 액션별 에러 처리 함수
+    const handleApiError = (error, operation) => {
+        console.error(`❌ ${operation} 실패:`, error);
+        let errorMessage = '데이터를 불러오는데 실패했습니다.';
+
+        if (error.response?.status === 404) {
+            errorMessage = '요청한 데이터를 찾을 수 없습니다.';
+        } else if (error.response?.status === 500) {
+            errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        } else if (error.response?.status === 401) {
+            errorMessage = '인증이 필요합니다. 다시 로그인해주세요.';
+        }
+
+        setErrorModal({
+            isOpen: true,
+            message: errorMessage
+        });
+    };
 
 
 
@@ -91,127 +123,96 @@ export default function DashboardUsage() {
         return `${s.getFullYear()}년 ${s.getMonth() + 1}월 ~ ${now.getFullYear()}년 ${now.getMonth() + 1}월`;
     })();
 
-    // 컴포넌트 마운트 시 애플리케이션 데이터 로드
+    // 컴포넌트 마운트 시 필수 데이터 로드 (투트랙 시스템 - 페이지 로드 에러)
     useEffect(() => {
-        refreshApplications();
-    }, [refreshApplications]);
+        const loadInitialData = async () => {
+            try {
+                // 모든 API 호출을 에러 처리와 함께 실행 (모든 API가 성공해야만 완료)
+                const allSuccessful = await executeAllWithErrorHandling([
+                    {
+                        apiCall: () => refreshApplications(),
+                        operation: '앱 목록 로드',
+                        onSuccess: () => console.log('✅ 앱 목록 로드 완료')
+                    },
+                    {
+                        apiCall: () => loadMultiAppStatistics('전체'),
+                        operation: '전체 앱 통계 로드',
+                        onSuccess: () => console.log('✅ 전체 앱 통계 로드 완료')
+                    }
+                ]);
+
+                if (allSuccessful) {
+                    console.log('✅ 모든 초기 데이터 로드 완료');
+                    setIsInitialLoadComplete(true); // 성공한 경우에만 초기 로드 완료
+                } else {
+                    console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
+                    // 실패한 경우에는 초기 로드 상태 유지 (isInitialLoadComplete = false)
+                }
+            } catch (error) {
+                console.error('❌ 초기 데이터 로드 중 예상치 못한 오류:', error);
+                // 예상치 못한 오류의 경우에도 초기 로드 상태 유지
+            }
+        };
+
+        loadInitialData();
+    }, [refreshApplications, loadMultiAppStatistics, executeAllWithErrorHandling]);
 
 
 
-    // API 로그 초기 로드
+    // 필터 변경 시 데이터 업데이트 (투트랙 시스템 - 액션별 에러)
     useEffect(() => {
-        const periodType = getPeriodType(selectedPeriod);
-
-        // 테이블 뷰일 때 로그 데이터 로드
-        if (viewMode === 'table') {
-            if (selectedApiKeyId === 'all') {
-                loadAllLogs(1, itemsPerPage, periodType);
-            } else {
-                loadLogsByKeyId(selectedApiKeyId, 1, itemsPerPage, periodType);
-            }
-        }
-
-        // 그래프 뷰일 때 통계 요약 데이터 로드
-        if (viewMode === 'graph') {
-            if (selectedAppId === 'all') {
-                // 전체 선택 시 다중 앱 통계 로드
-                loadMultiAppStatistics(selectedPeriod);
-            } else {
-                // 특정 앱 선택 시 기존 방식
-                const keyId = selectedApiKeyId === 'all' ? null : selectedApiKeyId;
-                loadStatisticsSummary(keyId, selectedPeriod);
-            }
-        }
-    }, [itemsPerPage, selectedPeriod, viewMode, selectedApiKeyId, selectedAppId, loadAllLogs, loadLogsByKeyId, loadStatisticsSummary, loadMultiAppStatistics]);
-
-    // 필터 변경 시 데이터 업데이트 (기간 변경 시에만)
-    useEffect(() => {
-        setIsLoading(true);
-
-        // 스토어 기간 동기화
-        setGlobalPeriod(selectedPeriod);
-
-        // periodType 변환
-        const periodType = getPeriodType(selectedPeriod);
-
-        // API 로그 로드
-        if (selectedApiKeyId === 'all') {
-            loadAllLogs(1, itemsPerPage, periodType);
-        } else {
-            loadLogsByKeyId(selectedApiKeyId, 1, itemsPerPage, periodType);
-        }
-
-        // 그래프 뷰일 때 통계 요약 데이터 로드
-        if (viewMode === 'graph') {
-            if (selectedAppId === 'all') {
-                // 전체 선택 시 다중 앱 통계 로드
-                loadMultiAppStatistics(selectedPeriod);
-            } else {
-                // 특정 앱 선택 시 기존 방식
-                const keyId = selectedApiKeyId === 'all' ? null : selectedApiKeyId;
-                loadStatisticsSummary(keyId, selectedPeriod);
-            }
-        }
-
-        // 테이블 뷰일 때도 기간에 따른 로그 데이터 로드
-        if (viewMode === 'table') {
-            const periodType = getPeriodType(selectedPeriod);
-            if (selectedApiKeyId === 'all') {
-                loadAllLogs(1, itemsPerPage, periodType);
-            } else {
-                loadLogsByKeyId(selectedApiKeyId, 1, itemsPerPage, periodType);
-            }
-        }
-
-        // 로딩 시뮬레이션
-        setTimeout(() => {
-            setIsLoading(false);
-        }, 500);
-    }, [selectedPeriod, selectedApiKeyId, selectedAppId, itemsPerPage, viewMode, setGlobalPeriod, loadAllLogs, loadLogsByKeyId, loadStatisticsSummary, loadMultiAppStatistics]);
-
-    // 필터 변경 시 API 로그 업데이트 (디바운스 적용)
-    useEffect(() => {
-        // 디바운스로 중복 API 호출 방지
-        const timeoutId = setTimeout(() => {
-            setIsLoading(true);
+        const updateData = async () => {
+            // 초기 로드가 완료된 후에만 실행
+            if (!isInitialLoadComplete) return;
 
             const periodType = getPeriodType(selectedPeriod);
 
-            if (selectedApiKeyId === 'all') {
-                loadAllLogs(1, itemsPerPage, periodType);
-            } else {
-                loadLogsByKeyId(selectedApiKeyId, 1, itemsPerPage, periodType);
+            // 테이블 뷰일 때 로그 데이터 로드 (액션별 에러 처리)
+            if (viewMode === 'table') {
+                if (selectedApiKeyId === 'all') {
+                    try {
+                        await loadAllLogs(1, itemsPerPage, periodType);
+                    } catch (error) {
+                        handleApiError(error, '전체 로그 로드');
+                    }
+                } else {
+                    try {
+                        await loadLogsByKeyId(selectedApiKeyId, 1, itemsPerPage, periodType);
+                    } catch (error) {
+                        handleApiError(error, '특정 키 로그 로드');
+                    }
+                }
             }
 
-            // 그래프 뷰일 때 통계 요약 데이터 로드
+            // 그래프 뷰일 때 통계 요약 데이터 로드 (액션별 에러 처리)
             if (viewMode === 'graph') {
                 if (selectedAppId === 'all') {
-                    // 전체 선택 시 다중 앱 통계 로드
-                    loadMultiAppStatistics(selectedPeriod);
+                    // 전체 앱 선택 시 (기간에 관계없이)
+                    try {
+                        await loadMultiAppStatistics(selectedPeriod);
+                    } catch (error) {
+                        handleApiError(error, '전체 앱 통계 로드');
+                    }
                 } else {
-                    // 특정 앱 선택 시 기존 방식
+                    // 특정 앱 선택 시
                     const keyId = selectedApiKeyId === 'all' ? null : selectedApiKeyId;
-                    loadStatisticsSummary(keyId, selectedPeriod);
+                    try {
+                        await loadStatisticsSummary(keyId, selectedPeriod);
+                    } catch (error) {
+                        handleApiError(error, '특정 앱 통계 로드');
+                    }
                 }
             }
+        };
 
-            // 테이블 뷰일 때도 기간에 따른 로그 데이터 로드
-            if (viewMode === 'table') {
-                const periodType = getPeriodType(selectedPeriod);
-                if (selectedApiKeyId === 'all') {
-                    loadAllLogs(1, itemsPerPage, periodType);
-                } else {
-                    loadLogsByKeyId(selectedApiKeyId, 1, itemsPerPage, periodType);
-                }
-            }
+        updateData();
+    }, [itemsPerPage, selectedPeriod, viewMode, selectedApiKeyId, selectedAppId, isInitialLoadComplete, loadAllLogs, loadLogsByKeyId, loadStatisticsSummary, loadMultiAppStatistics]);
 
-            setTimeout(() => {
-                setIsLoading(false);
-            }, 300);
-        }, 300); // 300ms 디바운스
+    // 스토어 기간 동기화
+    useEffect(() => {
+        setGlobalPeriod(selectedPeriod);
+    }, [selectedPeriod, setGlobalPeriod]);
 
-        return () => clearTimeout(timeoutId);
-    }, [selectedApiKeyId, selectedAppId, selectedPeriod, viewMode, loadAllLogs, loadLogsByKeyId, loadStatisticsSummary, loadMultiAppStatistics, itemsPerPage]);
 
     // 앱 선택 핸들러 (API 키 자동 필터링)
     const handleAppChange = (appId) => {
@@ -234,11 +235,16 @@ export default function DashboardUsage() {
     };
 
 
-    // 페이지 변경 핸들러
-    const handlePageChange = (page) => {
+    // 페이지 변경 핸들러 (액션별 에러 처리)
+    const handlePageChange = async (page) => {
         setCurrentPage(page);
         const periodType = getPeriodType(selectedPeriod);
-        changeLogPage(page, itemsPerPage, periodType);
+
+        try {
+            await changeLogPage(page, itemsPerPage, periodType);
+        } catch (error) {
+            handleApiError(error, '페이지 변경');
+        }
     };
 
     // 페이징 계산 (API 로그만 사용)
@@ -386,175 +392,217 @@ export default function DashboardUsage() {
         }
     ];
 
+    // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
+    const isDataLoading = isLoading || !apps || apps.length === 0 || !isInitialLoadComplete;
+
     return (
         <DashboardLayout
             title="사용량"
             subtitle="API 사용 현황을 한눈에 확인해보세요"
         >
-            <div className="space-y-6">
+            {isDataLoading ? (
+                <div className="flex flex-col justify-center items-center h-64 space-y-4 bg-transparent">
+                    <LoadingSpinner />
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        사용량 데이터를 불러오는 중...
+                    </p>
+                </div>
+            ) : (
+                <div className="space-y-6">
 
-                {/* 필터 */}
-                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <div className="flex flex-col md:flex-row md:items-end gap-4">
-                        {/* 좌측: 앱과 기간 선택 */}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            {/* 앱 선택 */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">앱</label>
-                                <select
-                                    value={selectedAppId}
-                                    onChange={(e) => handleAppChange(e.target.value)}
-                                    className="w-full sm:w-36 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                >
-                                    <option value="all">전체</option>
-                                    {apps.map(app => (
-                                        <option
-                                            key={app.id}
-                                            value={app.id}
-                                            title={app.name}
-                                        >
-                                            {app.name.length > 15 ? `${app.name.substring(0, 15)}...` : app.name}
-                                        </option>
-                                    ))}
-                                </select>
+                    {/* 필터 */}
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div className="flex flex-col md:flex-row md:items-end gap-4">
+                            {/* 좌측: 앱과 기간 선택 */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                {/* 앱 선택 */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">앱</label>
+                                    <select
+                                        value={selectedAppId}
+                                        onChange={(e) => handleAppChange(e.target.value)}
+                                        className="w-full sm:w-36 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    >
+                                        <option value="all">전체</option>
+                                        {apps.map(app => (
+                                            <option
+                                                key={app.id}
+                                                value={app.id}
+                                                title={app.name}
+                                            >
+                                                {app.name.length > 15 ? `${app.name.substring(0, 15)}...` : app.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* 기간 선택 */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">기간</label>
+                                    <select
+                                        value={selectedPeriod}
+                                        onChange={(e) => setSelectedPeriod(e.target.value)}
+                                        className="w-full sm:w-36 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    >
+                                        {periodOptions.map(option => (
+                                            <option key={option} value={option}>{option}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
-                            {/* 기간 선택 */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">기간</label>
-                                <select
-                                    value={selectedPeriod}
-                                    onChange={(e) => setSelectedPeriod(e.target.value)}
-                                    className="w-full sm:w-36 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                >
-                                    {periodOptions.map(option => (
-                                        <option key={option} value={option}>{option}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* 우측: 보기 모드 */}
-                        <div className="md:ml-auto">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">보기</label>
-                            <div className="flex w-full sm:w-36">
-                                <button
-                                    onClick={() => setViewMode('graph')}
-                                    className={`flex-1 px-3 py-2 text-sm font-medium rounded-l-md border focus:outline-none focus:ring-2 focus:ring-blue-500 ${viewMode === 'graph'
-                                        ? 'bg-blue-600 text-white border-blue-600'
-                                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-                                        }`}
-                                >
-                                    그래프
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('table')}
-                                    className={`flex-1 px-3 py-2 text-sm font-medium rounded-r-md border focus:outline-none focus:ring-2 focus:ring-blue-500 ${viewMode === 'table'
-                                        ? 'bg-blue-600 text-white border-blue-600'
-                                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-                                        }`}
-                                >
-                                    테이블
-                                </button>
+                            {/* 우측: 보기 모드 */}
+                            <div className="md:ml-auto">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">보기</label>
+                                <div className="flex w-full sm:w-36">
+                                    <button
+                                        onClick={() => setViewMode('graph')}
+                                        className={`flex-1 px-3 py-2 text-sm font-medium rounded-l-md border focus:outline-none focus:ring-2 focus:ring-blue-500 ${viewMode === 'graph'
+                                            ? 'bg-blue-600 text-white border-blue-600'
+                                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                                            }`}
+                                    >
+                                        그래프
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('table')}
+                                        className={`flex-1 px-3 py-2 text-sm font-medium rounded-r-md border focus:outline-none focus:ring-2 focus:ring-blue-500 ${viewMode === 'table'
+                                            ? 'bg-blue-600 text-white border-blue-600'
+                                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                                            }`}
+                                    >
+                                        테이블
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* 콘텐츠 */}
-                <div className="space-y-6">
-                    {isLoading || logs.loading ? (
-                        <div className="flex justify-center items-center h-64">
-                            <LoadingSpinner />
-                        </div>
-                    ) : (
-                        <>
-                            {/* 그래프 뷰 */}
-                            {viewMode === 'graph' && (
-                                <div className="p-6 rounded-lg theme-card">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <div className="flex items-center gap-4">
-                                            <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량</h3>
-                                            {!isLoading && (
-                                                <span className={`${T.label} theme-text-secondary`}>{rangeLabel}</span>
-                                            )}
-                                        </div>
-                                        <div className="text-sm theme-text-secondary">
-                                            총 {logs.total || 0}개 로그
-                                        </div>
+                    {/* 콘텐츠 */}
+                    <div className="space-y-6">
+                        {/* 그래프 뷰 */}
+                        {viewMode === 'graph' && (
+                            <div className="p-6 rounded-lg theme-card">
+                                <div className="flex justify-between items-center mb-6">
+                                    <div className="flex items-center gap-4">
+                                        <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량</h3>
+                                        {!isLoading && (
+                                            <span className={`${T.label} theme-text-secondary`}>{rangeLabel}</span>
+                                        )}
                                     </div>
+                                    <div className="text-sm theme-text-secondary">
+                                        총 {logs.total || 0}개 로그
+                                    </div>
+                                </div>
 
-                                    {(() => {
-                                        const { usageData } = useDashboardStore.getState();
-                                        return usageData && usageData.length > 0 ? (
-                                            selectedAppId === 'all' ? (
-                                                <div className="h-80 min-w-0">
-                                                    <MultiAppUsageChart
-                                                        data={usageData}
-                                                        selectedPeriod={selectedPeriod}
-                                                        height="h-80"
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div className="h-80 min-w-0">
-                                                    <UsageChart
-                                                        data={usageData}
-                                                        selectedPeriod={selectedPeriod}
-                                                        height="h-80"
-                                                        appName={apps.find(app => String(app.id) === String(selectedAppId))?.name}
-                                                    />
-                                                </div>
-                                            )
-                                        ) : (
-                                            <div className="flex flex-col justify-center items-center h-64 text-gray-500 dark:text-gray-400">
-                                                <svg className="w-16 h-16 mb-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                                </svg>
-                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">사용량 데이터가 없습니다</h3>
-                                                <p className="text-gray-600 dark:text-gray-400 text-center">
-                                                    선택한 기간에 사용량 데이터가 없습니다.<br />
-                                                    다른 기간을 선택하거나 APP을 확인해보세요.
-                                                </p>
+                                {(() => {
+                                    const { usageData } = useDashboardStore.getState();
+                                    return usageData && usageData.length > 0 ? (
+                                        selectedAppId === 'all' ? (
+                                            <div className="h-80 min-w-0">
+                                                <MultiAppUsageChart
+                                                    data={usageData}
+                                                    selectedPeriod={selectedPeriod}
+                                                    height="h-80"
+                                                />
                                             </div>
-                                        );
+                                        ) : (
+                                            <div className="h-80 min-w-0">
+                                                <UsageChart
+                                                    data={usageData}
+                                                    selectedPeriod={selectedPeriod}
+                                                    height="h-80"
+                                                    appName={apps.find(app => String(app.id) === String(selectedAppId))?.name}
+                                                />
+                                            </div>
+                                        )
+                                    ) : (
+                                        <div className="flex flex-col justify-center items-center h-64 text-gray-500 dark:text-gray-400">
+                                            <svg className="w-16 h-16 mb-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                            </svg>
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">사용량 데이터가 없습니다</h3>
+                                            <p className="text-gray-600 dark:text-gray-400 text-center">
+                                                선택한 기간에 사용량 데이터가 없습니다.<br />
+                                                다른 기간을 선택하거나 APP을 확인해보세요.
+                                            </p>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        )}
+
+                        {/* 테이블 뷰 */}
+                        {viewMode === 'table' && (
+                            <div className="p-6 rounded-lg theme-card">
+                                <DataTable
+                                    title="로그 상세"
+                                    subtitle={(() => {
+                                        const total = logs.total || 0;
+                                        const page = logs.page || 1;
+
+                                        if (total === 0) {
+                                            return '0개';
+                                        }
+
+                                        // 프론트엔드 페이지 크기(itemsPerPage) 기준으로 계산
+                                        const start = (page - 1) * itemsPerPage + 1;
+                                        const end = Math.min(page * itemsPerPage, total);
+
+                                        return `${start}-${end} / ${total}개`;
                                     })()}
-                                </div>
-                            )}
-
-                            {/* 테이블 뷰 */}
-                            {viewMode === 'table' && (
-                                <div className="p-6 rounded-lg theme-card">
-                                    <DataTable
-                                        title="로그 상세"
-                                        subtitle={(() => {
-                                            const total = logs.total || 0;
-                                            const page = logs.page || 1;
-
-                                            if (total === 0) {
-                                                return '0개';
-                                            }
-
-                                            // 프론트엔드 페이지 크기(itemsPerPage) 기준으로 계산
-                                            const start = (page - 1) * itemsPerPage + 1;
-                                            const end = Math.min(page * itemsPerPage, total);
-
-                                            return `${start}-${end} / ${total}개`;
-                                        })()}
-                                        columns={logColumns}
-                                        data={currentLogs}
-                                        loading={logs.loading}
-                                        error={logs.error}
-                                        currentPage={currentPage}
-                                        totalPages={totalPages}
-                                        onPageChange={handlePageChange}
-                                        emptyMessage="로그 데이터가 없습니다."
-                                    />
-                                </div>
-                            )}
-                        </>
-                    )}
+                                    columns={logColumns}
+                                    data={currentLogs}
+                                    loading={logs.loading}
+                                    error={logs.error}
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={handlePageChange}
+                                    emptyMessage="로그 데이터가 없습니다."
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {/* 액션별 에러 모달 (필터 변경, 페이지 변경 등) */}
+            <Modal
+                isOpen={_errorModal.isOpen}
+                onClose={() => setErrorModal({ isOpen: false, message: '' })}
+                title="오류 발생"
+            >
+                <div className="space-y-4">
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-center gap-2">
+                            <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                            <span className="font-medium text-red-800">오류</span>
+                        </div>
+                        <p className="text-red-700 mt-2">{_errorModal.message}</p>
+                    </div>
+
+                    <div className="flex justify-end pt-4">
+                        <button
+                            onClick={() => setErrorModal({ isOpen: false, message: '' })}
+                            className="px-4 py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition"
+                        >
+                            확인
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* 페이지 로드 에러 모달 (통합 ErrorModal) */}
+            <ErrorModal
+                isOpen={errorState.isOpen}
+                onClose={closeError}
+                onRetry={handleRetry}
+                message={errorState.message}
+                isRetrying={isRetrying}
+                title={errorState.title || "데이터 로드 실패"}
+            />
         </DashboardLayout>
     );
 } 

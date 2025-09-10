@@ -159,16 +159,6 @@ export const dashboardAPI = {
 
 };
 
-// 요금제 관련 API
-export const billingAPI = {
-    // 요금제 변경 (실제 API 스펙에 맞게 수정)
-    changePlan: (userId, planName) => {
-        console.log('💰 요금제 변경 API 호출:', { userId, planName });
-        return apiClient.patch(`/dashboard/users/${userId}/plan`, {
-            plan: planName.toLowerCase()
-        });
-    },
-};
 
 // 설정 관련 API
 export const settingsAPI = {
@@ -209,6 +199,18 @@ export const paymentAPI = {
         queryParams.append('skip', skip);
         queryParams.append('limit', limit);
         return apiClient.get(`/payments/history?${queryParams.toString()}`);
+    },
+};
+
+// 결제/요금제 관련 API (billingAPI)
+export const billingAPI = {
+    // 요금제 변경
+    changePlan: (userId, planName) => {
+        console.log('💳 요금제 변경 API 호출:', { userId, planName });
+        return apiClient.post('/billing/change-plan', {
+            userId,
+            planName
+        });
     },
 };
 
