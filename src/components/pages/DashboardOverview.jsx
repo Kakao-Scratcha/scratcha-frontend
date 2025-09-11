@@ -191,7 +191,7 @@ export default function DashboardOverview() {
         };
 
         loadInitialData();
-    }, [loadAllRequestsStats, loadStatisticsSummary, refreshApplications, executeAllWithErrorHandling]);
+    }, [loadAllRequestsStats, loadStatisticsSummary, refreshApplications, executeAllWithErrorHandling, checkPaymentHistory]);
 
     // 기간 변경 시 데이터 로드 (초기 로드가 아닌 경우에만)
     useEffect(() => {
@@ -256,7 +256,7 @@ export default function DashboardOverview() {
                 setHasShownAppModal(false);
             }
         }
-    }, [apps, isAppsLoading, hasShownAppModal, showAppCreateModal]);
+    }, [apps, isAppsLoading, hasShownAppModal, showAppCreateModal, isInitialLoad]);
 
     // 앱 생성 모달 닫기
     const handleCloseAppCreateModal = useCallback(() => {
