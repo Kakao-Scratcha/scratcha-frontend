@@ -1,6 +1,7 @@
 import React from 'react';
+import OptimizedImage from './OptimizedImage';
 import ntFavicon from '../../assets/images/nt_favicon.ico?w=20&h=20&format=webp&quality=90';
-import ghFavicon from '../../assets/images/gh_favicon.svg';
+import ghFavicon from '../../assets/images/gh_favicon.svg?w=20&h=20&format=webp&quality=90';
 import spFavicon from '../../assets/images/sp_favicon.ico?w=20&h=20&format=webp&quality=90';
 
 export default function SocialLinks() {
@@ -14,7 +15,7 @@ export default function SocialLinks() {
                 target="_blank"
                 rel="noopener noreferrer"
             >
-                <img
+                <OptimizedImage
                     src={ntFavicon}
                     alt="Notion"
                     className="w-5 h-5"
@@ -31,7 +32,7 @@ export default function SocialLinks() {
                 target="_blank"
                 rel="noopener noreferrer"
             >
-                <img
+                <OptimizedImage
                     src={ghFavicon}
                     alt="GitHub"
                     className="w-5 h-5"
@@ -48,7 +49,7 @@ export default function SocialLinks() {
                 target="_blank"
                 rel="noopener noreferrer"
             >
-                <img
+                <OptimizedImage
                     src={spFavicon}
                     alt="SniperFactory"
                     className="w-5 h-5"

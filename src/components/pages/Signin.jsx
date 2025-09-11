@@ -3,18 +3,14 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
 import FormField from '../forms/FormField';
+import OptimizedImage from '../ui/OptimizedImage';
 import { useAuth } from '../../hooks/useAuth';
-import signinBackground from '@/assets/images/signin-background.png?format=webp&q=80';
-import logo from '@/assets/images/scratchalogo.svg';
+import signinBackground from '@/assets/images/signin-background.png?w=1600&h=900&format=webp&q=80';
+import logo from '@/assets/images/scratchalogo.svg?w=200&h=60&format=webp&quality=90';
 
 
-// 배경 스타일 상수 (재렌더링 시 새 객체 생성 방지)
-const backgroundStyle = {
-    backgroundImage: `url(${signinBackground})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat'
-};
+// 배경 이미지 최적화를 위한 preload
+const backgroundPreload = <link rel="preload" as="image" href={signinBackground} />;
 
 // SVG 아이콘들을 JSX 상수로 분리 (재렌더링 방지)
 const CHECK_ICON = (
@@ -27,12 +23,12 @@ const CHECK_ICON = (
 // 로고 링크 전체를 상수로 분리 (재렌더링 방지)
 const LOGO_LINK = (
     <Link to="/" className="inline-block">
-        <img
+        <OptimizedImage
             src={logo}
             alt="Scratcha"
             className="h-32 md:h-40 lg:h-48 w-auto mx-auto cursor-pointer hover:opacity-80 transition-opacity dark:brightness-0 dark:invert"
-            width={192}
-            height={48}
+            width={200}
+            height={60}
         />
     </Link>
 );
@@ -168,10 +164,24 @@ export default function Signin() {
     }, []);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-contain bg-center bg-no-repeat bg-y-center"
-            style={backgroundStyle}>
+        <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden">
             {/* 배경 이미지 최적화를 위한 preload */}
-            <link rel="preload" as="image" href={signinBackground} />
+            {backgroundPreload}
+
+            {/* 최적화된 배경 이미지 - 가로 꽉참 */}
+            <OptimizedImage
+                src={signinBackground}
+                alt="로그인 배경"
+                className="fixed inset-0 w-screen h-screen object-contain object-center -z-10"
+                width={1600}
+                height={900}
+                loading="eager"
+                fetchPriority="high"
+                sizes="100vw"
+                style={{
+                    objectPosition: 'center top'
+                }}
+            />
 
             {/* 로그인 모달 */}
             <div className="relative z-10 w-full max-w-md mx-4">
