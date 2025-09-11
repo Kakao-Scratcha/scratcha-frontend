@@ -96,7 +96,7 @@ export default function Header() {
                         <div className="relative" ref={userDropdownRef}>
                             <button
                                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                                className="flex items-center gap-1 px-2 py-1 rounded font-semibold border transition bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 border-blue-600 dark:border-blue-500 h-10"
+                                className="flex items-center gap-1 px-2 py-1 rounded font-semibold border transition bg-blue-700 dark:bg-blue-600 text-white hover:bg-blue-800 dark:hover:bg-blue-700 border-blue-700 dark:border-blue-600 h-10"
                             >
                                 <div className="w-6 h-6 bg-blue-500 dark:bg-blue-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
                                     {getUserInitial()}
@@ -188,7 +188,7 @@ export default function Header() {
                     ) : (
                         <Link
                             to="/signin"
-                            className="inline-block px-3 md:px-4 py-2 rounded font-semibold border transition bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 border-blue-600 dark:border-blue-500 text-sm md:text-base"
+                            className="inline-block px-3 md:px-4 py-2 rounded font-semibold border transition bg-blue-700 dark:bg-blue-600 text-white hover:bg-blue-800 dark:hover:bg-blue-700 border-blue-700 dark:border-blue-600 text-sm md:text-base"
                         >
                             로그인
                         </Link>

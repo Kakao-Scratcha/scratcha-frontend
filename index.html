@@ -8,8 +8,35 @@
     <meta name="keywords" content="캡차, 보안, 인증" />
     <meta name="author" content="scratCHA Team" />
 
+    <!-- 캐시 최적화 메타 태그 -->
+    <meta http-equiv="Cache-Control" content="public, max-age=31536000" />
+    <meta http-equiv="Expires" content="31536000" />
+
     <!-- 로컬 폰트 사용 -->
     <title>scratCHA</title>
+
+    <!-- 폰트 preload - LCP 개선 -->
+    <link
+      rel="preload"
+      href="/fonts/NotoSans-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/NotoSans-Medium.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/NotoSans-Bold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
 
     <!-- 로컬 폰트 정의 -->
     <style>

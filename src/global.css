@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* 폰트 최적화 - LCP 개선 */
+@font-face {
+  font-family: "Noto Sans";
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("./fonts/NotoSans-Regular.woff2") format("woff2");
+}
+
 /* 다크모드 커스텀 variant 설정 */
 @custom-variant dark (&:where(.dark, .dark *));
 

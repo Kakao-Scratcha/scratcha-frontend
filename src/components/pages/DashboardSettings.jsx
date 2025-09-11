@@ -394,7 +394,7 @@ export default function DashboardSettings() {
                                         setNameForm(prev => ({ ...prev, currentName: serverName, newName: serverName }));
                                         setIsNameModalOpen(true);
                                     }}
-                                    className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-700 dark:hover:bg-blue-600 transition"
+                                    className="px-4 py-2 bg-blue-700 dark:bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-800 dark:hover:bg-blue-700 transition"
                                 >
                                     변경하기
                                 </button>
@@ -501,7 +501,7 @@ export default function DashboardSettings() {
                         </button>
                         <button
                             type="submit"
-                            className="flex-1 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-700 dark:hover:bg-blue-600 transition"
+                            className="flex-1 px-4 py-2 bg-blue-700 dark:bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-800 dark:hover:bg-blue-700 transition"
                             disabled={isUpdating}
                         >
                             {isUpdating ? '변경 중...' : '변경하기'}

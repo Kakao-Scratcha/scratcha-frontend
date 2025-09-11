@@ -1,7 +1,7 @@
 import React from 'react';
-import ntFavicon from '../../assets/images/nt_favicon.ico';
+import ntFavicon from '../../assets/images/nt_favicon.ico?w=20&h=20&format=webp&quality=90';
 import ghFavicon from '../../assets/images/gh_favicon.svg';
-import spFavicon from '../../assets/images/sp_favicon.ico';
+import spFavicon from '../../assets/images/sp_favicon.ico?w=20&h=20&format=webp&quality=90';
 
 export default function SocialLinks() {
     return (
