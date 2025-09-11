@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
 import ErrorModal from '../ui/ErrorModal';
@@ -150,8 +150,8 @@ export default function DashboardBilling() {
 
 
 
-    // 초기 로드 완료 여부 추적
-    const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+    // 초기 로드 여부를 추적하는 ref
+    const isInitialLoad = useRef(true);
 
     // 초기 데이터 로드 (투트랙 시스템 - 페이지 로드 에러)
     useEffect(() => {
@@ -168,24 +168,23 @@ export default function DashboardBilling() {
 
                 if (allSuccessful) {
                     console.log('✅ 모든 초기 데이터 로드 완료');
-                    setIsInitialLoadComplete(true); // 성공한 경우에만 초기 로드 완료
+                    isInitialLoad.current = false; // 성공한 경우에만 로딩 완료
                 } else {
                     console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
-                    // 실패한 경우에는 초기 로드 상태 유지 (isInitialLoadComplete = false)
+                    // 실패한 경우에는 로딩 상태 유지 (isInitialLoad.current = true)
                 }
             } catch (error) {
                 console.error('❌ 초기 데이터 로드 중 예상치 못한 오류:', error);
-                // 에러는 executeAllWithErrorHandling에서 처리됨
+                // 예상치 못한 오류의 경우에도 로딩 상태 유지 (에러 모달 표시를 위해)
+                // isInitialLoad.current는 그대로 true로 유지
             }
         };
 
-        if (user && !isInitialLoadComplete) {
-            loadInitialData();
-        }
-    }, [user, isInitialLoadComplete, loadAllRequestsStats, executeAllWithErrorHandling]);
+        loadInitialData();
+    }, [loadAllRequestsStats, executeAllWithErrorHandling]);
 
     // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
-    const isDataLoading = !user || !isInitialLoadComplete;
+    const isDataLoading = !user || isInitialLoad.current;
 
     return (
         <DashboardLayout

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import UsageChart from '../ui/UsageChart';
 import MultiAppUsageChart from '../ui/MultiAppUsageChart';
@@ -44,8 +44,8 @@ export default function DashboardUsage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
 
-    // 초기 로드 완료 여부 추적
-    const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+    // 초기 로드 여부를 추적하는 ref
+    const isInitialLoad = useRef(true);
 
     // 선택된 APP의 API 키들 (전체 선택 시 모든 API 키)
     const appApiKeys = selectedAppId === 'all' ? apiKeys : apiKeys.filter(key => String(key.appId) === String(selectedAppId));
@@ -143,10 +143,10 @@ export default function DashboardUsage() {
 
                 if (allSuccessful) {
                     console.log('✅ 모든 초기 데이터 로드 완료');
-                    setIsInitialLoadComplete(true); // 성공한 경우에만 초기 로드 완료
+                    isInitialLoad.current = false; // 성공한 경우에만 로딩 완료
                 } else {
                     console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
-                    // 실패한 경우에는 초기 로드 상태 유지 (isInitialLoadComplete = false)
+                    // 실패한 경우에는 로딩 상태 유지 (isInitialLoad.current = true)
                 }
             } catch (error) {
                 console.error('❌ 초기 데이터 로드 중 예상치 못한 오류:', error);
@@ -163,7 +163,7 @@ export default function DashboardUsage() {
     useEffect(() => {
         const updateData = async () => {
             // 초기 로드가 완료된 후에만 실행
-            if (!isInitialLoadComplete) return;
+            if (isInitialLoad.current) return;
 
             const periodType = getPeriodType(selectedPeriod);
 
@@ -206,7 +206,7 @@ export default function DashboardUsage() {
         };
 
         updateData();
-    }, [itemsPerPage, selectedPeriod, viewMode, selectedApiKeyId, selectedAppId, isInitialLoadComplete, loadAllLogs, loadLogsByKeyId, loadStatisticsSummary, loadMultiAppStatistics]);
+    }, [itemsPerPage, selectedPeriod, viewMode, selectedApiKeyId, selectedAppId, loadAllLogs, loadLogsByKeyId, loadStatisticsSummary, loadMultiAppStatistics]);
 
     // 스토어 기간 동기화
     useEffect(() => {
@@ -374,7 +374,7 @@ export default function DashboardUsage() {
     ];
 
     // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
-    const isDataLoading = isLoading || !apps || apps.length === 0 || !isInitialLoadComplete;
+    const isDataLoading = isLoading || !apps || apps.length === 0 || isInitialLoad.current;
 
     return (
         <DashboardLayout

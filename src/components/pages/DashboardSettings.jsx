@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
 import ErrorModal from '../ui/ErrorModal';
@@ -18,8 +18,8 @@ export default function DashboardSettings() {
     // 액션별 에러 모달 상태 (개별 에러 처리용)
     const [_errorModal, setErrorModal] = useState({ isOpen: false, message: '' });
 
-    // 초기 로드 완료 여부 추적
-    const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+    // 초기 로드 여부를 추적하는 ref
+    const isInitialLoad = useRef(true);
 
     // 프리미엄 유저 확인 (결제 내역이 있는지 확인)
     const [isPremiumUser, setIsPremiumUser] = useState(false);
@@ -141,10 +141,10 @@ export default function DashboardSettings() {
 
                 if (allSuccessful) {
                     console.log('✅ 모든 초기 데이터 로드 완료');
-                    setIsInitialLoadComplete(true); // 성공한 경우에만 초기 로드 완료
+                    isInitialLoad.current = false; // 성공한 경우에만 로딩 완료
                 } else {
                     console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
-                    // 실패한 경우에는 초기 로드 상태 유지 (isInitialLoadComplete = false)
+                    // 실패한 경우에는 로딩 상태 유지 (isInitialLoad.current = true)
                 }
             } catch (error) {
                 console.error('❌ 초기 데이터 로드 중 예상치 못한 오류:', error);
@@ -297,7 +297,7 @@ export default function DashboardSettings() {
 
 
     // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
-    const isDataLoading = !user || !isInitialLoadComplete;
+    const isDataLoading = !user || isInitialLoad.current;
 
     return (
         <DashboardLayout
