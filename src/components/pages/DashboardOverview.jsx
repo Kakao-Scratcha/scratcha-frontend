@@ -363,6 +363,7 @@ export default function DashboardOverview() {
                                         <button
                                             onClick={() => window.location.href = '/dashboard/billing'}
                                             className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors"
+                                            aria-label="토큰 충전 페이지로 이동"
                                         >
                                             토큰 충전하기
                                         </button>

@@ -177,7 +177,7 @@ export default function DashboardBilling() {
                     {/* 토큰 현황 및 사용량 통계 */}
                     <div className="theme-card p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className={`${T.sectionTitle} text-gray-900 dark:text-gray-100`}>토큰 현황 및 사용량 통계</h3>
+                            <h2 className={`${T.sectionTitle} text-gray-900 dark:text-gray-100`}>토큰 현황 및 사용량 통계</h2>
                             <button
                                 onClick={() => setIsPlanChangeModalOpen(true)}
                                 className="px-6 py-2 bg-blue-700 dark:bg-blue-600 text-white dark:text-gray-900 rounded-lg font-semibold hover:opacity-90 transition"
@@ -231,7 +231,7 @@ export default function DashboardBilling() {
                                         </div>
                                         <div className="text-right">
                                             {requestsStats.daily.rate > 0 ? (
-                                                <div className="flex items-center text-green-600 dark:text-green-400">
+                                                <div className="flex items-center text-green-700 dark:text-green-300">
                                                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                                         <path d="M12 4l8 16H4L12 4z" />
                                                     </svg>
@@ -266,7 +266,7 @@ export default function DashboardBilling() {
                                         </div>
                                         <div className="text-right">
                                             {requestsStats.weekly.rate > 0 ? (
-                                                <div className="flex items-center text-green-600 dark:text-green-400">
+                                                <div className="flex items-center text-green-700 dark:text-green-300">
                                                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                                         <path d="M12 4l8 16H4L12 4z" />
                                                     </svg>
@@ -301,7 +301,7 @@ export default function DashboardBilling() {
                                         </div>
                                         <div className="text-right">
                                             {requestsStats.monthly.rate > 0 ? (
-                                                <div className="flex items-center text-green-600 dark:text-green-400">
+                                                <div className="flex items-center text-green-700 dark:text-green-300">
                                                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                                         <path d="M12 4l8 16H4L12 4z" />
                                                     </svg>

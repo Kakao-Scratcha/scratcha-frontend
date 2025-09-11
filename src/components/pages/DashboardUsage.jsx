@@ -485,7 +485,7 @@ export default function DashboardUsage() {
                             <div className="p-6 rounded-lg theme-card">
                                 <div className="flex justify-between items-center mb-6">
                                     <div className="flex items-center gap-4">
-                                        <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량</h3>
+                                        <h2 className={`${T.sectionTitle} theme-text-primary`}>사용량</h2>
                                         {!isLoading && (
                                             <span className={`${T.label} theme-text-secondary`}>{rangeLabel}</span>
                                         )}
@@ -521,7 +521,7 @@ export default function DashboardUsage() {
                                             <svg className="w-16 h-16 mb-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                             </svg>
-                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">사용량 데이터가 없습니다</h3>
+                                            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">사용량 데이터가 없습니다</h2>
                                             <p className="text-gray-600 dark:text-gray-400 text-center">
                                                 선택한 기간에 사용량 데이터가 없습니다.<br />
                                                 다른 기간을 선택하거나 APP을 확인해보세요.

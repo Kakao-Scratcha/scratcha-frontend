@@ -216,7 +216,7 @@ export default function CheckoutPage() {
                                 {getDisplayName(selectedProduct.name)}
                             </h4>
                             <p className="text-gray-600 dark:text-gray-400 text-base">
-                                제공 토큰: <span className="font-semibold text-green-600 dark:text-green-400">{getTokenAmount(selectedProduct.name)} 토큰</span>
+                                제공 토큰: <span className="font-semibold text-green-700 dark:text-green-300">{getTokenAmount(selectedProduct.name)} 토큰</span>
                             </p>
                         </div>
                         <div className="pt-3 border-t border-blue-200 dark:border-blue-700">
@@ -308,7 +308,7 @@ export default function CheckoutPage() {
                             setIsLoading(false);
                         }
                     }}
-                    className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white dark:text-gray-900 font-semibold py-4 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+                    className="w-full bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white dark:text-gray-900 font-semibold py-4 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
                 >
                     {isLoading ? (
                         <span className="flex items-center justify-center">
