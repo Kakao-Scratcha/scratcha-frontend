@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { imagetools } from 'vite-imagetools'
 import { fileURLToPath, URL } from 'node:url'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig({
   plugins: [
@@ -48,6 +49,13 @@ export default defineConfig({
 
         return params
       }
+    }),
+    // 번들 분석기 추가
+    visualizer({
+      filename: 'dist/bundle-analysis.html',
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
     }),
   ],
   resolve: {
