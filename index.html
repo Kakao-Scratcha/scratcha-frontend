@@ -8,9 +8,9 @@
     <meta name="keywords" content="캡차, 보안, 인증" />
     <meta name="author" content="scratCHA Team" />
 
-    <!-- 캐시 최적화 메타 태그 -->
-    <meta http-equiv="Cache-Control" content="public, max-age=31536000" />
-    <meta http-equiv="Expires" content="31536000" />
+    <!-- 캐시 최적화 메타 태그 - HTML은 짧은 캐싱 -->
+    <meta http-equiv="Cache-Control" content="public, max-age=3600" />
+    <meta http-equiv="Expires" content="3600" />
 
     <!-- 로컬 폰트 사용 -->
     <title>scratCHA</title>
@@ -37,6 +37,10 @@
       type="font/woff2"
       crossorigin
     />
+
+    <!-- Critical 이미지 preload - LCP 개선 (빌드된 경로) -->
+    <link rel="preload" href="/assets/main-scratcha.webp" as="image" />
+    <link rel="preload" href="/assets/main-select.webp" as="image" />
 
     <!-- 로컬 폰트 정의 -->
     <style>
@@ -78,7 +82,7 @@
         font-family: "Noto Sans KR";
         font-style: normal;
         font-weight: 700;
-        font-display: swap;
+        font-display: optional;
         src: url("/fonts/NotoSans-Bold.woff2") format("woff2");
       }
 
