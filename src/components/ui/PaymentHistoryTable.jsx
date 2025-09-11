@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { paymentAPI } from '../../services/api';
 import DataTable from './DataTable';
 
-export default function PaymentHistoryTable({ onLoadingChange }) {
+const PaymentHistoryTable = forwardRef(({ onLoadingChange, skipInitialLoad = false }, ref) => {
     const [paymentHistory, setPaymentHistory] = useState({
         data: [],
         total: 0,
@@ -16,7 +16,7 @@ export default function PaymentHistoryTable({ onLoadingChange }) {
     const [currentPage, setCurrentPage] = useState(1);
 
     // 구매내역 로드 함수
-    const loadPaymentHistory = async (page = 1, limit = 20) => {
+    const loadPaymentHistory = useCallback(async (page = 1, limit = 20) => {
         setPaymentHistory(prev => ({ ...prev, loading: true, error: null }));
         setCurrentPage(page); // 현재 페이지 업데이트
         onLoadingChange?.(true); // 부모 컴포넌트에 로딩 시작 알림
@@ -46,7 +46,7 @@ export default function PaymentHistoryTable({ onLoadingChange }) {
             }));
             onLoadingChange?.(false); // 부모 컴포넌트에 로딩 완료 알림
         }
-    };
+    }, [onLoadingChange]);
 
     // 페이지 변경 핸들러
     const handlePageChange = (page) => {
@@ -54,10 +54,17 @@ export default function PaymentHistoryTable({ onLoadingChange }) {
         loadPaymentHistory(page, paymentHistory.size);
     };
 
+    // 부모 컴포넌트에서 호출할 수 있는 메서드들을 노출
+    useImperativeHandle(ref, () => ({
+        loadPaymentHistory
+    }));
+
     // 초기 데이터 로드
     useEffect(() => {
-        loadPaymentHistory(1, 20);
-    }, []);
+        if (!skipInitialLoad) {
+            loadPaymentHistory(1, 20);
+        }
+    }, [skipInitialLoad, loadPaymentHistory]);
 
     // 날짜 포맷팅 함수
     const formatDate = (dateString) => {
@@ -202,4 +209,6 @@ export default function PaymentHistoryTable({ onLoadingChange }) {
             emptyMessage="구매내역이 없습니다."
         />
     );
-}
+});
+
+export default PaymentHistoryTable;

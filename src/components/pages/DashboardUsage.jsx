@@ -17,7 +17,7 @@ export default function DashboardUsage() {
     };
 
     // 에러 처리 훅 (투트랙 시스템)
-    const { errorState, closeError, handleRetry, executeAllWithErrorHandling, isRetrying } = useErrorHandler();
+    const { errorState, closeError, handleRetry, executeAllWithErrorHandling } = useErrorHandler();
 
     // 액션별 에러 모달 상태 (개별 에러 처리용)
     const [_errorModal, setErrorModal] = useState({ isOpen: false, message: '' });
@@ -581,7 +581,6 @@ export default function DashboardUsage() {
                 onClose={closeError}
                 onRetry={handleRetry}
                 message={errorState.message}
-                isRetrying={isRetrying}
                 title={errorState.title || "데이터 로드 실패"}
             />
         </DashboardLayout>

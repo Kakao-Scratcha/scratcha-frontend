@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
 import ErrorModal from '../ui/ErrorModal';
@@ -8,6 +8,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { useLocation } from 'react-router-dom';
 import useErrorHandler from '../../hooks/useErrorHandler';
+import { paymentAPI } from '../../services/api';
 
 
 export default function DashboardBilling() {
@@ -21,7 +22,7 @@ export default function DashboardBilling() {
     const { requestsStats, loadAllRequestsStats } = useDashboardStore();
 
     // 에러 처리 훅 (투트랙 시스템)
-    const { errorState, closeError, handleRetry, executeAllWithErrorHandling, isRetrying } = useErrorHandler();
+    const { errorState, closeError, handleRetry, executeAllWithErrorHandling } = useErrorHandler();
 
     const [isPlanChangeModalOpen, setIsPlanChangeModalOpen] = useState(false);
 
@@ -153,6 +154,20 @@ export default function DashboardBilling() {
     // 초기 로드 여부를 추적하는 ref
     const isInitialLoad = useRef(true);
 
+    // PaymentHistoryTable 참조
+    const paymentHistoryTableRef = useRef(null);
+
+    // 구매내역 확인 함수
+    const checkPaymentHistory = useCallback(async () => {
+        try {
+            const response = await paymentAPI.getPaymentHistory(1, 1);
+            console.log('✅ 구매내역 확인 완료:', response.data);
+        } catch (error) {
+            console.error('❌ 구매내역 확인 실패:', error);
+            throw error; // 에러를 다시 throw하여 useErrorHandler에서 감지할 수 있도록 함
+        }
+    }, []);
+
     // 초기 데이터 로드 (투트랙 시스템 - 페이지 로드 에러)
     useEffect(() => {
         const loadInitialData = async () => {
@@ -163,12 +178,22 @@ export default function DashboardBilling() {
                         apiCall: () => loadAllRequestsStats(),
                         operation: '결제 정보 로드',
                         onSuccess: () => console.log('✅ 결제 정보 로드 완료')
+                    },
+                    {
+                        apiCall: () => checkPaymentHistory(),
+                        operation: '구매내역 확인',
+                        onSuccess: () => console.log('✅ 구매내역 확인 완료')
                     }
                 ]);
 
                 if (allSuccessful) {
                     console.log('✅ 모든 초기 데이터 로드 완료');
                     isInitialLoad.current = false; // 성공한 경우에만 로딩 완료
+
+                    // 초기 데이터 로드가 성공한 후 PaymentHistoryTable에 데이터 로드 요청
+                    if (paymentHistoryTableRef.current) {
+                        paymentHistoryTableRef.current.loadPaymentHistory(1, 20);
+                    }
                 } else {
                     console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
                     // 실패한 경우에는 로딩 상태 유지 (isInitialLoad.current = true)
@@ -181,7 +206,7 @@ export default function DashboardBilling() {
         };
 
         loadInitialData();
-    }, [loadAllRequestsStats, executeAllWithErrorHandling]);
+    }, [loadAllRequestsStats, checkPaymentHistory, executeAllWithErrorHandling]);
 
     // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
     const isDataLoading = !user || isInitialLoad.current;
@@ -369,7 +394,7 @@ export default function DashboardBilling() {
 
                     {/* 최근 구매내역 */}
                     <div className="theme-card p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <PaymentHistoryTable />
+                        <PaymentHistoryTable ref={paymentHistoryTableRef} skipInitialLoad={true} />
                     </div>
                 </div>
             )}
@@ -560,7 +585,6 @@ export default function DashboardBilling() {
                 onClose={closeError}
                 onRetry={handleRetry}
                 message={errorState.message}
-                isRetrying={isRetrying}
                 title={errorState.title || "데이터 로드 실패"}
             />
         </DashboardLayout>

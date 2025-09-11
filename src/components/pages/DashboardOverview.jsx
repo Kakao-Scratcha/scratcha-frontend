@@ -27,7 +27,7 @@ export default function DashboardOverview() {
     const { user } = useAuthStore();
 
     // 에러 처리 훅
-    const { errorState, closeError, handleRetry, executeWithErrorHandling, executeAllWithErrorHandling, isRetrying } = useErrorHandler();
+    const { errorState, closeError, handleRetry, executeWithErrorHandling, executeAllWithErrorHandling } = useErrorHandler();
     const {
         selectedPeriod,
         usageData: chartUsageData,
@@ -82,8 +82,9 @@ export default function DashboardOverview() {
             const response = await paymentAPI.getPaymentHistory(1, 1);
             const hasHistory = response.data.total > 0;
             setHasPaymentHistory(hasHistory);
-        } catch {
+        } catch (error) {
             setHasPaymentHistory(false);
+            throw error; // 에러를 다시 throw하여 useErrorHandler에서 감지할 수 있도록 함
         } finally {
             setIsPaymentHistoryLoading(false);
         }
@@ -156,6 +157,11 @@ export default function DashboardOverview() {
                         apiCall: () => refreshApplications(),
                         operation: '앱 목록 로드',
                         onSuccess: () => console.log('✅ 앱 목록 로드 완료')
+                    },
+                    {
+                        apiCall: () => checkPaymentHistory(),
+                        operation: '결제 내역 확인',
+                        onSuccess: () => console.log('✅ 결제 내역 확인 완료')
                     }
                 ]);
 
@@ -212,13 +218,7 @@ export default function DashboardOverview() {
         }
     }, [user?.id]);
 
-    // 결제 내역 확인
-    useEffect(() => {
-        executeWithErrorHandling(
-            () => checkPaymentHistory(),
-            '결제 내역 확인'
-        );
-    }, [checkPaymentHistory, executeWithErrorHandling]);
+    // 결제 내역 확인은 이제 초기 데이터 로드에 포함됨
 
     // 앱이 0개일 때 모달 표시 (화면이 뜬 후에 체크)
     useEffect(() => {
@@ -314,6 +314,17 @@ export default function DashboardOverview() {
 
     // 모든 데이터가 로드될 때까지 로딩 표시
     const isDataLoading = isLoading || isAppsLoading || isPaymentHistoryLoading || !user || isInitialLoad.current;
+
+    // 디버깅을 위한 로그 (쿠버네티스 환경 문제 해결용)
+    console.log('🔍 로딩 상태 디버깅:', {
+        isLoading,
+        isAppsLoading,
+        isPaymentHistoryLoading,
+        hasUser: !!user,
+        isInitialLoad: isInitialLoad.current,
+        isDataLoading,
+        user: user ? { id: user.id, email: user.email } : null
+    });
 
     return (
         <DashboardLayout
@@ -536,7 +547,6 @@ export default function DashboardOverview() {
                 onClose={closeError}
                 onRetry={handleRetry}
                 message={errorState.message}
-                isRetrying={isRetrying}
                 title={errorState.title || "데이터 로드 실패"}
             />
         </DashboardLayout>
