@@ -82,18 +82,23 @@ export default function Signup() {
     return (
         <div className="min-h-screen relative flex items-center justify-end bg-cover bg-center bg-no-repeat bg-fixed"
             style={backgroundStyle}>
+            {/* 배경 이미지 최적화를 위한 preload */}
+            <link rel="preload" as="image" href={signupBackground} />
 
             {/* 좌측 영역 - 배경 이미지와 텍스트 (절대 위치로 상단 고정) */}
-            <div className="hidden lg:block absolute top-8 left-1/3 transform -translate-x-1/2">
-                <div className="text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+            <section
+                className="hidden lg:block absolute top-8 left-1/3 transform -translate-x-1/2"
+                aria-label="회원가입 안내"
+            >
+                <header className="text-center">
+                    <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
                         지금 바로 가입하세요!
-                    </h1>
+                    </h2>
                     <p className="text-4xl text-gray-600 mb-8">
                         새로운 CAPTCHA를 체험해보세요
                     </p>
-                </div>
-            </div>
+                </header>
+            </section>
 
             {/* 우측 영역 - 회원가입 폼 (우측 배치) */}
             <div className="w-full max-w-sm mx-4 mr-8 lg:mr-16">
@@ -135,7 +140,7 @@ export default function Signup() {
                         <FormField
                             id="email"
                             label="이메일 (아이디)"
-                            type="text"
+                            type="email"
                             placeholder="이메일을 입력하세요"
                             required={true}
                             value={formData.email}

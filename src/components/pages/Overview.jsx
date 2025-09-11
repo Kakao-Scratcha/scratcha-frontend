@@ -20,8 +20,8 @@ export default function Overview() {
                     </div>
 
                     {/* Stats Section */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto mt-16">
-                        <div className="text-center">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto mt-16" role="region" aria-label="서비스 통계">
+                        <div className="text-center" role="img" aria-label="AI 봇 차단률 99.8%">
                             <div className="text-3xl md:text-4xl font-bold theme-text-primary mb-2">
                                 99.8%
                             </div>
@@ -29,7 +29,7 @@ export default function Overview() {
                                 AI 봇 차단률
                             </div>
                         </div>
-                        <div className="text-center">
+                        <div className="text-center" role="img" aria-label="평균 인증 소요시간 3.2초">
                             <div className="text-3xl md:text-4xl font-bold theme-text-primary mb-2">
                                 3.2초
                             </div>
@@ -37,7 +37,7 @@ export default function Overview() {
                                 평균 인증 소요시간
                             </div>
                         </div>
-                        <div className="text-center">
+                        <div className="text-center" role="img" aria-label="연간 처리 요청수 5천만 건 이상">
                             <div className="text-3xl md:text-4xl font-bold theme-text-primary mb-2">
                                 50M+
                             </div>
@@ -45,7 +45,7 @@ export default function Overview() {
                                 연간 처리 요청수
                             </div>
                         </div>
-                        <div className="text-center">
+                        <div className="text-center" role="img" aria-label="실시간 모니터링 지원 24시간 7일">
                             <div className="text-3xl md:text-4xl font-bold theme-text-primary mb-2">
                                 24/7
                             </div>

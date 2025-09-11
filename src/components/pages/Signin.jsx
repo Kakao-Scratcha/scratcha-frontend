@@ -23,18 +23,6 @@ const CHECK_ICON = (
     </svg>
 );
 
-const EYE_ICON = (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-    </svg>
-);
-
-const EYE_OFF_ICON = (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-    </svg>
-);
 
 // 로고 링크 전체를 상수로 분리 (재렌더링 방지)
 const LOGO_LINK = (
@@ -42,7 +30,7 @@ const LOGO_LINK = (
         <img
             src={logo}
             alt="Scratcha"
-            className="h-48 w-auto mx-auto cursor-pointer hover:opacity-80 transition-opacity dark:brightness-0 dark:invert"
+            className="h-32 md:h-40 lg:h-48 w-auto mx-auto cursor-pointer hover:opacity-80 transition-opacity dark:brightness-0 dark:invert"
             width={192}
             height={48}
         />
@@ -89,12 +77,6 @@ export default function Signin() {
             }
         }
     }, [isAuthenticated, navigate, initialAuthCheck]);
-
-
-
-
-
-
 
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
@@ -161,14 +143,6 @@ export default function Signin() {
     // 성공 메시지 메모이제이션
     const successMessage = useMemo(() => "로그인이 완료되었습니다. 대시보드로 이동합니다.", []);
 
-    // 비밀번호 토글 핸들러 메모이제이션
-    // 비밀번호 토글 (필드 컴포넌트로 대체되어 미사용)
-
-    // 이메일 변경 핸들러 메모이제이션
-    // 미사용 (FormField onChange 사용)
-
-    // 비밀번호 변경 핸들러 메모이제이션
-    // 미사용 (FormField onChange 사용)
 
     const isSubmitDisabled = isLoading;
 
@@ -196,8 +170,8 @@ export default function Signin() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-contain bg-center bg-no-repeat bg-y-center"
             style={backgroundStyle}>
-            {/* 배경 오버레이 - 필요시 주석 해제 */}
-            {/* <div className="absolute inset-0 bg-black bg-opacity-5"></div> */}
+            {/* 배경 이미지 최적화를 위한 preload */}
+            <link rel="preload" as="image" href={signinBackground} />
 
             {/* 로그인 모달 */}
             <div className="relative z-10 w-full max-w-md mx-4">
@@ -219,19 +193,16 @@ export default function Signin() {
                         </p>
                     </div>
 
-
-
                     {/* 로그인 폼 */}
                     <form
                         className="space-y-6"
                         onSubmit={handleSubmit}
-                        action="javascript:void(0)"
                     >
                         {/* 아이디 필드 */}
                         <FormField
                             id="email"
                             label={<span className="flex items-center gap-2">{CHECK_ICON} 아이디(이메일)</span>}
-                            type="text"
+                            type="email"
                             placeholder="아이디를 입력하세요"
                             value={formData.email}
                             name="email"

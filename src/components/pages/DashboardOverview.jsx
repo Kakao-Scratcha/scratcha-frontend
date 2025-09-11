@@ -4,6 +4,7 @@ import UsageChart from '../ui/UsageChart';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import Modal from '../ui/Modal';
 import ErrorModal from '../ui/ErrorModal';
+import StatCard from '../ui/StatCard';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { useAuthStore } from '../../stores/authStore';
 import { paymentAPI } from '../../services/api';
@@ -79,7 +80,9 @@ export default function DashboardOverview() {
             getProfile({ showLoading: false });
         }, 30000); // 30초마다 갱신
 
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+        };
     }, []);
 
     // 결제 내역 확인 함수
@@ -200,11 +203,21 @@ export default function DashboardOverview() {
                 const saved = localStorage.getItem(`usageWarning_${user.id}`);
                 if (saved) {
                     const settings = JSON.parse(saved);
-                    setUsageWarningEnabled(settings.enabled || false);
-                    setUsageWarningThreshold(settings.threshold || 1000);
+                    // 타입 검증 추가
+                    if (typeof settings === 'object' && settings !== null) {
+                        setUsageWarningEnabled(Boolean(settings.enabled));
+                        setUsageWarningThreshold(
+                            typeof settings.threshold === 'number' && settings.threshold > 0
+                                ? settings.threshold
+                                : 1000
+                        );
+                    }
                 }
             } catch (error) {
                 console.error('사용량 경고 설정 불러오기 실패:', error);
+                // 기본값으로 설정
+                setUsageWarningEnabled(false);
+                setUsageWarningThreshold(1000);
             }
         }
     }, [user?.id]);
@@ -242,18 +255,18 @@ export default function DashboardOverview() {
                 setHasShownAppModal(false);
             }
         }
-    }, [apps, isAppsLoading, isInitialLoad, hasShownAppModal, showAppCreateModal]);
+    }, [apps, isAppsLoading, hasShownAppModal, showAppCreateModal]);
 
     // 앱 생성 모달 닫기
-    const handleCloseAppCreateModal = () => {
+    const handleCloseAppCreateModal = useCallback(() => {
         setShowAppCreateModal(false);
-    };
+    }, []);
 
     // 앱 페이지로 이동
-    const handleGoToAppPage = () => {
+    const handleGoToAppPage = useCallback(() => {
         setShowAppCreateModal(false);
         window.location.href = '/dashboard/app';
-    };
+    }, []);
 
     // 최근 활동 데이터 (7일 통계 데이터 기반으로 변경)
     const avgTokens = 1; // 1호출당 1토큰
@@ -267,10 +280,10 @@ export default function DashboardOverview() {
     // 7일 통계 데이터를 기반으로 최근 활동 계산
     const activity = useMemo(() => {
         // 7일 통계 데이터에서 합산된 값들 사용
-        const weeklyStats = requestsStats.weekly;
+        const weeklyStats = requestsStats?.weekly || {};
         const totalRequests = weeklyStats.currentCount || 0;
-        const successRate = weeklyStats.currentCount > 0 ?
-            ((weeklyStats.currentCount - (weeklyStats.currentCount * 0.1)) / weeklyStats.currentCount) * 100 : 0; // 예상 성공률 90%
+        const successRate = totalRequests > 0 ?
+            ((totalRequests - (totalRequests * 0.1)) / totalRequests) * 100 : 0; // 예상 성공률 90%
 
         const totalSuccess = Math.round(totalRequests * (successRate / 100));
         const totalFail = totalRequests - totalSuccess;
@@ -280,7 +293,7 @@ export default function DashboardOverview() {
             totalSuccess,    // 성공한 호출 수
             totalFail,       // 실패한 호출 수
         };
-    }, [requestsStats.weekly]);
+    }, [requestsStats?.weekly]);
 
     // 기간 선택 옵션
     const periodOptions = ['전체', '당일', '7일', '30일'];
@@ -390,98 +403,21 @@ export default function DashboardOverview() {
 
                     {/* 전체 사용량 (API 데이터 연동) */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="p-5 rounded-lg theme-card text-center">
-                            <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>당일</h3>
-                            {requestsStats.daily.loading ? (
-                                <div className="flex justify-center items-center h-20">
-                                    <LoadingSpinner />
-                                </div>
-                            ) : (
-                                <>
-                                    <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.daily.currentCount.toLocaleString()}</p>
-                                    <div className="mt-2 inline-flex items-center gap-2 justify-center">
-                                        {requestsStats.daily.rate > 0 ? (
-                                            <>
-                                                <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                                <span className="text-lg md:text-xl font-bold theme-success">+{Math.ceil(requestsStats.daily.rate)}%</span>
-                                            </>
-                                        ) : requestsStats.daily.rate < 0 ? (
-                                            <>
-                                                <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                                <span className="text-lg md:text-xl font-bold theme-error">{Math.ceil(requestsStats.daily.rate)}%</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="2" rx="1" /></svg>
-                                                <span className="text-lg md:text-xl font-bold text-yellow-500">0%</span>
-                                            </>
-                                        )}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
-                        <div className="p-5 rounded-lg theme-card text-center">
-                            <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>이번 주</h3>
-                            {requestsStats.weekly.loading ? (
-                                <div className="flex justify-center items-center h-20">
-                                    <LoadingSpinner />
-                                </div>
-                            ) : (
-                                <>
-                                    <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.weekly.currentCount.toLocaleString()}</p>
-                                    <div className="mt-2 inline-flex items-center gap-2 justify-center">
-                                        {requestsStats.weekly.rate > 0 ? (
-                                            <>
-                                                <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                                <span className="text-lg md:text-xl font-bold theme-success">+{Math.ceil(requestsStats.weekly.rate)}%</span>
-                                            </>
-                                        ) : requestsStats.weekly.rate < 0 ? (
-                                            <>
-                                                <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                                <span className="text-lg md:text-xl font-bold theme-error">{Math.ceil(requestsStats.weekly.rate)}%</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="2" rx="1" /></svg>
-                                                <span className="text-lg md:text-xl font-bold text-yellow-500">0%</span>
-                                            </>
-                                        )}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
-                        <div className="p-5 rounded-lg theme-card text-center">
-                            <h3 className={`${T.cardTitle} theme-text-primary mb-1`}>이번 달</h3>
-                            {requestsStats.monthly.loading ? (
-                                <div className="flex justify-center items-center h-20">
-                                    <LoadingSpinner />
-                                </div>
-                            ) : (
-                                <>
-                                    <p className="text-4xl md:text-5xl font-bold theme-blue-accent">{requestsStats.monthly.currentCount.toLocaleString()}</p>
-                                    <div className="mt-2 inline-flex items-center gap-2 justify-center">
-                                        {requestsStats.monthly.rate > 0 ? (
-                                            <>
-                                                <svg className="w-6 h-6 theme-success" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4l8 16H4L12 4z" /></svg>
-                                                <span className="text-lg md:text-xl font-bold theme-success">+{Math.ceil(requestsStats.monthly.rate)}%</span>
-                                            </>
-                                        ) : requestsStats.monthly.rate < 0 ? (
-                                            <>
-                                                <svg className="w-6 h-6 theme-error" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20l-8-16h16l-8 16z" /></svg>
-                                                <span className="text-lg md:text-xl font-bold theme-error">{Math.ceil(requestsStats.monthly.rate)}%</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="2" rx="1" /></svg>
-                                                <span className="text-lg md:text-xl font-bold text-yellow-500">0%</span>
-                                            </>
-                                        )}
-                                    </div>
-                                </>
-                            )}
-                        </div>
+                        <StatCard
+                            title="당일"
+                            data={requestsStats.daily}
+                            loading={requestsStats.daily?.loading}
+                        />
+                        <StatCard
+                            title="이번 주"
+                            data={requestsStats.weekly}
+                            loading={requestsStats.weekly?.loading}
+                        />
+                        <StatCard
+                            title="이번 달"
+                            data={requestsStats.monthly}
+                            loading={requestsStats.monthly?.loading}
+                        />
                     </div>
 
                     {/* 사용량 그래프 */}
@@ -529,7 +465,7 @@ export default function DashboardOverview() {
                         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                             <li className="py-4 flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <img src={ICONS.info} alt="전체호출" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
+                                    <img src={ICONS.info} alt="API 호출 통계 아이콘" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
                                     <div>
                                         <p className="font-semibold theme-text-primary">API 호출 성공</p>
                                         <p className="text-sm theme-text-secondary">최근 7일</p>
@@ -539,7 +475,7 @@ export default function DashboardOverview() {
                             </li>
                             <li className="py-4 flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <img src={ICONS.success} alt="성공" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
+                                    <img src={ICONS.success} alt="CAPTCHA 검증 성공 아이콘" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
                                     <div>
                                         <p className="font-semibold theme-text-primary">CAPTCHA 검증 성공</p>
                                         <p className="text-sm theme-text-secondary">최근 7일</p>
@@ -549,7 +485,7 @@ export default function DashboardOverview() {
                             </li>
                             <li className="py-4 flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <img src={ICONS.error} alt="실패" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
+                                    <img src={ICONS.error} alt="CAPTCHA 검증 실패 아이콘" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
                                     <div>
                                         <p className="font-semibold theme-text-primary">CAPTCHA 검증 실패</p>
                                         <p className="text-sm theme-text-secondary">최근 7일</p>
