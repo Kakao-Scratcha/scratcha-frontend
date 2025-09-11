@@ -324,7 +324,7 @@ export default function DashboardSettings() {
                     {/* 사용량 경고 설정 */}
                     {isPremiumUser && (
                         <div className="p-6 rounded-lg theme-card">
-                            <h3 className="text-xl font-semibold theme-text-primary mb-6">사용량 경고 설정</h3>
+                            <h2 className="text-xl font-semibold theme-text-primary mb-6">사용량 경고 설정</h2>
 
                             <div className="space-y-6">
                                 {/* 경고 활성화 토글 */}
@@ -339,6 +339,7 @@ export default function DashboardSettings() {
                                             checked={usageWarningEnabled}
                                             onChange={(e) => handleUsageWarningChange(e.target.checked, usageWarningThreshold)}
                                             className="sr-only peer"
+                                            aria-label="토큰 사용량 경고 활성화"
                                         />
                                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                                     </label>
@@ -354,12 +355,13 @@ export default function DashboardSettings() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <label htmlFor="usage-warning-threshold" className="sr-only">경고 임계값 선택</label>
+                                            <label htmlFor="usage-warning-threshold" className="text-sm font-medium theme-text-primary">경고 임계값:</label>
                                             <select
                                                 id="usage-warning-threshold"
                                                 value={usageWarningThreshold}
                                                 onChange={(e) => handleUsageWarningChange(usageWarningEnabled, parseInt(e.target.value))}
                                                 className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                aria-label="경고 임계값 선택"
                                             >
                                                 <option value={1000}>1,000 토큰</option>
                                                 <option value={3000}>3,000 토큰</option>
@@ -381,7 +383,7 @@ export default function DashboardSettings() {
 
                     {/* 회원 설정 */}
                     <div className="p-6 rounded-lg theme-card">
-                        <h3 className="text-xl font-semibold theme-text-primary mb-6">회원 설정</h3>
+                        <h2 className="text-xl font-semibold theme-text-primary mb-6">회원 설정</h2>
 
                         <div className="space-y-4">
                             {/* 이름 변경 */}
@@ -412,7 +414,7 @@ export default function DashboardSettings() {
                                 </div>
                                 <button
                                     onClick={() => setIsDeleteModalOpen(true)}
-                                    className="px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition"
+                                    className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition"
                                 >
                                     탈퇴하기
                                 </button>
@@ -558,7 +560,7 @@ export default function DashboardSettings() {
                         </button>
                         <button
                             onClick={handleAccountDelete}
-                            className="flex-1 px-4 py-2 rounded-lg font-semibold bg-red-500 text-white hover:bg-red-600 transition"
+                            className="flex-1 px-4 py-2 rounded-lg font-semibold bg-red-600 text-white hover:bg-red-700 transition"
                             disabled={isDeleting}
                         >
                             {isDeleting ? '탈퇴 중...' : '탈퇴하기'}
