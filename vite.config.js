@@ -65,63 +65,49 @@ export default defineConfig({
           return 'assets/[name]-[hash:8].[ext]';
         },
 
-        // 최적화된 청크 분리 전략 (Lighthouse 개선)
-        manualChunks: (id) => {
-          // node_modules 의존성 분리
-          if (id.includes('node_modules')) {
-            // React 관련 라이브러리
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'react-vendor';
-            }
-            // 차트 라이브러리
-            if (id.includes('recharts')) {
-              return 'chart-vendor';
-            }
-            // 결제 라이브러리
-            if (id.includes('tosspayments')) {
-              return 'payment-vendor';
-            }
-            // 기타 유틸리티 라이브러리
-            if (id.includes('axios') || id.includes('zustand') || id.includes('prismjs')) {
-              return 'utils-vendor';
-            }
-            // 기타 모든 node_modules
-            return 'vendor';
-          }
+        // 균형잡힌 청크 분리 전략 (성능과 유지보수성 균형)
+        manualChunks: {
+          // 1. 라이브러리 분리 (공통 의존성)
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'chart-vendor': ['recharts'],
+          'payment-vendor': ['@tosspayments/tosspayments-sdk'],
+          'utils-vendor': ['axios', 'zustand', 'prismjs'],
 
-          // 소스 코드 분리
-          if (id.includes('src/components/pages/MainPage.jsx')) {
-            return 'main-page';
-          }
+          // 2. 메인 페이지 개별 분리 (LCP 최적화)
+          'main-page': ['./src/components/pages/MainPage.jsx'],
 
-          if (id.includes('src/components/pages/DashboardApp.jsx')) {
-            return 'dashboard-app';
-          }
+          // 3. 공개 페이지 그룹화 (로그인 전)
+          'public-pages': [
+            './src/components/pages/Overview.jsx',
+            './src/components/pages/Pricing.jsx',
+            './src/components/pages/Demo.jsx',
+            './src/components/pages/ApiDocs.jsx',
+            './src/components/pages/Contact.jsx'
+          ],
 
-          // 대시보드 페이지들
-          if (id.includes('src/components/pages/Dashboard')) {
-            return 'dashboard-pages';
-          }
+          // 4. 인증 페이지 그룹화
+          'auth-pages': [
+            './src/components/pages/Signin.jsx',
+            './src/components/pages/Signup.jsx'
+          ],
 
-          // 공개 페이지들
-          if (id.includes('src/components/pages/Overview.jsx') ||
-            id.includes('src/components/pages/Pricing.jsx') ||
-            id.includes('src/components/pages/Demo.jsx') ||
-            id.includes('src/components/pages/ApiDocs.jsx') ||
-            id.includes('src/components/pages/Contact.jsx')) {
-            return 'public-pages';
-          }
+          // 5. 대시보드 분리 (로그인 후)
+          'dashboard-pages': [
+            './src/components/pages/DashboardOverview.jsx',
+            './src/components/pages/DashboardUsage.jsx',
+            './src/components/pages/DashboardBilling.jsx',
+            './src/components/pages/DashboardSettings.jsx'
+          ],
 
-          // 인증 페이지들
-          if (id.includes('src/components/pages/Signin.jsx') ||
-            id.includes('src/components/pages/Signup.jsx')) {
-            return 'auth-pages';
-          }
+          // 6. 큰 컴포넌트 개별 분리
+          'dashboard-app': ['./src/components/pages/DashboardApp.jsx'],
 
-          // 결제 페이지들
-          if (id.includes('src/components/tosspayments/')) {
-            return 'payment-pages';
-          }
+          // 7. 결제 관련 분리
+          'payment-pages': [
+            './src/components/tosspayments/Checkout.jsx',
+            './src/components/tosspayments/Success.jsx',
+            './src/components/tosspayments/Fail.jsx'
+          ]
         }
       }
     },
