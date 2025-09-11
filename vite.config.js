@@ -200,10 +200,10 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,  // console.log 제거
+        drop_console: false,  // console.log 제거 (디버깅용으로 임시 비활성화)
         drop_debugger: true, // debugger 제거
         // 추가 압축 옵션 (Lighthouse 개선)
-        pure_funcs: ['console.log', 'console.info', 'console.warn', 'console.error'], // 순수 함수 제거
+        pure_funcs: [], // 순수 함수 제거 (디버깅용으로 콘솔 로그 제거 비활성화)
         passes: 3, // 압축 패스 증가 (더 강력한 압축)
         unsafe: false, // 안전한 압축만 사용
         unsafe_comps: false, // 안전한 비교 연산자만 사용

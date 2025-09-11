@@ -71,12 +71,15 @@ export const useErrorHandler = () => {
      */
     const executeWithErrorHandling = useCallback(async (apiCall, operation, onSuccess = null, throwError = false) => {
         try {
+            console.log(`🔍 API 호출 시작: ${operation}`);
             const result = await apiCall();
+            console.log(`✅ API 호출 성공: ${operation}`, result);
             if (onSuccess) {
                 onSuccess(result);
             }
             return result;
         } catch (error) {
+            console.log(`❌ API 호출 실패: ${operation}`, error);
             handleError(error, operation); // 페이지 리로드로 재시도
             if (throwError) {
                 throw error;
@@ -102,6 +105,17 @@ export const useErrorHandler = () => {
         const allSuccessful = results.every(result =>
             result.status === 'fulfilled' && result.value !== null
         );
+
+        // 디버깅을 위한 로그 (쿠버네티스 환경 문제 해결용)
+        console.log('🔍 executeAllWithErrorHandling 결과:', {
+            allSuccessful,
+            results: results.map((result, index) => ({
+                index,
+                status: result.status,
+                value: result.value,
+                reason: result.reason
+            }))
+        });
 
         // 하나라도 실패하면 에러 모달 표시 (페이지 리로드로 재시도)
         if (!allSuccessful) {

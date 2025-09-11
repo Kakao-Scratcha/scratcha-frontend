@@ -315,6 +315,17 @@ export default function DashboardOverview() {
     // 모든 데이터가 로드될 때까지 로딩 표시
     const isDataLoading = isLoading || isAppsLoading || isPaymentHistoryLoading || !user || isInitialLoad.current;
 
+    // 디버깅을 위한 로그 (쿠버네티스 환경 문제 해결용)
+    console.log('🔍 로딩 상태 디버깅:', {
+        isLoading,
+        isAppsLoading,
+        isPaymentHistoryLoading,
+        hasUser: !!user,
+        isInitialLoad: isInitialLoad.current,
+        isDataLoading,
+        user: user ? { id: user.id, email: user.email } : null
+    });
+
     return (
         <DashboardLayout
             title="대시보드 개요"
