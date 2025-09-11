@@ -67,7 +67,7 @@ export default defineConfig({
         assetFileNames: (assetInfo) => {
           // 이미지 파일은 더 긴 해시 사용 (변경 빈도 낮음)
           if (assetInfo.name && /\.(png|jpe?g|gif|svg|webp|ico)$/i.test(assetInfo.name)) {
-            return 'assets/[name]-[hash:12].[ext]';
+            return 'assets/[name]-[hash:8].[ext]';
           }
           // 기타 파일은 8자리 해시 사용
           return 'assets/[name]-[hash:8].[ext]';
