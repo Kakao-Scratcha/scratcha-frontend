@@ -1,10 +1,11 @@
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import mainSelectImage from '../../assets/images/main-select.png?format=webp&q=85';
-import mainScratchaImage from '../../assets/images/main-scratcha.png?format=webp&q=85';
+import OptimizedImage from '../ui/OptimizedImage';
+import mainSelectImage from '../../assets/images/main-select.png?w=400&h=100&format=webp&q=95';
+import mainScratchaImage from '../../assets/images/main-scratcha.png?w=400&h=400&format=webp&q=95';
 
-// SVG 아이콘들을 상수로 분리 (재렌더링 방지)
+// SVG 아이콘들을 상수로 분리
 const ARROW_ICON = (
     <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -51,17 +52,25 @@ export default function MainPage() {
             <section className="relative overflow-hidden py-24">
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="text-left max-w-4xl mx-auto">
-                        <h1 className="text-5xl md:text-7xl font-bold mb-6 theme-text-primary">
+                        <h1 className="text-5xl md:text-7xl font-bold mb-6 theme-text-primary" style={{
+                            contain: 'layout',
+                            willChange: 'transform',
+                            fontDisplay: 'swap'
+                        }}>
                             scratCHA.
                         </h1>
-                        <p className="text-xl md:text-2xl mb-8 max-w-3xl theme-text-secondary">
+                        <p className="text-xl md:text-2xl mb-8 max-w-3xl theme-text-secondary" style={{
+                            contain: 'layout',
+                            willChange: 'transform',
+                            fontDisplay: 'swap'
+                        }}>
                             scratCHA는 이미지를 긁어 확인하고 정답을 맞추는 2단계 인증으로,<br />
                             기존 CAPTCHA를 뛰어넘는 강력한 보안을 제공합니다
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-start">
                             <button
                                 onClick={handleDemoClick}
-                                className="px-8 py-4 font-bold rounded-lg text-lg hover:opacity-90 transition bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white"
+                                className="px-8 py-4 font-bold rounded-lg text-lg hover:opacity-90 transition bg-blue-700 dark:bg-blue-600 hover:bg-blue-800 dark:hover:bg-blue-700 text-white"
                                 aria-label="스크래치 캡차 데모 체험하기"
                             >
                                 데모 체험하기 →
@@ -104,14 +113,15 @@ export default function MainPage() {
                             <div className="flex-1">
                                 <div className="text-center mb-4">
                                     <div className="w-[400px] h-[400px] bg-gray-200 dark:bg-gray-700 rounded-lg mx-auto flex items-center justify-center">
-                                        <img
+                                        <OptimizedImage
                                             src={mainScratchaImage}
                                             alt="스크래치 캡차 스크래치"
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-auto"
                                             width={400}
-                                            height={300}
+                                            height={400}
                                             loading="eager"
                                             fetchPriority="high"
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 400px"
                                         />
                                     </div>
                                 </div>
@@ -132,14 +142,15 @@ export default function MainPage() {
                             <div className="flex-1">
                                 <div className="text-center mb-4">
                                     <div className="w-[400px] h-[400px] bg-white dark:bg-black rounded-lg mx-auto flex items-center justify-center">
-                                        <img
+                                        <OptimizedImage
                                             src={mainSelectImage}
                                             alt="스크래치 캡차 정답선택"
-                                            className="w-full object-cover"
+                                            className="w-full h-auto"
                                             width={400}
-                                            height={300}
+                                            height={400}
                                             loading="eager"
                                             fetchPriority="high"
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 400px"
                                         /></div>
                                 </div>
                                 <div className="flex items-center justify-center gap-3">

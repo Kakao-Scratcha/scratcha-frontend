@@ -31,7 +31,7 @@ export default function SuccessModal({
                 <div className="flex gap-3">
                     <button
                         onClick={onConfirm || onClose}
-                        className="flex-1 bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition"
+                        className="flex-1 bg-blue-700 dark:bg-blue-600 hover:bg-blue-800 dark:hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition"
                     >
                         확인
                     </button>

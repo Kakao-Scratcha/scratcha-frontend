@@ -171,7 +171,7 @@ export default function Pricing() {
                                 <button
                                     onClick={handlePlanClick}
                                     className={`w-full py-3 px-6 rounded-lg font-bold text-lg transition mt-auto ${plan.popular
-                                        ? 'bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white'
+                                        ? 'bg-blue-700 dark:bg-blue-600 hover:bg-blue-800 dark:hover:bg-blue-700 text-white'
                                         : 'border border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white'
                                         }`}
                                     aria-label={`${plan.name} 요금제 ${plan.buttonText}`}

@@ -180,7 +180,7 @@ export default function DashboardBilling() {
                             <h3 className={`${T.sectionTitle} text-gray-900 dark:text-gray-100`}>토큰 현황 및 사용량 통계</h3>
                             <button
                                 onClick={() => setIsPlanChangeModalOpen(true)}
-                                className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white dark:text-gray-900 rounded-lg font-semibold hover:opacity-90 transition"
+                                className="px-6 py-2 bg-blue-700 dark:bg-blue-600 text-white dark:text-gray-900 rounded-lg font-semibold hover:opacity-90 transition"
                             >
                                 토큰 충전
                             </button>
@@ -520,7 +520,7 @@ export default function DashboardBilling() {
                     <div className="flex justify-center pt-4">
                         <button
                             onClick={() => setShowPaymentResultModal(false)}
-                            className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white dark:text-gray-900 rounded-lg font-medium hover:opacity-90 transition"
+                            className="px-6 py-2 bg-blue-700 dark:bg-blue-600 text-white dark:text-gray-900 rounded-lg font-medium hover:opacity-90 transition"
                         >
                             확인
                         </button>
