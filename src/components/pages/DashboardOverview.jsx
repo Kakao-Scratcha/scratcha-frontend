@@ -167,9 +167,20 @@ export default function DashboardOverview() {
 
                 if (allSuccessful) {
                     console.log('✅ 모든 초기 데이터 로드 완료');
-                    isInitialLoad.current = false; // 성공한 경우에만 로딩 완료
+                    console.log('🔍 isInitialLoad 변경 전:', isInitialLoad.current);
+                    isInitialLoad.current = false;
+                    console.log('🔍 isInitialLoad 변경 후:', isInitialLoad.current);
+                    console.log('🔍 로딩 상태 즉시 확인:', {
+                        isLoading,
+                        isAppsLoading,
+                        isPaymentHistoryLoading,
+                        hasUser: !!user,
+                        isInitialLoad: isInitialLoad.current,
+                        isDataLoading: isLoading || isAppsLoading || isPaymentHistoryLoading || !user || isInitialLoad.current
+                    });
                 } else {
                     console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
+                    console.log('🔍 allSuccessful 값:', allSuccessful);
                     // 실패한 경우에는 로딩 상태 유지 (isInitialLoad.current = true)
                 }
             } catch (error) {
@@ -323,7 +334,15 @@ export default function DashboardOverview() {
         hasUser: !!user,
         isInitialLoad: isInitialLoad.current,
         isDataLoading,
-        user: user ? { id: user.id, email: user.email } : null
+        user: user ? { id: user.id, email: user.email } : null,
+        // 각 조건별 상세 분석
+        conditions: {
+            'isLoading': isLoading,
+            'isAppsLoading': isAppsLoading,
+            'isPaymentHistoryLoading': isPaymentHistoryLoading,
+            '!user': !user,
+            'isInitialLoad.current': isInitialLoad.current
+        }
     });
 
     return (
