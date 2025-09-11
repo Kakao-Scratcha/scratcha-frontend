@@ -62,12 +62,14 @@ export default function MainPage() {
                             <button
                                 onClick={handleDemoClick}
                                 className="px-8 py-4 font-bold rounded-lg text-lg hover:opacity-90 transition bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white"
+                                aria-label="스크래치 캡차 데모 체험하기"
                             >
                                 데모 체험하기 →
                             </button>
                             <button
                                 onClick={handleFreeStartClick}
                                 className="px-8 py-4 border font-bold rounded-lg text-lg hover:opacity-90 transition theme-button-secondary"
+                                aria-label="스크래치 캡차 무료로 시작하기"
                             >
                                 무료로 시작하기 →
                             </button>
@@ -108,7 +110,8 @@ export default function MainPage() {
                                             className="w-full h-full object-cover"
                                             width={400}
                                             height={300}
-                                            loading="lazy"
+                                            loading="eager"
+                                            fetchPriority="high"
                                         />
                                     </div>
                                 </div>
@@ -135,7 +138,8 @@ export default function MainPage() {
                                             className="w-full object-cover"
                                             width={400}
                                             height={300}
-                                            loading="lazy"
+                                            loading="eager"
+                                            fetchPriority="high"
                                         /></div>
                                 </div>
                                 <div className="flex items-center justify-center gap-3">

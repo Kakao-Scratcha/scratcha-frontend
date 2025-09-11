@@ -63,7 +63,7 @@ const PRICING_DATA = {
         questions: [
             {
                 question: "어떤 요금제를 사용할 수 있나요?",
-                answer: "Starter, Pro, Enterprise 중에 원하는 요금제로 언제든지 토큰을 충전하여 사용할 수 있습니다."
+                answer: "Starter, Standard, Enterprise 중에 원하는 요금제로 언제든지 토큰을 충전하여 사용할 수 있습니다."
             },
             {
                 question: "Free 요금제의 제약사항은 무엇인가요?",
@@ -174,6 +174,7 @@ export default function Pricing() {
                                         ? 'bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white'
                                         : 'border border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white'
                                         }`}
+                                    aria-label={`${plan.name} 요금제 ${plan.buttonText}`}
                                 >
                                     {plan.buttonText}
                                 </button>
