@@ -103,7 +103,7 @@ export const useErrorHandler = () => {
 
         // 모든 API가 성공했는지 확인
         const allSuccessful = results.every(result =>
-            result.status === 'fulfilled' && result.value !== null
+            result.status === 'fulfilled'
         );
 
         // 디버깅을 위한 로그 (쿠버네티스 환경 문제 해결용)
