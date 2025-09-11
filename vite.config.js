@@ -73,48 +73,113 @@ export default defineConfig({
           return 'assets/[name]-[hash:8].[ext]';
         },
 
-        // 균형잡힌 청크 분리 전략 (성능과 유지보수성 균형)
+        // 성능 최적화를 위한 청크 분리 전략
         manualChunks: {
           // 1. 라이브러리 분리 (공통 의존성)
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'chart-vendor': ['recharts'],
-          'payment-vendor': ['@tosspayments/tosspayments-sdk'],
-          'utils-vendor': ['axios', 'zustand', 'prismjs'],
+          'utils-vendor': ['axios', 'zustand'],
 
-          // 2. 메인 페이지 개별 분리 (LCP 최적화)
-          'main-page': ['./src/components/pages/MainPage.jsx'],
-
-          // 3. 공개 페이지 그룹화 (로그인 전)
-          'public-pages': [
-            './src/components/pages/Overview.jsx',
-            './src/components/pages/Pricing.jsx',
-            './src/components/pages/Demo.jsx',
-            './src/components/pages/ApiDocs.jsx',
-            './src/components/pages/Contact.jsx'
+          // 2. 초기 로딩 최적화 (메인 페이지만)
+          'critical': [
+            './src/components/pages/MainPage.jsx',
+            './src/components/Layout.jsx',
+            './src/components/ui/Header.jsx',
+            './src/components/ui/Footer.jsx'
           ],
 
-          // 4. 인증 페이지 그룹화
+          // 3. 공개 페이지 개별 분리 (사용자 행동 기반)
+          'overview-page': ['./src/components/pages/Overview.jsx'],
+          'pricing-page': ['./src/components/pages/Pricing.jsx'],
+          'demo-page': [
+            './src/components/pages/Demo.jsx',
+            'scratcha-sdk'
+          ],
+          'api-docs-page': [
+            './src/components/pages/ApiDocs.jsx',
+            'prismjs'
+          ],
+          'contact-page': ['./src/components/pages/Contact.jsx'],
+
+          // 4. 인증 페이지 그룹화 (함께 사용됨)
           'auth-pages': [
             './src/components/pages/Signin.jsx',
             './src/components/pages/Signup.jsx'
           ],
 
-          // 5. 대시보드 분리 (로그인 후)
-          'dashboard-pages': [
-            './src/components/pages/DashboardOverview.jsx',
-            './src/components/pages/DashboardUsage.jsx',
-            './src/components/pages/DashboardBilling.jsx',
-            './src/components/pages/DashboardSettings.jsx'
-          ],
+          // 5. 대시보드 페이지 개별 분리 (큰 페이지들)
+          'dashboard-overview': ['./src/components/pages/DashboardOverview.jsx'],
+          'dashboard-usage': ['./src/components/pages/DashboardUsage.jsx'],
+          'dashboard-billing': ['./src/components/pages/DashboardBilling.jsx'],
+          'dashboard-settings': ['./src/components/pages/DashboardSettings.jsx'],
+
+          // 차트 라이브러리 별도 청크 (대시보드에서 공통 사용)
+          'chart-vendor': ['recharts'],
 
           // 6. 큰 컴포넌트 개별 분리
           'dashboard-app': ['./src/components/pages/DashboardApp.jsx'],
 
-          // 7. 결제 관련 분리
+          // 6. 결제 관련 분리 (지연 로딩)
           'payment-pages': [
             './src/components/tosspayments/Checkout.jsx',
             './src/components/tosspayments/Success.jsx',
-            './src/components/tosspayments/Fail.jsx'
+            './src/components/tosspayments/Fail.jsx',
+            '@tosspayments/tosspayments-sdk'
+          ],
+
+          // 7. UI 컴포넌트 그룹화 (자주 함께 사용됨)
+          'ui-forms': [
+            './src/components/forms/FormField.jsx',
+            './src/components/forms/FormInput.jsx',
+            './src/components/forms/FormLabel.jsx',
+            './src/components/forms/SignupButton.jsx'
+          ],
+          'ui-modals': [
+            './src/components/ui/Modal.jsx',
+            './src/components/ui/ErrorModal.jsx',
+            './src/components/ui/SuccessModal.jsx'
+          ],
+          'ui-charts': [
+            './src/components/ui/Chart.jsx',
+            './src/components/ui/UsageChart.jsx',
+            './src/components/ui/MultiAppUsageChart.jsx'
+          ],
+          'ui-tables': [
+            './src/components/ui/Table.jsx',
+            './src/components/ui/DataTable.jsx',
+            './src/components/ui/PaymentHistoryTable.jsx'
+          ],
+
+          // 8. 서비스/유틸리티 분리 (캐싱 최적화)
+          'services': [
+            './src/services/api.js',
+            './src/config/api.js'
+          ],
+          'utils': [
+            './src/utils/chartDataUtils.js',
+            './src/utils/chartImports.js',
+            './src/utils/logger.js',
+            './src/utils/tokenUtils.js',
+            './src/utils/validators.js'
+          ],
+          'stores': [
+            './src/stores/authStore.js',
+            './src/stores/dashboardStore.js',
+            './src/stores/darkModeStore.js'
+          ],
+          'hooks': [
+            './src/hooks/useAuth.js',
+            './src/hooks/useErrorHandler.js',
+            './src/hooks/useSignupForm.js'
+          ],
+
+          // 9. 대시보드 레이아웃 컴포넌트
+          'dashboard-layout': [
+            './src/components/dashboard/DashboardLayout.jsx',
+            './src/components/dashboard/DashboardHeader.jsx',
+            './src/components/dashboard/Sidebar.jsx',
+            './src/components/dashboard/MenuData.jsx',
+            './src/components/dashboard/MenuLink.jsx',
+            './src/components/dashboard/UserInfo.jsx'
           ]
         }
       }
