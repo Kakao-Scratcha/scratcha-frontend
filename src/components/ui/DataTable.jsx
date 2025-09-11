@@ -34,6 +34,7 @@ export default function DataTable({
                     onClick={() => handlePageChange(1)}
                     disabled={currentPage === 1}
                     className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="첫 페이지로 이동"
                 >
                     &lt;&lt;
                 </button>
@@ -43,6 +44,7 @@ export default function DataTable({
                     onClick={() => handlePageChange(Math.max(1, currentPage - 10))}
                     disabled={currentPage <= 1}
                     className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="이전 10페이지로 이동"
                 >
                     &lt;
                 </button>
@@ -82,6 +84,8 @@ export default function DataTable({
                                 ? 'bg-blue-600 text-white border-blue-600'
                                 : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
                                 }`}
+                            aria-label={`${page}페이지로 이동`}
+                            aria-current={page === currentPage ? 'page' : undefined}
                         >
                             {page}
                         </button>
@@ -93,6 +97,7 @@ export default function DataTable({
                     onClick={() => handlePageChange(Math.min(totalPages, currentPage + 10))}
                     disabled={currentPage >= totalPages}
                     className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="다음 10페이지로 이동"
                 >
                     &gt;
                 </button>
@@ -102,6 +107,7 @@ export default function DataTable({
                     onClick={() => handlePageChange(totalPages)}
                     disabled={currentPage === totalPages}
                     className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="마지막 페이지로 이동"
                 >
                     &gt;&gt;
                 </button>

@@ -394,7 +394,7 @@ export default function DashboardApp() {
             tempDiv.style.borderRadius = '8px';
             tempDiv.style.zIndex = '9999';
             tempDiv.innerHTML = `
-                <h3>API 키 복사</h3>
+                <h2>API 키 복사</h2>
                 <p>아래 텍스트를 선택하여 복사하세요:</p>
                 <textarea readonly style="width: 100%; height: 60px; margin: 10px 0;">${text}</textarea>
                 <button onclick="this.parentElement.remove()" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">닫기</button>
@@ -444,11 +444,11 @@ export default function DashboardApp() {
                     <div className="p-6 rounded-lg theme-card border-2 border-blue-200 dark:border-blue-800">
                         <div className="flex items-center justify-between mb-6">
                             <div>
-                                <h3 className="text-xl font-semibold theme-text-primary">APP 관리</h3>
+                                <h2 className="text-xl font-semibold theme-text-primary">APP 관리</h2>
                             </div>
                             <button
                                 onClick={() => setIsAddAppModalOpen(true)}
-                                className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -518,7 +518,7 @@ export default function DashboardApp() {
                                                         <button
                                                             onClick={() => handleOpenEditApp(app)}
                                                             disabled={loading}
-                                                            className="group relative px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                            className="group relative px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                                         >
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -532,7 +532,7 @@ export default function DashboardApp() {
                                                                 setIsDeleteAppModalOpen(true);
                                                             }}
                                                             disabled={loading}
-                                                            className="group relative px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                            className="group relative px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                                         >
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -597,6 +597,7 @@ export default function DashboardApp() {
                                                             }
                                                         }}
                                                         className="p-2 hover:bg-transparent rounded-lg transition"
+                                                        aria-label={apiKeys.filter(key => key.appId === app.id).length === 0 ? "API 키 추가" : (expandedApps.has(app.id) ? "API 키 목록 접기" : "API 키 목록 펼치기")}
                                                     >
                                                         {apiKeys.filter(key => key.appId === app.id).length === 0 ? (
                                                             // API 키가 없는 경우: 멋진 + 아이콘
@@ -678,7 +679,7 @@ export default function DashboardApp() {
                                                                                     }
                                                                                 }}
                                                                                 disabled={togglingKeyIds.has(apiKey.id) || loading}
-                                                                                className={`group relative px-4 py-2 ${apiKey.status === 'active' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
+                                                                                className={`group relative px-4 py-2 ${apiKey.status === 'active' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
                                                                             >
                                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                     {apiKey.status === 'active' ? (
@@ -695,7 +696,7 @@ export default function DashboardApp() {
                                                                                     setSelectedAppId(app.id);
                                                                                     setIsDeleteApiKeyModalOpen(true);
                                                                                 }}
-                                                                                className="group relative px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                                                                                className="group relative px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
                                                                             >
                                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -725,7 +726,7 @@ export default function DashboardApp() {
                                                                                     alert('복사에 실패했습니다.');
                                                                                 }
                                                                             }}
-                                                                            className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                                                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
                                                                         >
                                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -750,7 +751,7 @@ export default function DashboardApp() {
                                     <svg className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">APP이 없습니다</h3>
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">APP이 없습니다</h2>
                                     <p className="text-gray-600 dark:text-gray-400">첫 번째 APP을 추가해보세요</p>
                                 </div>
                             )}
@@ -1001,7 +1002,7 @@ export default function DashboardApp() {
                         <button
                             onClick={handleDeleteApp}
                             disabled={loading}
-                            className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition disabled:opacity-50"
+                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50"
                         >
                             {loading ? '삭제 중...' : '삭제'}
                         </button>
@@ -1106,7 +1107,7 @@ export default function DashboardApp() {
                         <button
                             onClick={handleDeleteApiKey}
                             disabled={loading}
-                            className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition disabled:opacity-50"
+                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50"
                         >
                             {loading ? '삭제 중...' : '삭제'}
                         </button>

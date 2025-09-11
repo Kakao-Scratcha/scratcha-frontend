@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import UsageChart from '../ui/UsageChart';
 import MultiAppUsageChart from '../ui/MultiAppUsageChart';
@@ -44,8 +44,8 @@ export default function DashboardUsage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
 
-    // 초기 로드 완료 여부 추적
-    const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+    // 초기 로드 여부를 추적하는 ref
+    const isInitialLoad = useRef(true);
 
     // 선택된 APP의 API 키들 (전체 선택 시 모든 API 키)
     const appApiKeys = selectedAppId === 'all' ? apiKeys : apiKeys.filter(key => String(key.appId) === String(selectedAppId));
@@ -143,10 +143,10 @@ export default function DashboardUsage() {
 
                 if (allSuccessful) {
                     console.log('✅ 모든 초기 데이터 로드 완료');
-                    setIsInitialLoadComplete(true); // 성공한 경우에만 초기 로드 완료
+                    isInitialLoad.current = false; // 성공한 경우에만 로딩 완료
                 } else {
                     console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
-                    // 실패한 경우에는 초기 로드 상태 유지 (isInitialLoadComplete = false)
+                    // 실패한 경우에는 로딩 상태 유지 (isInitialLoad.current = true)
                 }
             } catch (error) {
                 console.error('❌ 초기 데이터 로드 중 예상치 못한 오류:', error);
@@ -163,7 +163,7 @@ export default function DashboardUsage() {
     useEffect(() => {
         const updateData = async () => {
             // 초기 로드가 완료된 후에만 실행
-            if (!isInitialLoadComplete) return;
+            if (isInitialLoad.current) return;
 
             const periodType = getPeriodType(selectedPeriod);
 
@@ -206,7 +206,7 @@ export default function DashboardUsage() {
         };
 
         updateData();
-    }, [itemsPerPage, selectedPeriod, viewMode, selectedApiKeyId, selectedAppId, isInitialLoadComplete, loadAllLogs, loadLogsByKeyId, loadStatisticsSummary, loadMultiAppStatistics]);
+    }, [itemsPerPage, selectedPeriod, viewMode, selectedApiKeyId, selectedAppId, loadAllLogs, loadLogsByKeyId, loadStatisticsSummary, loadMultiAppStatistics]);
 
     // 스토어 기간 동기화
     useEffect(() => {
@@ -259,25 +259,6 @@ export default function DashboardUsage() {
 
     // 현재 표시할 로그 데이터
     const currentLogs = logs.items || [];
-
-    // 디버깅용 로그 제거
-    // useEffect(() => {
-    //     console.log('🔍 DashboardUsage 렌더링:', {
-    //         selectedAppId,
-    //         selectedApiKeyId,
-    //         selectedPeriod,
-    //         viewMode,
-    //         currentPage,
-    //         itemsPerPage,
-    //         logs: {
-    //             items: logs.items?.length || 0,
-    //             total: logs.total,
-    //             page: logs.page,
-    //             loading: logs.loading,
-    //             error: logs.error
-    //         }
-    //     });
-    // }, [selectedAppId, selectedApiKeyId, selectedPeriod, viewMode, currentPage, itemsPerPage, logs]);
 
     // 날짜 포맷팅 함수
     const formatDate = (dateString) => {
@@ -393,7 +374,7 @@ export default function DashboardUsage() {
     ];
 
     // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
-    const isDataLoading = isLoading || !apps || apps.length === 0 || !isInitialLoadComplete;
+    const isDataLoading = isLoading || !apps || apps.length === 0 || isInitialLoad.current;
 
     return (
         <DashboardLayout
@@ -485,7 +466,7 @@ export default function DashboardUsage() {
                             <div className="p-6 rounded-lg theme-card">
                                 <div className="flex justify-between items-center mb-6">
                                     <div className="flex items-center gap-4">
-                                        <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량</h3>
+                                        <h2 className={`${T.sectionTitle} theme-text-primary`}>사용량</h2>
                                         {!isLoading && (
                                             <span className={`${T.label} theme-text-secondary`}>{rangeLabel}</span>
                                         )}
@@ -521,7 +502,7 @@ export default function DashboardUsage() {
                                             <svg className="w-16 h-16 mb-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                             </svg>
-                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">사용량 데이터가 없습니다</h3>
+                                            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">사용량 데이터가 없습니다</h2>
                                             <p className="text-gray-600 dark:text-gray-400 text-center">
                                                 선택한 기간에 사용량 데이터가 없습니다.<br />
                                                 다른 기간을 선택하거나 APP을 확인해보세요.

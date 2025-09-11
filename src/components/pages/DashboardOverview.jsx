@@ -74,17 +74,6 @@ export default function DashboardOverview() {
         preloadImages();
     }, []);
 
-    // 주기적으로 사용자 정보 갱신
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const { getProfile } = useAuthStore.getState();
-            getProfile({ showLoading: false });
-        }, 30000); // 30초마다 갱신
-
-        return () => {
-            clearInterval(interval);
-        };
-    }, []);
 
     // 결제 내역 확인 함수
     const checkPaymentHistory = useCallback(async () => {
@@ -363,6 +352,7 @@ export default function DashboardOverview() {
                                         <button
                                             onClick={() => window.location.href = '/dashboard/billing'}
                                             className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors"
+                                            aria-label="토큰 충전 페이지로 이동"
                                         >
                                             토큰 충전하기
                                         </button>

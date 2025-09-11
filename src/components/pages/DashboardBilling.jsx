@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
 import ErrorModal from '../ui/ErrorModal';
@@ -18,10 +18,10 @@ export default function DashboardBilling() {
     };
 
     const { user } = useAuthStore();
-    const { requestsStats, loadAllRequestsStats, isLoading } = useDashboardStore();
+    const { requestsStats, loadAllRequestsStats } = useDashboardStore();
 
-    // 에러 처리 훅
-    const { errorState, closeError, handleRetry, executeWithErrorHandling, isRetrying } = useErrorHandler();
+    // 에러 처리 훅 (투트랙 시스템)
+    const { errorState, closeError, handleRetry, executeAllWithErrorHandling, isRetrying } = useErrorHandler();
 
     const [isPlanChangeModalOpen, setIsPlanChangeModalOpen] = useState(false);
 
@@ -43,13 +43,6 @@ export default function DashboardBilling() {
         }
     }, [location.state]);
 
-    // 사용량 통계 데이터 로드
-    useEffect(() => {
-        executeWithErrorHandling(
-            () => loadAllRequestsStats(),
-            '사용량 통계 로드'
-        );
-    }, [loadAllRequestsStats, executeWithErrorHandling]);
 
     // 토큰 충전 선택 처리 - 바로 checkout 페이지로 이동
     const handleTokenSelect = (tokenPackage) => {
@@ -157,8 +150,41 @@ export default function DashboardBilling() {
 
 
 
-    // 모든 데이터가 로드될 때까지 로딩 표시 (구매내역은 별도 로딩 처리)
-    const isDataLoading = isLoading || !user;
+    // 초기 로드 여부를 추적하는 ref
+    const isInitialLoad = useRef(true);
+
+    // 초기 데이터 로드 (투트랙 시스템 - 페이지 로드 에러)
+    useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                // 모든 API 호출을 에러 처리와 함께 실행 (모든 API가 성공해야만 완료)
+                const allSuccessful = await executeAllWithErrorHandling([
+                    {
+                        apiCall: () => loadAllRequestsStats(),
+                        operation: '결제 정보 로드',
+                        onSuccess: () => console.log('✅ 결제 정보 로드 완료')
+                    }
+                ]);
+
+                if (allSuccessful) {
+                    console.log('✅ 모든 초기 데이터 로드 완료');
+                    isInitialLoad.current = false; // 성공한 경우에만 로딩 완료
+                } else {
+                    console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
+                    // 실패한 경우에는 로딩 상태 유지 (isInitialLoad.current = true)
+                }
+            } catch (error) {
+                console.error('❌ 초기 데이터 로드 중 예상치 못한 오류:', error);
+                // 예상치 못한 오류의 경우에도 로딩 상태 유지 (에러 모달 표시를 위해)
+                // isInitialLoad.current는 그대로 true로 유지
+            }
+        };
+
+        loadInitialData();
+    }, [loadAllRequestsStats, executeAllWithErrorHandling]);
+
+    // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
+    const isDataLoading = !user || isInitialLoad.current;
 
     return (
         <DashboardLayout
@@ -177,7 +203,7 @@ export default function DashboardBilling() {
                     {/* 토큰 현황 및 사용량 통계 */}
                     <div className="theme-card p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className={`${T.sectionTitle} text-gray-900 dark:text-gray-100`}>토큰 현황 및 사용량 통계</h3>
+                            <h2 className={`${T.sectionTitle} text-gray-900 dark:text-gray-100`}>토큰 현황 및 사용량 통계</h2>
                             <button
                                 onClick={() => setIsPlanChangeModalOpen(true)}
                                 className="px-6 py-2 bg-blue-700 dark:bg-blue-600 text-white dark:text-gray-900 rounded-lg font-semibold hover:opacity-90 transition"
@@ -231,7 +257,7 @@ export default function DashboardBilling() {
                                         </div>
                                         <div className="text-right">
                                             {requestsStats.daily.rate > 0 ? (
-                                                <div className="flex items-center text-green-600 dark:text-green-400">
+                                                <div className="flex items-center text-green-700 dark:text-green-300">
                                                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                                         <path d="M12 4l8 16H4L12 4z" />
                                                     </svg>
@@ -266,7 +292,7 @@ export default function DashboardBilling() {
                                         </div>
                                         <div className="text-right">
                                             {requestsStats.weekly.rate > 0 ? (
-                                                <div className="flex items-center text-green-600 dark:text-green-400">
+                                                <div className="flex items-center text-green-700 dark:text-green-300">
                                                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                                         <path d="M12 4l8 16H4L12 4z" />
                                                     </svg>
@@ -301,7 +327,7 @@ export default function DashboardBilling() {
                                         </div>
                                         <div className="text-right">
                                             {requestsStats.monthly.rate > 0 ? (
-                                                <div className="flex items-center text-green-600 dark:text-green-400">
+                                                <div className="flex items-center text-green-700 dark:text-green-300">
                                                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                                         <path d="M12 4l8 16H4L12 4z" />
                                                     </svg>

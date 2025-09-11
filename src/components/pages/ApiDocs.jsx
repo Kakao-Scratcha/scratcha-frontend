@@ -157,13 +157,14 @@ function App() {
                         </h3>
 
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left">
+                            <table className="w-full text-left" role="table">
+                                <caption className="sr-only">ScratchaWidget Props 속성 테이블</caption>
                                 <thead>
                                     <tr className="border-b border-gray-200 dark:border-gray-700">
-                                        <th className="py-3 px-4 font-semibold text-gray-900 dark:text-white">Prop</th>
-                                        <th className="py-3 px-4 font-semibold text-gray-900 dark:text-white">타입</th>
-                                        <th className="py-3 px-4 font-semibold text-gray-900 dark:text-white">기본값</th>
-                                        <th className="py-3 px-4 font-semibold text-gray-900 dark:text-white">설명</th>
+                                        <th className="py-3 px-4 font-semibold text-gray-900 dark:text-white" scope="col">Prop</th>
+                                        <th className="py-3 px-4 font-semibold text-gray-900 dark:text-white" scope="col">타입</th>
+                                        <th className="py-3 px-4 font-semibold text-gray-900 dark:text-white" scope="col">기본값</th>
+                                        <th className="py-3 px-4 font-semibold text-gray-900 dark:text-white" scope="col">설명</th>
                                     </tr>
                                 </thead>
                                 <tbody>
