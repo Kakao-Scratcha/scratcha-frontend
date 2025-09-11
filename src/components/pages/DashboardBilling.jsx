@@ -20,8 +20,8 @@ export default function DashboardBilling() {
     const { user } = useAuthStore();
     const { requestsStats, loadAllRequestsStats } = useDashboardStore();
 
-    // 에러 처리 훅
-    const { errorState, closeError, handleRetry, executeWithErrorHandling, isRetrying } = useErrorHandler();
+    // 에러 처리 훅 (투트랙 시스템)
+    const { errorState, closeError, handleRetry, executeAllWithErrorHandling, isRetrying } = useErrorHandler();
 
     const [isPlanChangeModalOpen, setIsPlanChangeModalOpen] = useState(false);
 
@@ -43,13 +43,6 @@ export default function DashboardBilling() {
         }
     }, [location.state]);
 
-    // 사용량 통계 데이터 로드
-    useEffect(() => {
-        executeWithErrorHandling(
-            () => loadAllRequestsStats(),
-            '사용량 통계 로드'
-        );
-    }, [loadAllRequestsStats, executeWithErrorHandling]);
 
     // 토큰 충전 선택 처리 - 바로 checkout 페이지로 이동
     const handleTokenSelect = (tokenPackage) => {
@@ -160,24 +153,36 @@ export default function DashboardBilling() {
     // 초기 로드 완료 여부 추적
     const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
 
-    // 투트랙 시스템: 초기 데이터 로드
+    // 초기 데이터 로드 (투트랙 시스템 - 페이지 로드 에러)
     useEffect(() => {
         const loadInitialData = async () => {
             try {
-                await executeWithErrorHandling(async () => {
-                    await loadAllRequestsStats();
-                }, '결제 정보 로드');
+                // 모든 API 호출을 에러 처리와 함께 실행 (모든 API가 성공해야만 완료)
+                const allSuccessful = await executeAllWithErrorHandling([
+                    {
+                        apiCall: () => loadAllRequestsStats(),
+                        operation: '결제 정보 로드',
+                        onSuccess: () => console.log('✅ 결제 정보 로드 완료')
+                    }
+                ]);
 
-                setIsInitialLoadComplete(true);
-            } catch {
-                // 에러는 executeWithErrorHandling에서 처리됨
+                if (allSuccessful) {
+                    console.log('✅ 모든 초기 데이터 로드 완료');
+                    setIsInitialLoadComplete(true); // 성공한 경우에만 초기 로드 완료
+                } else {
+                    console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
+                    // 실패한 경우에는 초기 로드 상태 유지 (isInitialLoadComplete = false)
+                }
+            } catch (error) {
+                console.error('❌ 초기 데이터 로드 중 예상치 못한 오류:', error);
+                // 에러는 executeAllWithErrorHandling에서 처리됨
             }
         };
 
         if (user && !isInitialLoadComplete) {
             loadInitialData();
         }
-    }, [user, isInitialLoadComplete, loadAllRequestsStats, executeWithErrorHandling]);
+    }, [user, isInitialLoadComplete, loadAllRequestsStats, executeAllWithErrorHandling]);
 
     // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
     const isDataLoading = !user || !isInitialLoadComplete;

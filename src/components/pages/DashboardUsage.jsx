@@ -260,25 +260,6 @@ export default function DashboardUsage() {
     // 현재 표시할 로그 데이터
     const currentLogs = logs.items || [];
 
-    // 디버깅용 로그 제거
-    // useEffect(() => {
-    //     console.log('🔍 DashboardUsage 렌더링:', {
-    //         selectedAppId,
-    //         selectedApiKeyId,
-    //         selectedPeriod,
-    //         viewMode,
-    //         currentPage,
-    //         itemsPerPage,
-    //         logs: {
-    //             items: logs.items?.length || 0,
-    //             total: logs.total,
-    //             page: logs.page,
-    //             loading: logs.loading,
-    //             error: logs.error
-    //         }
-    //     });
-    // }, [selectedAppId, selectedApiKeyId, selectedPeriod, viewMode, currentPage, itemsPerPage, logs]);
-
     // 날짜 포맷팅 함수
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';

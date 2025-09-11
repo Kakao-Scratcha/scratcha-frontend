@@ -59,14 +59,6 @@ export default function DashboardSettings() {
     // 사용량 경고 설정 상태
     const [usageWarningEnabled, setUsageWarningEnabled] = useState(false);
     const [usageWarningThreshold, setUsageWarningThreshold] = useState(1000);
-
-    // 비밀번호 변경 폼 (주석처리)
-    // const [passwordForm, setPasswordForm] = useState({
-    //     currentPassword: '',
-    //     newPassword: '',
-    //     confirmPassword: ''
-    // });
-
     // 이름 변경 폼
     const [nameForm, setNameForm] = useState({
         currentName: getServerUserName(user),
