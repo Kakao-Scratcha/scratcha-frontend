@@ -18,7 +18,7 @@ export default function DashboardBilling() {
     };
 
     const { user } = useAuthStore();
-    const { requestsStats, loadAllRequestsStats, isLoading } = useDashboardStore();
+    const { requestsStats, loadAllRequestsStats } = useDashboardStore();
 
     // 에러 처리 훅
     const { errorState, closeError, handleRetry, executeWithErrorHandling, isRetrying } = useErrorHandler();
@@ -157,8 +157,30 @@ export default function DashboardBilling() {
 
 
 
-    // 모든 데이터가 로드될 때까지 로딩 표시 (구매내역은 별도 로딩 처리)
-    const isDataLoading = isLoading || !user;
+    // 초기 로드 완료 여부 추적
+    const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+
+    // 투트랙 시스템: 초기 데이터 로드
+    useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                await executeWithErrorHandling(async () => {
+                    await loadAllRequestsStats();
+                }, '결제 정보 로드');
+
+                setIsInitialLoadComplete(true);
+            } catch {
+                // 에러는 executeWithErrorHandling에서 처리됨
+            }
+        };
+
+        if (user && !isInitialLoadComplete) {
+            loadInitialData();
+        }
+    }, [user, isInitialLoadComplete, loadAllRequestsStats, executeWithErrorHandling]);
+
+    // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
+    const isDataLoading = !user || !isInitialLoadComplete;
 
     return (
         <DashboardLayout
