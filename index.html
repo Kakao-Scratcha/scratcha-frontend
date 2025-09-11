@@ -15,24 +15,10 @@
     <!-- 로컬 폰트 사용 -->
     <title>scratCHA</title>
 
-    <!-- 폰트 preload - LCP 개선 -->
+    <!-- 폰트 preload - 가장 중요한 Regular만 preload -->
     <link
       rel="preload"
       href="/fonts/NotoSans-Regular.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      href="/fonts/NotoSans-Medium.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      href="/fonts/NotoSans-Bold.woff2"
       as="font"
       type="font/woff2"
       crossorigin
@@ -53,7 +39,7 @@
         font-family: "Noto Sans KR";
         font-style: normal;
         font-weight: 500;
-        font-display: swap;
+        font-display: optional;
         src: url("/fonts/NotoSans-Medium.woff2") format("woff2");
       }
 
@@ -70,7 +56,7 @@
         font-family: "Noto Sans KR";
         font-style: normal;
         font-weight: 350;
-        font-display: swap;
+        font-display: optional;
         src: url("/fonts/NotoSans-DemiLight.woff2") format("woff2");
       }
 

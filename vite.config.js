@@ -88,11 +88,13 @@ export default defineConfig({
           'utils-vendor': ['axios', 'zustand'],
 
           // 2. 초기 로딩 최적화 (메인 페이지만)
-          'critical': [
-            './src/components/pages/MainPage.jsx',
+          'critical-layout': [
             './src/components/Layout.jsx',
             './src/components/ui/Header.jsx',
             './src/components/ui/Footer.jsx'
+          ],
+          'critical-main': [
+            './src/components/pages/MainPage.jsx'
           ],
 
           // 3. 공개 페이지 개별 분리 (사용자 행동 기반)
