@@ -89,17 +89,23 @@ export const useDashboardStore = create((set, get) => ({
                     }
                 }
             }));
+            throw error; // 에러를 다시 throw하여 상위에서 감지할 수 있도록 함
         }
     },
 
     // 모든 통계 데이터 로드
     loadAllRequestsStats: async () => {
         devLog('📊 모든 통계 데이터 로드 시작');
-        await Promise.all([
-            get().loadRequestsStats('daily'),
-            get().loadRequestsStats('weekly'),
-            get().loadRequestsStats('monthly')
-        ]);
+        try {
+            await Promise.all([
+                get().loadRequestsStats('daily'),
+                get().loadRequestsStats('weekly'),
+                get().loadRequestsStats('monthly')
+            ]);
+        } catch (error) {
+            devError('❌ 모든 통계 데이터 로드 실패:', error);
+            throw error; // 에러를 다시 throw하여 useErrorHandler에서 감지할 수 있도록 함
+        }
     },
 
     // 로그 데이터 로드
@@ -165,19 +171,34 @@ export const useDashboardStore = create((set, get) => ({
 
     // 전체 로그 로드
     loadAllLogs: async (page = 1, limit = 10, periodType = 'yearly') => {
-        await get().loadLogs({ page, limit, periodType });
+        try {
+            await get().loadLogs({ page, limit, periodType });
+        } catch (error) {
+            devError('❌ 전체 로그 로드 실패:', error);
+            throw error; // 에러를 다시 throw하여 상위에서 처리할 수 있도록 함
+        }
     },
 
     // 특정 API 키 로그 로드
     loadLogsByKeyId: async (keyId, page = 1, limit = 10, periodType = 'yearly') => {
-        await get().loadLogs({ keyId, page, limit, periodType });
+        try {
+            await get().loadLogs({ keyId, page, limit, periodType });
+        } catch (error) {
+            devError('❌ 특정 키 로그 로드 실패:', error);
+            throw error; // 에러를 다시 throw하여 상위에서 처리할 수 있도록 함
+        }
     },
 
     // 로그 페이지 변경
     changeLogPage: async (page, limit = 10, periodType = 'yearly') => {
         const { selectedKeyId } = get();
         devLog('📄 페이지 변경:', { page, limit, selectedKeyId, periodType });
-        await get().loadLogs({ keyId: selectedKeyId, page, limit, periodType });
+        try {
+            await get().loadLogs({ keyId: selectedKeyId, page, limit, periodType });
+        } catch (error) {
+            devError('❌ 로그 페이지 변경 실패:', error);
+            throw error; // 에러를 다시 throw하여 상위에서 처리할 수 있도록 함
+        }
     },
 
     // 기존 액션들 수정 (로그 데이터 활용)
@@ -587,7 +608,7 @@ export const useDashboardStore = create((set, get) => ({
 
         } catch (error) {
             devError('❌ 요금제 변경 실패:', error);
-            return { success: false, error: error.message };
+            throw error; // 에러를 다시 throw하여 상위에서 처리할 수 있도록 함
         }
     },
 }));

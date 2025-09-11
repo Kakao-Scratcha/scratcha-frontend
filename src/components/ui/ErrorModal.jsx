@@ -1,6 +1,5 @@
 import React from 'react';
 import Modal from './Modal';
-import LoadingSpinner from './LoadingSpinner';
 
 /**
  * 재사용 가능한 에러 모달 컴포넌트
@@ -11,7 +10,6 @@ export default function ErrorModal({
     onClose,
     onRetry,
     message,
-    isRetrying = false,
     title = '오류 발생'
 }) {
     return (
@@ -43,25 +41,16 @@ export default function ErrorModal({
                 <div className="flex gap-3 pt-2">
                     <button
                         onClick={onClose}
-                        disabled={isRetrying}
-                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                     >
                         닫기
                     </button>
                     {onRetry && (
                         <button
                             onClick={onRetry}
-                            disabled={isRetrying}
-                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
                         >
-                            {isRetrying ? (
-                                <>
-                                    <LoadingSpinner size="sm" />
-                                    <span>재시도 중...</span>
-                                </>
-                            ) : (
-                                <span>다시 시도</span>
-                            )}
+                            다시 시도
                         </button>
                     )}
                 </div>

@@ -12,15 +12,21 @@ export const useErrorHandler = () => {
         onRetry: null
     });
 
-    const [isRetrying, setIsRetrying] = useState(false);
+
+    /**
+     * 재시도 실행 (페이지 리로드)
+     */
+    const handleRetry = useCallback(async () => {
+        // 즉시 페이지 리로드
+        window.location.reload();
+    }, []);
 
     /**
      * 에러 발생 시 호출하는 함수
      * @param {Error} error - 발생한 에러 객체
      * @param {string} operation - 수행하려던 작업명
-     * @param {Function} retryFunction - 재시도할 함수
      */
-    const handleError = useCallback((error, operation, retryFunction = null) => {
+    const handleError = useCallback((error, operation) => {
         console.error(`❌ ${operation} 실패:`, error);
 
         // 이미 에러 모달이 열려있으면 새로운 에러는 무시 (통합 에러 모달)
@@ -39,10 +45,10 @@ export const useErrorHandler = () => {
                 message: errorMessage,
                 title: errorTitle,
                 operation,
-                onRetry: retryFunction
+                onRetry: handleRetry // 항상 페이지 리로드로 재시도
             };
         });
-    }, []);
+    }, [handleRetry]);
 
     /**
      * 에러 모달 닫기
@@ -54,26 +60,7 @@ export const useErrorHandler = () => {
             operation: '',
             onRetry: null
         });
-        setIsRetrying(false);
     }, []);
-
-    /**
-     * 재시도 실행
-     */
-    const handleRetry = useCallback(async () => {
-        if (!errorState.onRetry || isRetrying) return;
-
-        setIsRetrying(true);
-        try {
-            await errorState.onRetry();
-            closeError();
-        } catch (error) {
-            // 재시도 실패 시 에러 메시지 업데이트
-            handleError(error, errorState.operation, errorState.onRetry);
-        } finally {
-            setIsRetrying(false);
-        }
-    }, [errorState, isRetrying, handleError, closeError]);
 
     /**
      * API 호출을 래핑하는 함수 (자동 에러 처리)
@@ -90,7 +77,7 @@ export const useErrorHandler = () => {
             }
             return result;
         } catch (error) {
-            handleError(error, operation, () => executeWithErrorHandling(apiCall, operation, onSuccess, throwError));
+            handleError(error, operation); // 페이지 리로드로 재시도
             if (throwError) {
                 throw error;
             }
@@ -116,8 +103,13 @@ export const useErrorHandler = () => {
             result.status === 'fulfilled' && result.value !== null
         );
 
+        // 하나라도 실패하면 에러 모달 표시 (페이지 리로드로 재시도)
+        if (!allSuccessful) {
+            handleError(new Error('일부 API 호출이 실패했습니다.'), '데이터 로드');
+        }
+
         return allSuccessful;
-    }, [executeWithErrorHandling]);
+    }, [executeWithErrorHandling, handleError]);
 
     return {
         errorState,
@@ -125,8 +117,7 @@ export const useErrorHandler = () => {
         closeError,
         handleRetry,
         executeWithErrorHandling,
-        executeAllWithErrorHandling,
-        isRetrying
+        executeAllWithErrorHandling
     };
 };
 

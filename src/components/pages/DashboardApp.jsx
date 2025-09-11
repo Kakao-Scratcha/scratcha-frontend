@@ -10,7 +10,7 @@ import useErrorHandler from '../../hooks/useErrorHandler';
 
 export default function DashboardApp() {
     // 에러 처리 훅
-    const { errorState, closeError, handleRetry, executeAllWithErrorHandling, isRetrying } = useErrorHandler();
+    const { errorState, closeError, handleRetry, executeAllWithErrorHandling } = useErrorHandler();
 
     const {
         apps,
@@ -118,7 +118,9 @@ export default function DashboardApp() {
         setLoading(true);
         try {
             await refreshApplications();
-
+        } catch (error) {
+            devError('❌ 애플리케이션 데이터 로드 실패:', error);
+            throw error; // 에러를 다시 throw하여 상위에서 처리할 수 있도록 함
         } finally {
             setLoading(false);
         }
@@ -1252,7 +1254,6 @@ export default function DashboardApp() {
                 onClose={closeError}
                 onRetry={handleRetry}
                 message={errorState.message}
-                isRetrying={isRetrying}
                 title={errorState.title || "데이터 로드 실패"}
             />
         </DashboardLayout>

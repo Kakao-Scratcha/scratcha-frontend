@@ -198,7 +198,7 @@ export const paymentAPI = {
         const queryParams = new URLSearchParams();
         queryParams.append('skip', skip);
         queryParams.append('limit', limit);
-        return apiClient.get(`/payments/history?${queryParams.toString()}`);
+        return apiClient.get(`/payment1234s/history?${queryParams.toString()}`);
     },
 };
 

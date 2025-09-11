@@ -13,7 +13,7 @@ export default function DashboardSettings() {
     const { user, updateUser, logout } = useAuth();
 
     // 에러 처리 훅 (투트랙 시스템)
-    const { errorState, closeError, handleRetry, executeAllWithErrorHandling, isRetrying } = useErrorHandler();
+    const { errorState, closeError, handleRetry, executeAllWithErrorHandling } = useErrorHandler();
 
     // 액션별 에러 모달 상태 (개별 에러 처리용)
     const [_errorModal, setErrorModal] = useState({ isOpen: false, message: '' });
@@ -107,6 +107,7 @@ export default function DashboardSettings() {
         } catch (error) {
             devError('❌ 프리미엄 유저 확인 실패:', error);
             setIsPremiumUser(false);
+            throw error; // 에러를 다시 throw하여 useErrorHandler에서 감지할 수 있도록 함
         }
     }, []);
 
@@ -595,7 +596,6 @@ export default function DashboardSettings() {
                 onClose={closeError}
                 onRetry={handleRetry}
                 message={errorState.message}
-                isRetrying={isRetrying}
                 title={errorState.title || "데이터 로드 실패"}
             />
         </DashboardLayout>
