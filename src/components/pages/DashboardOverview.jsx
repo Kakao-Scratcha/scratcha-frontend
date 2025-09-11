@@ -74,17 +74,6 @@ export default function DashboardOverview() {
         preloadImages();
     }, []);
 
-    // 주기적으로 사용자 정보 갱신
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const { getProfile } = useAuthStore.getState();
-            getProfile({ showLoading: false });
-        }, 30000); // 30초마다 갱신
-
-        return () => {
-            clearInterval(interval);
-        };
-    }, []);
 
     // 결제 내역 확인 함수
     const checkPaymentHistory = useCallback(async () => {
