@@ -27,10 +27,12 @@ export default function OptimizedImage({
             loading={loading}
             fetchPriority={fetchPriority}
             sizes={sizes}
+            draggable={false}
             style={{
                 maxWidth: '100%',
                 maxHeight: '100%',
-                objectFit: 'contain'
+                objectFit: 'contain',
+                userSelect: 'none'
             }}
             {...props}
         />

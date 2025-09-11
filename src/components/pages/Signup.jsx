@@ -6,24 +6,22 @@ import FormField from '../forms/FormField';
 import SignupButton from '../forms/SignupButton';
 import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
-import signupBackground from '@/assets/images/signup-background.png?w=800&h=600&format=webp&quality=85';
-import logo from '@/assets/images/scratchalogo.svg';
+import OptimizedImage from '../ui/OptimizedImage';
+import signupBackground from '@/assets/images/signup-background.png?w=1600&h=900&format=webp&quality=85';
+import logo from '@/assets/images/scratchalogo.svg?w=200&h=60&format=webp&quality=90';
 
-// 배경 스타일 상수 (재렌더링 방지)
-const backgroundStyle = {
-    backgroundImage: `url(${signupBackground})`,
-    backgroundSize: 'cover'
-};
+// 배경 이미지 최적화를 위한 preload
+const backgroundPreload = <link rel="preload" as="image" href={signupBackground} />;
 
 // 로고 링크 상수 (재렌더링 방지)
 const LOGO_LINK = (
     <Link to="/" className="inline-block">
-        <img
+        <OptimizedImage
             src={logo}
             alt="Scratcha"
             className="h-20 w-auto mx-auto cursor-pointer hover:opacity-80 transition-opacity dark:brightness-0 dark:invert"
-            width={80}
-            height={20}
+            width={200}
+            height={60}
         />
     </Link>
 );
@@ -80,14 +78,31 @@ export default function Signup() {
     }, [setErrorModal, handleSignup]);
 
     return (
-        <div className="min-h-screen relative flex items-center justify-end bg-cover bg-center bg-no-repeat bg-fixed"
-            style={backgroundStyle}>
+        <div className="min-h-screen w-full relative flex items-center justify-end overflow-hidden">
             {/* 배경 이미지 최적화를 위한 preload */}
-            <link rel="preload" as="image" href={signupBackground} />
+            {backgroundPreload}
+
+            {/* 최적화된 배경 이미지 - 가로 꽉참, 비율 유지 */}
+            <OptimizedImage
+                src={signupBackground}
+                alt="회원가입 배경"
+                className="fixed inset-0 -z-10"
+                width={1600}
+                height={900}
+                loading="eager"
+                fetchPriority="high"
+                sizes="100vw"
+                style={{
+                    width: '100vw',
+                    height: '100vh',
+                    objectFit: 'cover',
+                    objectPosition: 'center top'
+                }}
+            />
 
             {/* 좌측 영역 - 배경 이미지와 텍스트 (절대 위치로 상단 고정) */}
             <section
-                className="hidden lg:block absolute top-8 left-1/3 transform -translate-x-1/2"
+                className="hidden lg:block absolute top-8 left-1/3 transform -translate-x-1/2 z-10"
                 aria-label="회원가입 안내"
             >
                 <header className="text-center">
@@ -101,7 +116,7 @@ export default function Signup() {
             </section>
 
             {/* 우측 영역 - 회원가입 폼 (우측 배치) */}
-            <div className="w-full max-w-sm mx-4 mr-8 lg:mr-16">
+            <div className="w-full max-w-sm mx-4 mr-8 lg:mr-16 relative z-10">
                 <div className="rounded-2xl shadow-2xl p-3 border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 min-h-[380px] flex flex-col justify-center">
                     {/* 페이지 타이틀 (Scratcha 로고 포함) */}
                     <div className="text-center mb-2">

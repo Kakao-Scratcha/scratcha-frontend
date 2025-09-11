@@ -5,14 +5,15 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 import Modal from '../ui/Modal';
 import ErrorModal from '../ui/ErrorModal';
 import StatCard from '../ui/StatCard';
+import OptimizedImage from '../ui/OptimizedImage';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { useAuthStore } from '../../stores/authStore';
 import { paymentAPI } from '../../services/api';
 import useErrorHandler from '../../hooks/useErrorHandler';
-import greenCheckIcon from '@/assets/images/green_check_icon.png?format=webp&q=90';
-import blueCheckIcon from '@/assets/images/blue_check_icon.png?format=webp&q=90';
-import yellowAlertIcon from '@/assets/images/yellow_alert_icon.png?format=webp&q=90';
-import redFailIcon from '@/assets/images/red_fail_icon.png?format=webp&q=90';
+import greenCheckIcon from '@/assets/images/green_check_icon.png?w=24&h=24&format=webp&q=90';
+import blueCheckIcon from '@/assets/images/blue_check_icon.png?w=24&h=24&format=webp&q=90';
+import yellowAlertIcon from '@/assets/images/yellow_alert_icon.png?w=24&h=24&format=webp&q=90';
+import redFailIcon from '@/assets/images/red_fail_icon.png?w=24&h=24&format=webp&q=90';
 
 export default function DashboardOverview() {
     // Typography scale (dashboard-wide consistency)
@@ -465,7 +466,7 @@ export default function DashboardOverview() {
                         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                             <li className="py-4 flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <img src={ICONS.info} alt="API 호출 통계 아이콘" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
+                                    <OptimizedImage src={ICONS.info} alt="API 호출 통계 아이콘" className="w-7 h-7 rounded-full" width={24} height={24} loading="lazy" />
                                     <div>
                                         <p className="font-semibold theme-text-primary">API 호출 성공</p>
                                         <p className="text-sm theme-text-secondary">최근 7일</p>
@@ -475,7 +476,7 @@ export default function DashboardOverview() {
                             </li>
                             <li className="py-4 flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <img src={ICONS.success} alt="CAPTCHA 검증 성공 아이콘" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
+                                    <OptimizedImage src={ICONS.success} alt="CAPTCHA 검증 성공 아이콘" className="w-7 h-7 rounded-full" width={24} height={24} loading="lazy" />
                                     <div>
                                         <p className="font-semibold theme-text-primary">CAPTCHA 검증 성공</p>
                                         <p className="text-sm theme-text-secondary">최근 7일</p>
@@ -485,7 +486,7 @@ export default function DashboardOverview() {
                             </li>
                             <li className="py-4 flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <img src={ICONS.error} alt="CAPTCHA 검증 실패 아이콘" className="w-7 h-7 rounded-full" width={28} height={28} loading="lazy" />
+                                    <OptimizedImage src={ICONS.error} alt="CAPTCHA 검증 실패 아이콘" className="w-7 h-7 rounded-full" width={24} height={24} loading="lazy" />
                                     <div>
                                         <p className="font-semibold theme-text-primary">CAPTCHA 검증 실패</p>
                                         <p className="text-sm theme-text-secondary">최근 7일</p>

@@ -23,7 +23,7 @@ export default defineConfig({
         }
 
         // 아이콘 파일 최적화 (20x20 이하)
-        if (url.pathname.match(/\.(ico|png)$/i) && url.pathname.includes('favicon')) {
+        if (url.pathname.match(/\.(ico|png|svg)$/i) && url.pathname.includes('favicon')) {
           params.set('format', 'webp')
           params.set('quality', '90')
           params.set('w', '20')
@@ -36,6 +36,14 @@ export default defineConfig({
           params.set('quality', '95')  // 품질을 95%로 높임
           params.set('w', '400')
           params.set('h', '400')
+        }
+
+        // 로고 이미지 최적화 (200x60)
+        if (url.pathname.includes('scratchalogo')) {
+          params.set('format', 'webp')
+          params.set('quality', '90')
+          params.set('w', '200')
+          params.set('h', '60')
         }
 
         return params
