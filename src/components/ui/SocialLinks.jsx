@@ -1,8 +1,8 @@
 import React from 'react';
 import OptimizedImage from './OptimizedImage';
-import ntFavicon from '../../assets/images/nt_favicon.ico?w=20&h=20&format=webp&quality=90';
-import ghFavicon from '../../assets/images/gh_favicon.svg?w=20&h=20&format=webp&quality=90';
-import spFavicon from '../../assets/images/sp_favicon.ico?w=20&h=20&format=webp&quality=90';
+import ntFavicon from '../../assets/images/nt_favicon.ico?w=20&h=20&format=webp&quality=70';
+import ghFavicon from '../../assets/images/gh_favicon.svg?w=20&h=20&format=webp&quality=70';
+import spFavicon from '../../assets/images/sp_favicon.ico?w=20&h=20&format=webp&quality=70';
 
 export default function SocialLinks() {
     return (
