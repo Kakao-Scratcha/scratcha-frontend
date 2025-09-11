@@ -78,14 +78,18 @@ export default function DashboardOverview() {
     // 결제 내역 확인 함수
     const checkPaymentHistory = useCallback(async () => {
         try {
+            console.log('🔍 checkPaymentHistory 시작 - setIsPaymentHistoryLoading(true)');
             setIsPaymentHistoryLoading(true);
             const response = await paymentAPI.getPaymentHistory(1, 1);
             const hasHistory = response.data.total > 0;
             setHasPaymentHistory(hasHistory);
+            console.log('🔍 checkPaymentHistory 성공 - hasHistory:', hasHistory);
         } catch (error) {
+            console.log('🔍 checkPaymentHistory 에러:', error);
             setHasPaymentHistory(false);
             throw error; // 에러를 다시 throw하여 useErrorHandler에서 감지할 수 있도록 함
         } finally {
+            console.log('🔍 checkPaymentHistory finally - setIsPaymentHistoryLoading(false)');
             setIsPaymentHistoryLoading(false);
         }
     }, []);
