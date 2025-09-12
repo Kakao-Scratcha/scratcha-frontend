@@ -5,7 +5,7 @@ import { imagetools } from 'vite-imagetools'
 import { fileURLToPath, URL } from 'node:url'
 import { visualizer } from 'rollup-plugin-visualizer'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react({
       // 프로덕션 빌드에서 React DevTools 제거
@@ -200,10 +200,10 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: false,  // console.log 제거 (디버깅용으로 임시 비활성화)
-        drop_debugger: true, // debugger 제거
+        drop_console: mode === 'production',   // 프로덕션에서만 console.log 제거
+        drop_debugger: true,  // debugger 제거
         // 추가 압축 옵션 (Lighthouse 개선)
-        pure_funcs: [], // 순수 함수 제거 (디버깅용으로 콘솔 로그 제거 비활성화)
+        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.warn', 'console.error'] : [], // 프로덕션에서만 콘솔 함수들 제거
         passes: 3, // 압축 패스 증가 (더 강력한 압축)
         unsafe: false, // 안전한 압축만 사용
         unsafe_comps: false, // 안전한 비교 연산자만 사용
@@ -221,7 +221,7 @@ export default defineConfig({
         // React DevTools 관련 코드 제거
         global_defs: {
           '__REACT_DEVTOOLS_GLOBAL_HOOK__': 'undefined',
-          'process.env.NODE_ENV': '"production"'
+          'process.env.NODE_ENV': `"${mode}"`
         },
         // 추가 최적화
         collapse_vars: true, // 변수 병합
@@ -248,4 +248,4 @@ export default defineConfig({
     sourcemap: false, // 프로덕션에서는 소스맵 비활성화로 크기 절약
   },
 
-})
+}))
