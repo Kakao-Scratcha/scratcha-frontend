@@ -269,8 +269,9 @@ export const useAuthStore = create(
                         devLog('⚠️ 로컬스토리지 제거 중 오류:', e?.message);
                     }
                     devLog('✅ 프론트엔드 로그아웃 완료');
-                    return { success: true }; // 성공 시 결과 반환
                 }
+
+                return { success: true }; // 성공 시 결과 반환
             },
 
             getProfile: async (options = {}) => {

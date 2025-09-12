@@ -81,7 +81,7 @@ export default function DashboardSettings() {
                 currentName: serverName
             }));
         }
-    }, [user, nameForm.currentName]);
+    }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 사용량 경고 설정 저장/불러오기 함수들
     const saveUsageWarningSettings = useCallback((enabled, threshold) => {

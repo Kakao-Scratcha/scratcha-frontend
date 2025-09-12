@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import UsageChart from '../ui/UsageChart';
 import MultiAppUsageChart from '../ui/MultiAppUsageChart';
@@ -48,7 +48,9 @@ export default function DashboardUsage() {
     const isInitialLoad = useRef(true);
 
     // 선택된 APP의 API 키들 (전체 선택 시 모든 API 키)
-    const appApiKeys = selectedAppId === 'all' ? (apiKeys || []) : (apiKeys || []).filter(key => String(key.appId) === String(selectedAppId));
+    const appApiKeys = useMemo(() => {
+        return selectedAppId === 'all' ? (apiKeys || []) : (apiKeys || []).filter(key => String(key.appId) === String(selectedAppId));
+    }, [selectedAppId, apiKeys]);
 
     // 액션별 에러 처리 함수
     const handleApiError = (error, operation) => {
