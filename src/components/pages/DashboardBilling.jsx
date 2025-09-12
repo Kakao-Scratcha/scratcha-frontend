@@ -176,6 +176,14 @@ export default function DashboardBilling() {
                 // 모든 API 호출을 에러 처리와 함께 실행 (모든 API가 성공해야만 완료)
                 const allSuccessful = await executeAllWithErrorHandling([
                     {
+                        apiCall: () => {
+                            const { getProfile } = useAuthStore.getState();
+                            return getProfile({ showLoading: false });
+                        },
+                        operation: '사용자 정보 로드',
+                        onSuccess: () => console.log('✅ 사용자 정보 로드 완료')
+                    },
+                    {
                         apiCall: () => loadAllRequestsStats(),
                         operation: '결제 정보 로드',
                         onSuccess: () => console.log('✅ 결제 정보 로드 완료')
@@ -189,7 +197,15 @@ export default function DashboardBilling() {
 
                 if (allSuccessful) {
                     console.log('✅ 모든 초기 데이터 로드 완료');
+                    console.log('🔍 isInitialLoad 변경 전:', isInitialLoad.current);
                     isInitialLoad.current = false; // 성공한 경우에만 로딩 완료
+                    console.log('🔍 isInitialLoad 변경 후:', isInitialLoad.current);
+                    console.log('🔍 로딩 상태 즉시 확인:', {
+                        isLoading,
+                        hasUser: !!user,
+                        isInitialLoad: isInitialLoad.current,
+                        isDataLoading: isLoading || !user || isInitialLoad.current
+                    });
 
                     // 초기 데이터 로드가 성공한 후 PaymentHistoryTable에 데이터 로드 요청
                     if (paymentHistoryTableRef.current) {
@@ -211,6 +227,14 @@ export default function DashboardBilling() {
 
     // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
     const isDataLoading = isLoading || !user || isInitialLoad.current;
+
+    // 로딩 상태 디버깅
+    console.log('🔍 요금제 페이지 로딩 상태:', {
+        isLoading,
+        hasUser: !!user,
+        isInitialLoad: isInitialLoad.current,
+        isDataLoading
+    });
 
     return (
         <DashboardLayout

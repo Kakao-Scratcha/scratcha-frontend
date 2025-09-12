@@ -8,6 +8,7 @@ import { authAPI, paymentAPI } from '../../services/api';
 import { validateUserName } from '../../utils/validators';
 import { devLog, devError } from '../../utils/logger';
 import useErrorHandler from '../../hooks/useErrorHandler';
+import { useAuthStore } from '../../stores/authStore';
 
 export default function DashboardSettings() {
     const { user, updateUser, logout } = useAuth();
@@ -138,6 +139,14 @@ export default function DashboardSettings() {
             try {
                 // 모든 API 호출을 에러 처리와 함께 실행 (모든 API가 성공해야만 완료)
                 const allSuccessful = await executeAllWithErrorHandling([
+                    {
+                        apiCall: () => {
+                            const { getProfile } = useAuthStore.getState();
+                            return getProfile({ showLoading: false });
+                        },
+                        operation: '사용자 정보 로드',
+                        onSuccess: () => console.log('✅ 사용자 정보 로드 완료')
+                    },
                     {
                         apiCall: () => checkPremiumStatus(),
                         operation: '프리미엄 상태 확인',
