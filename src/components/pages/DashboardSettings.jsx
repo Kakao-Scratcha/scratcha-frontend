@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
 import ErrorModal from '../ui/ErrorModal';
@@ -19,8 +19,8 @@ export default function DashboardSettings() {
     // 액션별 에러 모달 상태 (개별 에러 처리용)
     const [_errorModal, setErrorModal] = useState({ isOpen: false, message: '' });
 
-    // 초기 로드 여부를 추적하는 ref
-    const isInitialLoad = useRef(true);
+    // 초기 로드 여부를 추적하는 state (리렌더링을 위해)
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     // 프리미엄 유저 확인 (결제 내역이 있는지 확인)
     const [isPremiumUser, setIsPremiumUser] = useState(false);
@@ -135,6 +135,9 @@ export default function DashboardSettings() {
 
     // 초기 데이터 로드 (투트랙 시스템 - 페이지 로드 에러)
     useEffect(() => {
+        // 초기 로드가 이미 완료된 경우 실행하지 않음
+        if (!isInitialLoad) return;
+
         const loadInitialData = async () => {
             try {
                 // 모든 API 호출을 에러 처리와 함께 실행 (모든 API가 성공해야만 완료)
@@ -156,10 +159,10 @@ export default function DashboardSettings() {
 
                 if (allSuccessful) {
                     console.log('✅ 모든 초기 데이터 로드 완료');
-                    isInitialLoad.current = false; // 성공한 경우에만 로딩 완료
+                    setIsInitialLoad(false); // 성공한 경우에만 로딩 완료
                 } else {
                     console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
-                    // 실패한 경우에는 로딩 상태 유지 (isInitialLoad.current = true)
+                    // 실패한 경우에는 로딩 상태 유지 (isInitialLoad = true)
                 }
             } catch (error) {
                 console.error('❌ 초기 데이터 로드 중 예상치 못한 오류:', error);
@@ -168,7 +171,7 @@ export default function DashboardSettings() {
         };
 
         loadInitialData();
-    }, [checkPremiumStatus, executeAllWithErrorHandling]);
+    }, [checkPremiumStatus, executeAllWithErrorHandling, isInitialLoad]);
 
     // 사용량 경고 설정 변경 핸들러
     const handleUsageWarningChange = (enabled, threshold) => {
@@ -312,7 +315,7 @@ export default function DashboardSettings() {
 
 
     // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
-    const isDataLoading = isPremiumLoading || !user || isInitialLoad.current;
+    const isDataLoading = isPremiumLoading || !user || isInitialLoad;
 
     return (
         <DashboardLayout

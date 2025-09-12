@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import Modal from '../ui/Modal';
 import ErrorModal from '../ui/ErrorModal';
@@ -151,8 +151,8 @@ export default function DashboardBilling() {
 
 
 
-    // 초기 로드 여부를 추적하는 ref
-    const isInitialLoad = useRef(true);
+    // 초기 로드 여부를 추적하는 state (리렌더링을 위해)
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     // PaymentHistoryTable 참조
     const paymentHistoryTableRef = useRef(null);
@@ -171,6 +171,9 @@ export default function DashboardBilling() {
 
     // 초기 데이터 로드 (투트랙 시스템 - 페이지 로드 에러)
     useEffect(() => {
+        // 초기 로드가 이미 완료된 경우 실행하지 않음
+        if (!isInitialLoad) return;
+
         const loadInitialData = async () => {
             try {
                 // 모든 API 호출을 에러 처리와 함께 실행 (모든 API가 성공해야만 완료)
@@ -197,14 +200,14 @@ export default function DashboardBilling() {
 
                 if (allSuccessful) {
                     console.log('✅ 모든 초기 데이터 로드 완료');
-                    console.log('🔍 isInitialLoad 변경 전:', isInitialLoad.current);
-                    isInitialLoad.current = false; // 성공한 경우에만 로딩 완료
-                    console.log('🔍 isInitialLoad 변경 후:', isInitialLoad.current);
+                    console.log('🔍 isInitialLoad 변경 전:', isInitialLoad);
+                    setIsInitialLoad(false); // 성공한 경우에만 로딩 완료
+                    console.log('🔍 isInitialLoad 변경 후:', false);
                     console.log('🔍 로딩 상태 즉시 확인:', {
                         isLoading,
                         hasUser: !!user,
-                        isInitialLoad: isInitialLoad.current,
-                        isDataLoading: isLoading || !user || isInitialLoad.current
+                        isInitialLoad: false,
+                        isDataLoading: isLoading || !user || false
                     });
 
                     // 초기 데이터 로드가 성공한 후 PaymentHistoryTable에 데이터 로드 요청
@@ -213,26 +216,26 @@ export default function DashboardBilling() {
                     }
                 } else {
                     console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
-                    // 실패한 경우에는 로딩 상태 유지 (isInitialLoad.current = true)
+                    // 실패한 경우에는 로딩 상태 유지 (isInitialLoad = true)
                 }
             } catch (error) {
                 console.error('❌ 초기 데이터 로드 중 예상치 못한 오류:', error);
                 // 예상치 못한 오류의 경우에도 로딩 상태 유지 (에러 모달 표시를 위해)
-                // isInitialLoad.current는 그대로 true로 유지
+                // isInitialLoad는 그대로 true로 유지
             }
         };
 
         loadInitialData();
-    }, [loadAllRequestsStats, checkPaymentHistory, executeAllWithErrorHandling]);
+    }, [loadAllRequestsStats, checkPaymentHistory, executeAllWithErrorHandling, isInitialLoad]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
-    const isDataLoading = isLoading || !user || isInitialLoad.current;
+    const isDataLoading = isLoading || !user || isInitialLoad;
 
     // 로딩 상태 디버깅
     console.log('🔍 요금제 페이지 로딩 상태:', {
         isLoading,
         hasUser: !!user,
-        isInitialLoad: isInitialLoad.current,
+        isInitialLoad: isInitialLoad,
         isDataLoading
     });
 

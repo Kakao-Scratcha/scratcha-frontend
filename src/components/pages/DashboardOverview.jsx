@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import DashboardLayout from '../dashboard/DashboardLayout';
 import UsageChart from '../ui/UsageChart';
 import LoadingSpinner from '../ui/LoadingSpinner';
@@ -124,11 +124,14 @@ export default function DashboardOverview() {
     // 현재 요금제 정보 (authStore 기반)
     const currentPlanInfo = getCurrentPlanInfo();
 
-    // 초기 로드 여부를 추적하는 ref
-    const isInitialLoad = useRef(true);
+    // 초기 로드 여부를 추적하는 state (리렌더링을 위해)
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     // 컴포넌트 마운트 시 통계 데이터 로드 (초기에는 항상 '전체' 기간으로)
     useEffect(() => {
+        // 초기 로드가 이미 완료된 경우 실행하지 않음
+        if (!isInitialLoad) return;
+
         const loadInitialData = async () => {
             try {
                 // 모든 API 호출을 에러 처리와 함께 실행 (모든 API가 성공해야만 완료)
@@ -170,21 +173,21 @@ export default function DashboardOverview() {
 
                 if (allSuccessful) {
                     console.log('✅ 모든 초기 데이터 로드 완료');
-                    console.log('🔍 isInitialLoad 변경 전:', isInitialLoad.current);
-                    isInitialLoad.current = false;
-                    console.log('🔍 isInitialLoad 변경 후:', isInitialLoad.current);
+                    console.log('🔍 isInitialLoad 변경 전:', isInitialLoad);
+                    setIsInitialLoad(false);
+                    console.log('🔍 isInitialLoad 변경 후:', false);
                     console.log('🔍 로딩 상태 즉시 확인:', {
                         isLoading,
                         isAppsLoading,
                         isPaymentHistoryLoading,
                         hasUser: !!user,
-                        isInitialLoad: isInitialLoad.current,
-                        isDataLoading: isLoading || isAppsLoading || isPaymentHistoryLoading || !user || isInitialLoad.current
+                        isInitialLoad: false,
+                        isDataLoading: isLoading || isAppsLoading || isPaymentHistoryLoading || !user || false
                     });
                 } else {
                     console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
                     console.log('🔍 allSuccessful 값:', allSuccessful);
-                    // 실패한 경우에는 로딩 상태 유지 (isInitialLoad.current = true)
+                    // 실패한 경우에는 로딩 상태 유지 (isInitialLoad = true)
                 }
             } catch (error) {
                 console.error('❌ 초기 데이터 로드 중 예상치 못한 오류:', error);
@@ -194,17 +197,17 @@ export default function DashboardOverview() {
         };
 
         loadInitialData();
-    }, [loadAllRequestsStats, loadStatisticsSummary, refreshApplications, executeAllWithErrorHandling, checkPaymentHistory]);
+    }, [loadAllRequestsStats, loadStatisticsSummary, refreshApplications, executeAllWithErrorHandling, checkPaymentHistory, isInitialLoad]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // 기간 변경 시 데이터 로드 (초기 로드가 아닌 경우에만)
     useEffect(() => {
-        if (!isInitialLoad.current) {
+        if (!isInitialLoad) {
             executeWithErrorHandling(
                 () => loadStatisticsSummary(null, selectedPeriod),
                 '기간별 통계 로드'
             );
         }
-    }, [selectedPeriod, loadStatisticsSummary, executeWithErrorHandling]);
+    }, [selectedPeriod, loadStatisticsSummary, executeWithErrorHandling, isInitialLoad]);
 
     // 사용자 정보가 변경될 때마다 설정 불러오기
     useEffect(() => {
@@ -237,11 +240,11 @@ export default function DashboardOverview() {
     // 앱이 0개일 때 모달 표시 (화면이 뜬 후에 체크)
     useEffect(() => {
         // 화면이 뜬 후에만 모달 체크 (초기 로드 완료 후)
-        if (!isInitialLoad.current) {
+        if (!isInitialLoad) {
             console.log('앱 모달 체크 (화면 로드 후):', {
                 isAppsLoading,
                 appsLength: apps.length,
-                isInitialLoad: isInitialLoad.current,
+                isInitialLoad: isInitialLoad,
                 apps: apps,
                 showAppCreateModal,
                 hasShownAppModal
@@ -327,7 +330,8 @@ export default function DashboardOverview() {
     })();
 
     // 모든 데이터가 로드될 때까지 로딩 표시
-    const isDataLoading = isLoading || isAppsLoading || isPaymentHistoryLoading || !user || isInitialLoad.current;
+    // isInitialLoad가 false가 되면 로딩 완료로 간주
+    const isDataLoading = isInitialLoad || isLoading || isAppsLoading || isPaymentHistoryLoading || !user;
 
     // 디버깅을 위한 로그 (쿠버네티스 환경 문제 해결용)
     console.log('🔍 로딩 상태 디버깅:', {
@@ -335,16 +339,16 @@ export default function DashboardOverview() {
         isAppsLoading,
         isPaymentHistoryLoading,
         hasUser: !!user,
-        isInitialLoad: isInitialLoad.current,
+        isInitialLoad: isInitialLoad,
         isDataLoading,
         user: user ? { id: user.id, email: user.email } : null,
         // 각 조건별 상세 분석
         conditions: {
+            'isInitialLoad': isInitialLoad,
             'isLoading': isLoading,
             'isAppsLoading': isAppsLoading,
             'isPaymentHistoryLoading': isPaymentHistoryLoading,
-            '!user': !user,
-            'isInitialLoad.current': isInitialLoad.current
+            '!user': !user
         }
     });
 
