@@ -23,6 +23,7 @@ export default function DashboardSettings() {
 
     // 프리미엄 유저 확인 (결제 내역이 있는지 확인)
     const [isPremiumUser, setIsPremiumUser] = useState(false);
+    const [isPremiumLoading, setIsPremiumLoading] = useState(false);
 
     const getServerUserName = (u) => (u?.userName ?? u?.username ?? u?.name ?? u?.email ?? '');
 
@@ -100,6 +101,7 @@ export default function DashboardSettings() {
     // 프리미엄 유저 확인 함수
     const checkPremiumStatus = useCallback(async () => {
         try {
+            setIsPremiumLoading(true);
             const response = await paymentAPI.getPaymentHistory(1, 1);
             const hasPaymentHistory = response.data.total > 0;
             setIsPremiumUser(hasPaymentHistory);
@@ -108,6 +110,8 @@ export default function DashboardSettings() {
             devError('❌ 프리미엄 유저 확인 실패:', error);
             setIsPremiumUser(false);
             throw error; // 에러를 다시 throw하여 useErrorHandler에서 감지할 수 있도록 함
+        } finally {
+            setIsPremiumLoading(false);
         }
     }, []);
 
@@ -298,7 +302,7 @@ export default function DashboardSettings() {
 
 
     // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
-    const isDataLoading = !user || isInitialLoad.current;
+    const isDataLoading = isPremiumLoading || !user || isInitialLoad.current;
 
     return (
         <DashboardLayout
