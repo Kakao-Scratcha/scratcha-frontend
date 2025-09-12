@@ -203,7 +203,7 @@ export default defineConfig(({ mode }) => ({
         drop_console: mode === 'production',   // 프로덕션에서만 console.log 제거
         drop_debugger: true,  // debugger 제거
         // 추가 압축 옵션 (Lighthouse 개선)
-        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.warn'] : [], // 프로덕션에서만 콘솔 함수들 제거
+        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.warn', 'console.error'] : [], // 프로덕션에서만 콘솔 함수들 제거
         passes: 3, // 압축 패스 증가 (더 강력한 압축)
         unsafe: false, // 안전한 압축만 사용
         unsafe_comps: false, // 안전한 비교 연산자만 사용
@@ -221,8 +221,7 @@ export default defineConfig(({ mode }) => ({
         // React DevTools 관련 코드 제거
         global_defs: {
           '__REACT_DEVTOOLS_GLOBAL_HOOK__': 'undefined',
-          'process.env.NODE_ENV': `"${mode}"`,
-          ...(mode === 'production' && { 'console': 'undefined' }) // 프로덕션에서만 콘솔 객체 제거
+          'process.env.NODE_ENV': `"${mode}"`
         },
         // 추가 최적화
         collapse_vars: true, // 변수 병합
