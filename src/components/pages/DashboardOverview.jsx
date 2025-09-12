@@ -195,7 +195,7 @@ export default function DashboardOverview() {
         };
 
         loadInitialData();
-    }, [loadAllRequestsStats, loadStatisticsSummary, refreshApplications, executeAllWithErrorHandling, checkPaymentHistory]);
+    }, [loadAllRequestsStats, loadStatisticsSummary, refreshApplications, executeAllWithErrorHandling]);
 
     // 기간 변경 시 데이터 로드 (초기 로드가 아닌 경우에만)
     useEffect(() => {
