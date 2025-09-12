@@ -37,7 +37,7 @@ const StatCard = ({ title, data, loading, className = "" }) => {
 
     return (
         <div className={`p-5 rounded-lg theme-card text-center ${className}`}>
-            <h4 className="text-base md:text-lg font-semibold theme-text-primary mb-1">{title}</h4>
+            <h3 className="text-base md:text-lg font-semibold theme-text-primary mb-1">{title}</h3>
             {loading ? (
                 <div className="flex justify-center items-center h-20">
                     <LoadingSpinner />

@@ -32,7 +32,7 @@ export default function Button({
         lg: "px-6 py-3 text-base"
     };
 
-    const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
+    const disabledClasses = disabled ? "opacity-60 cursor-not-allowed bg-gray-400 dark:bg-gray-600" : "";
 
     return (
         <button

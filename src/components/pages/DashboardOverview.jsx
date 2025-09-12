@@ -376,9 +376,9 @@ export default function DashboardOverview() {
                                     </svg>
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                                    <h2 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
                                         토큰 사용량 경고
-                                    </h3>
+                                    </h2>
                                     <p className="text-yellow-700 dark:text-yellow-300 mb-4">
                                         보유 토큰이 설정한 경고 임계값({usageWarningThreshold.toLocaleString()} 토큰) 이하로 떨어졌습니다.
                                     </p>
@@ -452,7 +452,7 @@ export default function DashboardOverview() {
                     <div className="p-6 rounded-lg theme-card">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
-                                <h3 className={`${T.sectionTitle} theme-text-primary`}>사용량</h3>
+                                <h2 className={`${T.sectionTitle} theme-text-primary`}>사용량</h2>
                                 {!isLoading && (
                                     <span className={`${T.label} theme-text-secondary`}>{rangeLabel}</span>
                                 )}
@@ -489,7 +489,7 @@ export default function DashboardOverview() {
 
                     {/* 최근 활동 */}
                     <div className="p-6 rounded-lg theme-card">
-                        <h3 className={`${T.sectionTitle} theme-text-primary mb-4`}>최근 7일 활동</h3>
+                        <h2 className={`${T.sectionTitle} theme-text-primary mb-4`}>최근 7일 활동</h2>
                         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                             <li className="py-4 flex items-center justify-between">
                                 <div className="flex items-center gap-4">
