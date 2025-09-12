@@ -11,7 +11,7 @@ const CustomTooltip = ({ active, payload, label, appName }) => {
                     {label && label.length > 15 ? `${label.substring(0, 15)}...` : label}
                 </p>
                 {appName && (
-                    <p className="text-sm" style={{ color: payload[0]?.color || 'rgb(59 130 246)' }}>
+                    <p className="text-sm" style={{ color: payload[0]?.color || 'rgb(96 165 250)' }}>
                         {appName.length > 15 ? `${appName.substring(0, 15)}...` : appName}: {payload[0]?.value}
                     </p>
                 )}
@@ -82,7 +82,7 @@ export default function UsageChart({
     selectedPeriod = '전체',
     height = "h-80",
     dataKey = "usage",
-    strokeColor = "rgb(59 130 246)",
+    strokeColor = "rgb(96 165 250)",
     strokeWidth = 3,
     dotRadius = 4,
     activeDotRadius = 6,
