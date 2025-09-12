@@ -67,8 +67,6 @@ export default function DashboardOverview() {
                 const img = new Image();
                 img.src = url;
             });
-
-            console.log('🖼️ 통계 아이콘 이미지 프리로딩 완료');
         };
 
         preloadImages();
@@ -84,6 +82,7 @@ export default function DashboardOverview() {
             const hasHistory = response.data.total > 0;
             setHasPaymentHistory(hasHistory);
             console.log('🔍 checkPaymentHistory 성공 - hasHistory:', hasHistory);
+            return { success: true, hasHistory }; // 성공 시 결과 반환
         } catch (error) {
             console.log('🔍 checkPaymentHistory 에러:', error);
             setHasPaymentHistory(false);
@@ -195,7 +194,7 @@ export default function DashboardOverview() {
         };
 
         loadInitialData();
-    }, [loadAllRequestsStats, loadStatisticsSummary, refreshApplications, executeAllWithErrorHandling]);
+    }, [loadAllRequestsStats, loadStatisticsSummary, refreshApplications, executeAllWithErrorHandling, checkPaymentHistory]);
 
     // 기간 변경 시 데이터 로드 (초기 로드가 아닌 경우에만)
     useEffect(() => {

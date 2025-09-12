@@ -75,8 +75,8 @@ export default function DashboardApp() {
     };
 
     // 선택된 APP과 API 키들
-    const selectedApp = apps.find(app => app.id === selectedAppId);
-    const selectedApiKey = apiKeys.find(key => key.id === selectedApiKeyId);
+    const selectedApp = apps?.find(app => app.id === selectedAppId);
+    const selectedApiKey = apiKeys?.find(key => key.id === selectedApiKeyId);
 
 
     // API 에러 처리 함수
@@ -120,7 +120,8 @@ export default function DashboardApp() {
     const loadApplications = useCallback(async () => {
         setLoading(true);
         try {
-            await refreshApplications();
+            const result = await refreshApplications();
+            return result; // 성공 시 결과 반환
         } catch (error) {
             devError('❌ 애플리케이션 데이터 로드 실패:', error);
             throw error; // 에러를 다시 throw하여 상위에서 처리할 수 있도록 함
@@ -512,7 +513,7 @@ export default function DashboardApp() {
                                                 </div>
                                                 <div className="flex items-center gap-3 flex-shrink-0">
                                                     {/* 난이도 표시 - API 키가 있을 때만 표시 */}
-                                                    {apiKeys.filter(key => key.appId === app.id).length > 0 && (
+                                                    {apiKeys?.filter(key => key.appId === app.id).length > 0 && (
                                                         <button
                                                             onClick={() => handleOpenDifficultyModal(app)}
                                                             className="group relative px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
@@ -575,7 +576,7 @@ export default function DashboardApp() {
                                                         </span>
                                                     </div>
 
-                                                    {apiKeys.filter(key => key.appId === app.id).length > 0 && (
+                                                    {apiKeys?.filter(key => key.appId === app.id).length > 0 && (
                                                         <div className="flex items-center gap-2">
                                                             <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                                                             <span className="text-sm text-gray-600 dark:text-gray-400">난이도:</span>
@@ -595,7 +596,7 @@ export default function DashboardApp() {
                                                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                                                         <span className="text-sm text-gray-600 dark:text-gray-400">API 키:</span>
                                                         <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                                                            {apiKeys.filter(key => key.appId === app.id).length}개
+                                                            {apiKeys?.filter(key => key.appId === app.id).length || 0}개
                                                         </span>
                                                     </div>
                                                 </div>
@@ -604,7 +605,7 @@ export default function DashboardApp() {
                                                 <div className="flex items-center">
                                                     <button
                                                         onClick={() => {
-                                                            if (apiKeys.filter(key => key.appId === app.id).length === 0) {
+                                                            if (apiKeys?.filter(key => key.appId === app.id).length === 0) {
                                                                 // API 키가 없으면 바로 API 키 추가 모달 열기
                                                                 setSelectedAppId(app.id);
                                                                 setIsAddApiKeyModalOpen(true);
@@ -614,9 +615,9 @@ export default function DashboardApp() {
                                                             }
                                                         }}
                                                         className="p-2 hover:bg-transparent rounded-lg transition"
-                                                        aria-label={apiKeys.filter(key => key.appId === app.id).length === 0 ? "API 키 추가" : (expandedApps.has(app.id) ? "API 키 목록 접기" : "API 키 목록 펼치기")}
+                                                        aria-label={apiKeys?.filter(key => key.appId === app.id).length === 0 ? "API 키 추가" : (expandedApps.has(app.id) ? "API 키 목록 접기" : "API 키 목록 펼치기")}
                                                     >
-                                                        {apiKeys.filter(key => key.appId === app.id).length === 0 ? (
+                                                        {apiKeys?.filter(key => key.appId === app.id).length === 0 ? (
                                                             // API 키가 없는 경우: 멋진 + 아이콘
                                                             <svg
                                                                 className="w-6 h-6 text-blue-600 dark:text-blue-400 transition-all duration-200 hover:scale-110"
@@ -648,7 +649,7 @@ export default function DashboardApp() {
 
                                                         <div className="space-y-0">
                                                             {(() => {
-                                                                const appApiKeys = apiKeys.filter(key => key.appId === app.id);
+                                                                const appApiKeys = apiKeys?.filter(key => key.appId === app.id) || [];
                                                                 const uniqueApiKeys = appApiKeys.filter((apiKey, index, self) =>
                                                                     index === self.findIndex(key => key.id === apiKey.id)
                                                                 );

@@ -74,7 +74,7 @@ export const useErrorHandler = () => {
             console.log(`🔍 API 호출 시작: ${operation}`);
             const result = await apiCall();
             console.log(`✅ API 호출 성공: ${operation}`, result);
-            if (onSuccess) {
+            if (onSuccess && result !== undefined) {
                 onSuccess(result);
             }
             return result;

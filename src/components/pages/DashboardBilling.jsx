@@ -162,6 +162,7 @@ export default function DashboardBilling() {
         try {
             const response = await paymentAPI.getPaymentHistory(1, 1);
             console.log('✅ 구매내역 확인 완료:', response.data);
+            return { success: true, data: response.data }; // 성공 시 결과 반환
         } catch (error) {
             console.error('❌ 구매내역 확인 실패:', error);
             throw error; // 에러를 다시 throw하여 useErrorHandler에서 감지할 수 있도록 함
