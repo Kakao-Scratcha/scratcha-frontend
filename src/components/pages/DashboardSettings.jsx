@@ -340,7 +340,7 @@ export default function DashboardSettings() {
                                 {/* 경고 활성화 토글 */}
                                 <div className="flex items-center justify-between p-4 theme-layout-secondary rounded-lg">
                                     <div>
-                                        <h4 className="font-medium theme-text-primary">토큰 사용량 경고</h4>
+                                        <h3 className="font-medium theme-text-primary">토큰 사용량 경고</h3>
                                         <p className="text-sm theme-text-secondary">보유 토큰이 설정한 수치 이하로 떨어지면 경고를 표시합니다</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -399,7 +399,7 @@ export default function DashboardSettings() {
                             {/* 이름 변경 */}
                             <div className="flex items-center justify-between p-4 theme-layout-secondary rounded-lg">
                                 <div>
-                                    <h4 className="font-medium theme-text-primary">회원 정보 수정</h4>
+                                    <h3 className="font-medium theme-text-primary">회원 정보 수정</h3>
                                     <p className="text-sm theme-text-secondary">현재 이름 : {getServerUserName(user) || '설정되지 않음'}</p>
                                 </div>
                                 <button
@@ -419,7 +419,7 @@ export default function DashboardSettings() {
                             {/* 회원 탈퇴 */}
                             <div className="flex items-center justify-between p-4 theme-layout-secondary rounded-lg">
                                 <div>
-                                    <h4 className="font-medium theme-text-primary">회원 탈퇴</h4>
+                                    <h3 className="font-medium theme-text-primary">회원 탈퇴</h3>
                                     <p className="text-sm theme-text-secondary">계정을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다</p>
                                 </div>
                                 <button

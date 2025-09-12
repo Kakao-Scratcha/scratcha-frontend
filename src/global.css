@@ -26,16 +26,16 @@
   --color-accent-secondary: #1d4ed8; /* bg-blue-700 */
   --color-accent-light: #60a5fa; /* bg-blue-500 */
 
-  --color-success: #10b981; /* bg-green-500 */
-  --color-warning: #f59e0b; /* bg-yellow-500 */
-  --color-error: #ef4444; /* bg-red-500 */
+  --color-success: #059669; /* bg-green-600 - 더 진한 녹색 */
+  --color-warning: #d97706; /* bg-yellow-600 - 더 진한 노란색 */
+  --color-error: #dc2626; /* bg-red-600 - 더 진한 빨간색 */
 
   /* 기존 색상 변수 유지 */
   --color-primary: #3b82f6;
   --color-primary-dark: #1d4ed8;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
 }
 
 /* 다크 모드 색상 (기존 다크모드 색상과 정확히 매핑) */
@@ -56,13 +56,13 @@
   --color-border-dark: #374151; /* dark:border-gray-700 */
   --color-border-dark-secondary: #4b5563; /* dark:border-gray-600 */
 
-  --color-accent-primary: #60a5fa; /* dark:bg-blue-500 */
-  --color-accent-secondary: #3b82f6; /* dark:bg-blue-600 */
+  --color-accent-primary: #3b82f6; /* dark:bg-blue-600 - 더 진한 파란색 */
+  --color-accent-secondary: #1d4ed8; /* dark:bg-blue-700 - 더 진한 파란색 */
   --color-accent-light: #60a5fa; /* dark:bg-blue-500 */
 
-  --color-success: #34d399; /* dark:bg-green-400 */
-  --color-warning: #fbbf24; /* dark:bg-yellow-400 */
-  --color-error: #f87171; /* dark:bg-red-400 */
+  --color-success: #10b981; /* dark:bg-green-500 - 더 진한 녹색 */
+  --color-warning: #f59e0b; /* dark:bg-yellow-500 - 더 진한 노란색 */
+  --color-error: #ef4444; /* dark:bg-red-500 - 더 진한 빨간색 */
 }
 
 /* 기본 설정 */

@@ -268,7 +268,7 @@ export default function DashboardBilling() {
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* 현재 보유 토큰 현황 */}
                             <div className="lg:col-span-1 bg-blue-50 dark:bg-blue-900/20 p-5 rounded-lg border border-blue-200 dark:border-blue-800 flex flex-col justify-center">
-                                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-4 text-center">현재 보유 토큰 현황</h4>
+                                <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-4 text-center">현재 보유 토큰 현황</h3>
 
                                 <div className="text-center mb-5">
                                     <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
@@ -306,7 +306,7 @@ export default function DashboardBilling() {
                                             <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                                 {requestsStats.daily.currentCount.toLocaleString()}
                                             </div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-500">토큰</div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-300">토큰</div>
                                         </div>
                                         <div className="text-right">
                                             {requestsStats.daily.rate > 0 ? (
@@ -341,7 +341,7 @@ export default function DashboardBilling() {
                                             <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                                 {requestsStats.weekly.currentCount.toLocaleString()}
                                             </div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-500">토큰</div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-300">토큰</div>
                                         </div>
                                         <div className="text-right">
                                             {requestsStats.weekly.rate > 0 ? (
@@ -376,7 +376,7 @@ export default function DashboardBilling() {
                                             <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                                 {requestsStats.monthly.currentCount.toLocaleString()}
                                             </div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-500">토큰</div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-300">토큰</div>
                                         </div>
                                         <div className="text-right">
                                             {requestsStats.monthly.rate > 0 ? (

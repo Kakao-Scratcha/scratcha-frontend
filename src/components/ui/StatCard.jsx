@@ -26,10 +26,10 @@ const StatCard = ({ title, data, loading, className = "" }) => {
         } else {
             return (
                 <>
-                    <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
                         <rect x="3" y="11" width="18" height="2" rx="1" />
                     </svg>
-                    <span className="text-lg md:text-xl font-bold text-yellow-500">0%</span>
+                    <span className="text-lg md:text-xl font-bold text-yellow-600 dark:text-yellow-400">0%</span>
                 </>
             );
         }
@@ -37,7 +37,7 @@ const StatCard = ({ title, data, loading, className = "" }) => {
 
     return (
         <div className={`p-5 rounded-lg theme-card text-center ${className}`}>
-            <h3 className="text-base md:text-lg font-semibold theme-text-primary mb-1">{title}</h3>
+            <h4 className="text-base md:text-lg font-semibold theme-text-primary mb-1">{title}</h4>
             {loading ? (
                 <div className="flex justify-center items-center h-20">
                     <LoadingSpinner />

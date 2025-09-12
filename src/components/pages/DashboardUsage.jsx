@@ -408,6 +408,7 @@ export default function DashboardUsage() {
                                         value={selectedAppId}
                                         onChange={(e) => handleAppChange(e.target.value)}
                                         className="w-full sm:w-36 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        aria-label="앱 선택"
                                     >
                                         <option value="all">전체</option>
                                         {(apps || []).map(app => (
@@ -415,8 +416,9 @@ export default function DashboardUsage() {
                                                 key={app.id}
                                                 value={app.id}
                                                 title={app.name}
+                                                aria-label={app.name}
                                             >
-                                                {app.name.length > 15 ? `${app.name.substring(0, 15)}...` : app.name}
+                                                {app.name}
                                             </option>
                                         ))}
                                     </select>
@@ -429,6 +431,7 @@ export default function DashboardUsage() {
                                         value={selectedPeriod}
                                         onChange={(e) => setSelectedPeriod(e.target.value)}
                                         className="w-full sm:w-36 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        aria-label="기간 선택"
                                     >
                                         {periodOptions.map(option => (
                                             <option key={option} value={option}>{option}</option>
