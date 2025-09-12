@@ -538,6 +538,108 @@ if (import.meta.env.DEV) {
 - `Pricing.jsx`: 헤딩 순서 수정
 - 모든 이미지 컴포넌트: WebP 최적화, 명시적 크기
 
+## 최적화 진행 내역
+
+### 2025-01-12: API 반환값 및 에러 처리 최적화
+
+#### 🔧 주요 수정 사항
+
+**1. API 함수 반환값 최적화**
+
+- **문제**: 대부분의 API 함수가 `undefined`를 반환하여 디버깅 및 에러 처리에 어려움
+- **해결**: 모든 API 함수에 의미 있는 반환값 추가
+- **수정된 파일들**:
+  - `frontend/src/stores/dashboardStore.js`
+  - `frontend/src/stores/authStore.js`
+  - `frontend/src/components/pages/DashboardOverview.jsx`
+  - `frontend/src/components/pages/DashboardBilling.jsx`
+  - `frontend/src/components/pages/DashboardApp.jsx`
+  - `frontend/src/components/pages/DashboardSettings.jsx`
+
+**2. 에러 처리 로직 개선**
+
+- **문제**: `Promise.allSettled`에서 실패한 API도 `fulfilled`로 처리되어 `allSuccessful: true` 반환
+- **해결**: `catch` 블록에서 `return null` 대신 `throw error` 사용
+- **수정된 파일**: `frontend/src/hooks/useErrorHandler.js`
+
+**3. 로딩 상태 조건 통일**
+
+- **문제**: 각 페이지마다 다른 로딩 조건으로 인한 일관성 부족
+- **해결**: 모든 대시보드 페이지에 `getProfile` API 추가하여 `!user` 조건 해결
+- **수정된 페이지들**:
+  - `DashboardBilling.jsx`: 2개 → 3개 API 호출
+  - `DashboardSettings.jsx`: 1개 → 2개 API 호출
+
+**4. ESLint 경고 해결**
+
+- **문제**: `react-hooks/exhaustive-deps` 경고 및 `no-unsafe-finally` 에러
+- **해결**: 의존성 배열 최적화 및 `finally` 블록에서 `return` 문 제거
+- **수정된 파일들**:
+  - `frontend/src/stores/authStore.js`
+  - `frontend/src/components/pages/DashboardOverview.jsx`
+  - `frontend/src/components/pages/DashboardUsage.jsx`
+  - `frontend/src/components/tosspayments/Checkout.jsx`
+
+#### 📊 최적화 결과
+
+**Before (이전)**
+
+```javascript
+// API 함수들이 undefined 반환
+const result = await someAPI();
+console.log(result); // undefined
+
+// 에러 발생 시에도 성공으로 처리
+{allSuccessful: true, results: [{status: 'fulfilled', value: undefined}]}
+
+// 로딩 상태가 계속 유지됨
+const isDataLoading = isLoading || !user || isInitialLoad.current; // !user가 true
+```
+
+**After (수정 후)**
+
+```javascript
+// API 함수들이 의미 있는 데이터 반환
+const result = await someAPI();
+console.log(result); // {success: true, data: {...}}
+
+// 에러 발생 시 올바르게 실패로 처리
+{allSuccessful: false, results: [{status: 'rejected', reason: Error}]}
+
+// 로딩 상태가 정상적으로 해제됨
+const isDataLoading = isLoading || isInitialLoad.current; // user 정보 로드 완료
+```
+
+#### 🚀 성능 개선 효과
+
+1. **디버깅 개선**: 모든 API 호출 결과를 명확히 확인 가능
+2. **에러 처리 정확성**: 실패한 API 호출을 올바르게 감지
+3. **로딩 상태 일관성**: 모든 페이지에서 동일한 로딩 조건 적용
+4. **코드 품질 향상**: ESLint 경고 제거로 코드 안정성 증대
+5. **쿠버네티스 환경 안정성**: 개발환경과 프로덕션 환경에서 동일한 동작 보장
+
+#### 🔍 수정된 API 함수 목록
+
+**dashboardStore.js**
+
+- `loadRequestsStats`: `{success: true, data: {...}}` 반환
+- `loadAllRequestsStats`: `{success: true}` 반환
+- `loadLogs`: `{success: true, data: {...}}` 반환
+- `refreshApplications`: `{success: true, apps, apiKeys}` 반환
+- `loadStatisticsSummary`: `{success: true, data}` 반환
+- `loadMultiAppStatistics`: `{success: true, data}` 반환
+
+**authStore.js**
+
+- `logout`: `{success: true}` 반환
+- `initialize`: `{success: true/false, error?}` 반환
+
+**페이지별 API 함수**
+
+- `checkPaymentHistory`: `{success: true, hasHistory/data}` 반환
+- `loadApplications`: `result` 반환
+- `checkPremiumStatus`: `{success: true, hasPaymentHistory}` 반환
+
 ## 라이선스
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다.
