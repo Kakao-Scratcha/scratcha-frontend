@@ -19,7 +19,7 @@ export default function DashboardBilling() {
     };
 
     const { user } = useAuthStore();
-    const { requestsStats, loadAllRequestsStats } = useDashboardStore();
+    const { requestsStats, loadAllRequestsStats, isLoading } = useDashboardStore();
 
     // 에러 처리 훅 (투트랙 시스템)
     const { errorState, closeError, handleRetry, executeAllWithErrorHandling } = useErrorHandler();
@@ -209,7 +209,7 @@ export default function DashboardBilling() {
     }, [loadAllRequestsStats, checkPaymentHistory, executeAllWithErrorHandling]);
 
     // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
-    const isDataLoading = !user || isInitialLoad.current;
+    const isDataLoading = isLoading || !user || isInitialLoad.current;
 
     return (
         <DashboardLayout

@@ -28,13 +28,13 @@ export const authAPI = {
         return apiClient.patch('/dashboard/users/me', data);
     },
 
-    // 사용자 이름 변경
-    updateUsername: (newUsername) => {
-        console.log('📞 updateUsername API 호출:', { newUsername });
-        return apiClient.patch('/dashboard/users/me', {
-            userName: newUsername
-        });
-    },
+    // 사용자 이름 변경 (미사용 - updateProfile로 대체됨)
+    // updateUsername: (newUsername) => {
+    //     console.log('📞 updateUsername API 호출:', { newUsername });
+    //     return apiClient.patch('/dashboard/users/me', {
+    //         userName: newUsername
+    //     });
+    // },
 
     // 회원 탈퇴 (계정 소프트 삭제)
     deleteAccount: () => {
@@ -42,8 +42,8 @@ export const authAPI = {
         return apiClient.delete('/dashboard/users/me');
     },
 
-    // 사용자 삭제
-    deleteUser: () => apiClient.delete('/dashboard/users/me'),
+    // 사용자 삭제 (미사용 - deleteAccount와 중복)
+    // deleteUser: () => apiClient.delete('/dashboard/users/me'),
 };
 
 // 애플리케이션 관련 API
@@ -60,11 +60,11 @@ export const applicationAPI = {
         return apiClient.post('/dashboard/applications/', data);
     },
 
-    // 특정 애플리케이션 조회
-    getApplicationById: (appId) => {
-        console.log('📱 애플리케이션 조회 API 호출:', appId);
-        return apiClient.get(`/dashboard/applications/${appId}`);
-    },
+    // 특정 애플리케이션 조회 (미사용)
+    // getApplicationById: (appId) => {
+    //     console.log('📱 애플리케이션 조회 API 호출:', appId);
+    //     return apiClient.get(`/dashboard/applications/${appId}`);
+    // },
 
     // 애플리케이션 업데이트
     updateApplication: (appId, data) => {
@@ -114,19 +114,18 @@ export const applicationAPI = {
 };
 
 
-// 사용자 관련 API
-export const userAPI = {
-    // 사용자 정보 업데이트
-    updateProfile: (data) => apiClient.put('/user/profile', data),
-
-};
+// 사용자 관련 API (미사용 - authAPI로 대체됨)
+// export const userAPI = {
+//     // 사용자 정보 업데이트
+//     updateProfile: (data) => apiClient.put('/user/profile', data),
+// };
 
 // 대시보드 관련 API
 export const dashboardAPI = {
-    // 기존 API 유지
-    getStats: () => apiClient.get('/dashboard/stats'),
-    getUsage: (period) => apiClient.get(`/dashboard/usage?period=${period}`),
-    getRecentActivity: () => apiClient.get('/dashboard/activity'),
+    // 기존 API 유지 (미사용 - 새로운 통계 API로 대체됨)
+    // getStats: () => apiClient.get('/dashboard/stats'),
+    // getUsage: (period) => apiClient.get(`/dashboard/usage?period=${period}`),
+    // getRecentActivity: () => apiClient.get('/dashboard/activity'),
 
     // 로그 관련 API
     getLogs: (params) => {
@@ -160,18 +159,18 @@ export const dashboardAPI = {
 };
 
 
-// 설정 관련 API
-export const settingsAPI = {
-    // 설정 조회
-    getSettings: () => apiClient.get('/settings'),
+// 설정 관련 API (미사용)
+// export const settingsAPI = {
+//     // 설정 조회
+//     getSettings: () => apiClient.get('/settings'),
 
-    // 설정 업데이트
-    updateSettings: (settings) => apiClient.put('/settings', settings),
+//     // 설정 업데이트
+//     updateSettings: (settings) => apiClient.put('/settings', settings),
 
-    // 통합 설정
-    getIntegrations: () => apiClient.get('/settings/integrations'),
-    updateIntegrations: (integrations) => apiClient.put('/settings/integrations', integrations),
-};
+//     // 통합 설정
+//     getIntegrations: () => apiClient.get('/settings/integrations'),
+//     updateIntegrations: (integrations) => apiClient.put('/settings/integrations', integrations),
+// };
 
 // 결제 관련 API
 export const paymentAPI = {

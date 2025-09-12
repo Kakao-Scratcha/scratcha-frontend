@@ -84,8 +84,8 @@ export const useErrorHandler = () => {
             if (throwError) {
                 throw error;
             }
-            // 에러 발생 시 onSuccess 콜백을 호출하지 않고 null 반환
-            return null;
+            // 에러 발생 시 Promise를 reject하여 allSettled에서 rejected로 처리되도록 함
+            throw error;
         }
     }, [handleError]);
 
