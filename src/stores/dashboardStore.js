@@ -77,6 +77,7 @@ export const useDashboardStore = create((set, get) => ({
             }));
 
             devLog('✅ 통계 데이터 로드 완료:', { periodType, currentCount, previousCount, rate });
+            return { success: true, data: { currentCount, previousCount, rate } }; // 성공 시 결과 반환
         } catch (error) {
             devError('❌ 통계 데이터 로드 실패:', error);
             set(state => ({
@@ -102,6 +103,7 @@ export const useDashboardStore = create((set, get) => ({
                 get().loadRequestsStats('weekly'),
                 get().loadRequestsStats('monthly')
             ]);
+            return { success: true }; // 성공 시 결과 반환
         } catch (error) {
             devError('❌ 모든 통계 데이터 로드 실패:', error);
             throw error; // 에러를 다시 throw하여 useErrorHandler에서 감지할 수 있도록 함
@@ -155,6 +157,7 @@ export const useDashboardStore = create((set, get) => ({
                 page,
                 size
             });
+            return { success: true, data: { items, total, page, size } }; // 성공 시 결과 반환
         } catch (error) {
             devError('로그 데이터 로드 실패:', error);
             set(state => ({
@@ -172,7 +175,8 @@ export const useDashboardStore = create((set, get) => ({
     // 전체 로그 로드
     loadAllLogs: async (page = 1, limit = 10, periodType = 'yearly') => {
         try {
-            await get().loadLogs({ page, limit, periodType });
+            const result = await get().loadLogs({ page, limit, periodType });
+            return result; // 성공 시 결과 반환
         } catch (error) {
             devError('❌ 전체 로그 로드 실패:', error);
             throw error; // 에러를 다시 throw하여 상위에서 처리할 수 있도록 함
@@ -182,7 +186,8 @@ export const useDashboardStore = create((set, get) => ({
     // 특정 API 키 로그 로드
     loadLogsByKeyId: async (keyId, page = 1, limit = 10, periodType = 'yearly') => {
         try {
-            await get().loadLogs({ keyId, page, limit, periodType });
+            const result = await get().loadLogs({ keyId, page, limit, periodType });
+            return result; // 성공 시 결과 반환
         } catch (error) {
             devError('❌ 특정 키 로그 로드 실패:', error);
             throw error; // 에러를 다시 throw하여 상위에서 처리할 수 있도록 함
@@ -194,7 +199,8 @@ export const useDashboardStore = create((set, get) => ({
         const { selectedKeyId } = get();
         devLog('📄 페이지 변경:', { page, limit, selectedKeyId, periodType });
         try {
-            await get().loadLogs({ keyId: selectedKeyId, page, limit, periodType });
+            const result = await get().loadLogs({ keyId: selectedKeyId, page, limit, periodType });
+            return result; // 성공 시 결과 반환
         } catch (error) {
             devError('❌ 로그 페이지 변경 실패:', error);
             throw error; // 에러를 다시 throw하여 상위에서 처리할 수 있도록 함
@@ -268,6 +274,7 @@ export const useDashboardStore = create((set, get) => ({
                 hasKey: !!key.key
             })));
             set({ apps: freshApps, apiKeys: freshKeys, isAppsLoading: false });
+            return { success: true, apps: freshApps, apiKeys: freshKeys }; // 성공 시 결과 반환
         } catch (error) {
             devError('📱 애플리케이션 데이터 로드 실패:', error);
             // 에러 발생 시에도 기존 데이터 유지 (상태 초기화하지 않음)
@@ -311,6 +318,7 @@ export const useDashboardStore = create((set, get) => ({
             });
 
             devLog('✅ 통계 요약 로드 완료:', { keyId, selectedPeriod, chartData });
+            return { success: true, data: chartData }; // 성공 시 결과 반환
         } catch (error) {
             devError('❌ 통계 요약 로드 실패:', error);
             set({
@@ -386,6 +394,7 @@ export const useDashboardStore = create((set, get) => ({
             });
 
             devLog('✅ 다중 앱 통계 로드 완료:', { selectedPeriod, multiAppData });
+            return { success: true, data: multiAppData }; // 성공 시 결과 반환
         } catch (error) {
             devError('❌ 다중 앱 통계 로드 실패:', error);
             set({

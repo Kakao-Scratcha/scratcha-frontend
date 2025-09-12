@@ -106,6 +106,7 @@ export default function DashboardSettings() {
             const hasPaymentHistory = response.data.total > 0;
             setIsPremiumUser(hasPaymentHistory);
             devLog('✅ 프리미엄 유저 확인:', { hasPaymentHistory, isPremium: hasPaymentHistory });
+            return { success: true, hasPaymentHistory }; // 성공 시 결과 반환
         } catch (error) {
             devError('❌ 프리미엄 유저 확인 실패:', error);
             setIsPremiumUser(false);

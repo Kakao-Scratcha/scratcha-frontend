@@ -269,6 +269,7 @@ export const useAuthStore = create(
                         devLog('⚠️ 로컬스토리지 제거 중 오류:', e?.message);
                     }
                     devLog('✅ 프론트엔드 로그아웃 완료');
+                    return { success: true }; // 성공 시 결과 반환
                 }
             },
 
@@ -476,6 +477,7 @@ export const useAuthStore = create(
                         }
 
                         devLog('✅ 토큰 유효성 검증 완료 (로컬 검증)');
+                        return { success: true }; // 성공 시 결과 반환
                     } catch (error) {
                         devLog('❌ 토큰 유효성 검증 실패:', error.message);
                         // 토큰이 유효하지 않으면 로그아웃
@@ -487,6 +489,7 @@ export const useAuthStore = create(
                             error: null,
                             lastActivity: null,
                         });
+                        return { success: false, error: error.message }; // 실패 시 결과 반환
                     }
                 } else {
                     devLog('❌ 토큰 없음 - 인증 상태 없음');
@@ -498,6 +501,7 @@ export const useAuthStore = create(
                         error: null,
                         lastActivity: null,
                     });
+                    return { success: false, error: '토큰이 없습니다' }; // 토큰 없음 시 결과 반환
                 }
             },
 

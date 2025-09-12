@@ -84,6 +84,7 @@ export default function DashboardOverview() {
             const hasHistory = response.data.total > 0;
             setHasPaymentHistory(hasHistory);
             console.log('🔍 checkPaymentHistory 성공 - hasHistory:', hasHistory);
+            return { success: true, hasHistory }; // 성공 시 결과 반환
         } catch (error) {
             console.log('🔍 checkPaymentHistory 에러:', error);
             setHasPaymentHistory(false);

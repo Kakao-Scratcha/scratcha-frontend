@@ -48,7 +48,7 @@ export default function DashboardUsage() {
     const isInitialLoad = useRef(true);
 
     // 선택된 APP의 API 키들 (전체 선택 시 모든 API 키)
-    const appApiKeys = selectedAppId === 'all' ? apiKeys : apiKeys.filter(key => String(key.appId) === String(selectedAppId));
+    const appApiKeys = selectedAppId === 'all' ? (apiKeys || []) : (apiKeys || []).filter(key => String(key.appId) === String(selectedAppId));
 
     // 액션별 에러 처리 함수
     const handleApiError = (error, operation) => {
@@ -405,7 +405,7 @@ export default function DashboardUsage() {
                                         className="w-full sm:w-36 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                     >
                                         <option value="all">전체</option>
-                                        {apps.map(app => (
+                                        {(apps || []).map(app => (
                                             <option
                                                 key={app.id}
                                                 value={app.id}
@@ -493,7 +493,7 @@ export default function DashboardUsage() {
                                                     data={usageData}
                                                     selectedPeriod={selectedPeriod}
                                                     height="h-80"
-                                                    appName={apps.find(app => String(app.id) === String(selectedAppId))?.name}
+                                                    appName={apps?.find(app => String(app.id) === String(selectedAppId))?.name || '알 수 없음'}
                                                 />
                                             </div>
                                         )
