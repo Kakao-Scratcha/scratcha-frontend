@@ -33,18 +33,43 @@ export default function DashboardSettings() {
         console.error(`❌ ${operation} 실패:`, error);
         let errorMessage = '작업을 수행하는데 실패했습니다.';
 
-        if (error.response?.status === 404) {
-            errorMessage = '요청한 데이터를 찾을 수 없습니다.';
-        } else if (error.response?.status === 500) {
-            errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-        } else if (error.response?.status === 401) {
-            errorMessage = '인증이 필요합니다. 다시 로그인해주세요.';
-        } else if (error.response?.status === 409) {
-            errorMessage = '이미 사용 중인 이름입니다.';
-        } else if (error.response?.status === 400) {
-            errorMessage = '입력 정보를 확인해주세요.';
-        } else if (error.response?.status === 422) {
-            errorMessage = '입력 정보를 확인해주세요.';
+        // 서버 응답이 있는 경우 상세 정보 표시
+        if (error.response) {
+            const status = error.response.status;
+            const responseData = error.response.data;
+
+            console.error(`📡 서버 응답 상세:`, {
+                status,
+                data: responseData
+            });
+
+            // 서버에서 보낸 메시지를 우선적으로 확인
+            if (responseData?.detail) {
+                if (Array.isArray(responseData.detail)) {
+                    errorMessage = responseData.detail
+                        .map(item => item.msg || item.message || JSON.stringify(item))
+                        .join(', ');
+                } else {
+                    errorMessage = responseData.detail;
+                }
+            } else if (responseData?.message) {
+                errorMessage = responseData.message;
+            } else {
+                // 서버 메시지가 없는 경우에만 기본 메시지 사용
+                if (status === 404) {
+                    errorMessage = '요청한 데이터를 찾을 수 없습니다.';
+                } else if (status === 500) {
+                    errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                } else if (status === 401) {
+                    errorMessage = '인증이 필요합니다. 다시 로그인해주세요.';
+                } else if (status === 409) {
+                    errorMessage = '이미 사용 중인 이름입니다.';
+                } else if (status === 400) {
+                    errorMessage = '입력 정보를 확인해주세요.';
+                } else if (status === 422) {
+                    errorMessage = '입력 정보를 확인해주세요.';
+                }
+            }
         }
 
         setErrorModal({
@@ -72,6 +97,21 @@ export default function DashboardSettings() {
         newPassword: '',
         confirmPassword: ''
     });
+
+    // 비밀번호 보이기/안보이기 상태
+    const [showPasswords, setShowPasswords] = useState({
+        currentPassword: false,
+        newPassword: false,
+        confirmPassword: false
+    });
+
+    // 비밀번호 보이기/안보이기 토글 함수
+    const togglePasswordVisibility = (field) => {
+        setShowPasswords(prev => ({
+            ...prev,
+            [field]: !prev[field]
+        }));
+    };
 
     // 사용자 정보가 변경될 때마다 이름 폼 업데이트
     useEffect(() => {
@@ -265,6 +305,11 @@ export default function DashboardSettings() {
                 newPassword: '',
                 confirmPassword: ''
             });
+            setShowPasswords({
+                currentPassword: false,
+                newPassword: false,
+                confirmPassword: false
+            });
 
             // 성공 메시지도 에러 모달로 표시
             setErrorModal({
@@ -437,7 +482,23 @@ export default function DashboardSettings() {
             {/* 이름 변경 모달 */}
             <Modal
                 isOpen={isNameModalOpen}
-                onClose={() => setIsNameModalOpen(false)}
+                onClose={() => {
+                    setNameForm({
+                        currentName: getServerUserName(user),
+                        newName: ''
+                    });
+                    setPasswordForm({
+                        currentPassword: '',
+                        newPassword: '',
+                        confirmPassword: ''
+                    });
+                    setShowPasswords({
+                        currentPassword: false,
+                        newPassword: false,
+                        confirmPassword: false
+                    });
+                    setIsNameModalOpen(false);
+                }}
                 title="회원 정보 수정"
                 centerTitle
                 hideClose
@@ -474,41 +535,114 @@ export default function DashboardSettings() {
                     {/* 비밀번호 (UI만) */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">비밀번호</label>
-                        <input
-                            type="password"
-                            value={passwordForm.currentPassword}
-                            onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                            placeholder="비밀번호를 입력하세요"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPasswords.currentPassword ? "text" : "password"}
+                                value={passwordForm.currentPassword}
+                                onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                                placeholder="비밀번호를 입력하세요"
+                                className="w-full px-3 py-2 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => togglePasswordVisibility('currentPassword')}
+                                className="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-10 h-10 flex items-center justify-center bg-transparent focus:outline-none"
+                                aria-label={showPasswords.currentPassword ? "비밀번호 숨기기" : "비밀번호 표시하기"}
+                            >
+                                {showPasswords.currentPassword ? (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-.274.857-.687 1.654-1.217 2.364" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">새로운 비밀번호</label>
-                        <input
-                            type="password"
-                            value={passwordForm.newPassword}
-                            onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                            placeholder="새 비밀번호를 입력하세요"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPasswords.newPassword ? "text" : "password"}
+                                value={passwordForm.newPassword}
+                                onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                                placeholder="새 비밀번호를 입력하세요"
+                                className="w-full px-3 py-2 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => togglePasswordVisibility('newPassword')}
+                                className="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-10 h-10 flex items-center justify-center bg-transparent focus:outline-none"
+                                aria-label={showPasswords.newPassword ? "비밀번호 숨기기" : "비밀번호 표시하기"}
+                            >
+                                {showPasswords.newPassword ? (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-.274.857-.687 1.654-1.217 2.364" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">새로운 비밀번호 확인</label>
-                        <input
-                            type="password"
-                            value={passwordForm.confirmPassword}
-                            onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                            placeholder="새 비밀번호를 다시 입력하세요"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPasswords.confirmPassword ? "text" : "password"}
+                                value={passwordForm.confirmPassword}
+                                onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                placeholder="새 비밀번호를 다시 입력하세요"
+                                className="w-full px-3 py-2 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => togglePasswordVisibility('confirmPassword')}
+                                className="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-10 h-10 flex items-center justify-center bg-transparent focus:outline-none"
+                                aria-label={showPasswords.confirmPassword ? "비밀번호 숨기기" : "비밀번호 표시하기"}
+                            >
+                                {showPasswords.confirmPassword ? (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-.274.857-.687 1.654-1.217 2.364" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     <div className="flex gap-3 pt-2">
                         <button
                             type="button"
-                            onClick={() => setIsNameModalOpen(false)}
+                            onClick={() => {
+                                setNameForm({
+                                    currentName: getServerUserName(user),
+                                    newName: ''
+                                });
+                                setPasswordForm({
+                                    currentPassword: '',
+                                    newPassword: '',
+                                    confirmPassword: ''
+                                });
+                                setShowPasswords({
+                                    currentPassword: false,
+                                    newPassword: false,
+                                    confirmPassword: false
+                                });
+                                setIsNameModalOpen(false);
+                            }}
                             className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                         >
                             취소

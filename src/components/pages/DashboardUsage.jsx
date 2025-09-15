@@ -379,7 +379,7 @@ export default function DashboardUsage() {
     ];
 
     // 모든 데이터가 로드될 때까지 로딩 표시 (투트랙 시스템)
-    const isDataLoading = isLoading || !apps || apps.length === 0 || isInitialLoad;
+    const isDataLoading = isLoading || isInitialLoad;
 
     return (
         <DashboardLayout
@@ -391,6 +391,16 @@ export default function DashboardUsage() {
                     <LoadingSpinner />
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                         사용량 데이터를 불러오는 중...
+                    </p>
+                </div>
+            ) : (!apps || apps.length === 0) && (!logs?.items?.length) ? (
+                <div className="flex flex-col justify-center items-center h-64 space-y-4 bg-transparent">
+                    <svg className="w-16 h-16 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">APP이 없습니다</h2>
+                    <p className="text-gray-600 dark:text-gray-400 text-center">
+                        사용량을 확인하려면 먼저 APP을 생성해주세요.<br />
                     </p>
                 </div>
             ) : (
