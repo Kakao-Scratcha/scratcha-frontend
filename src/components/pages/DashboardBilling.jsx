@@ -300,7 +300,7 @@ export default function DashboardBilling() {
                             <div className="lg:col-span-2">
                                 <div className="grid grid-cols-2 gap-3 h-full">
                                     {/* 오늘 사용량 */}
-                                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg h-full">
+                                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-green-900/20 rounded-lg h-full border border-gray-200 dark:border-green-800">
                                         <div>
                                             <div className="text-sm text-gray-600 dark:text-gray-400">오늘 사용량</div>
                                             <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -335,7 +335,7 @@ export default function DashboardBilling() {
                                     </div>
 
                                     {/* 이번 주 사용량 */}
-                                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg h-full">
+                                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-orange-900/20 rounded-lg h-full border border-gray-200 dark:border-orange-800">
                                         <div>
                                             <div className="text-sm text-gray-600 dark:text-gray-400">이번 주 사용량</div>
                                             <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -370,7 +370,7 @@ export default function DashboardBilling() {
                                     </div>
 
                                     {/* 이번 달 사용량 */}
-                                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg h-full">
+                                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-purple-900/20 rounded-lg h-full border border-gray-200 dark:border-purple-800">
                                         <div>
                                             <div className="text-sm text-gray-600 dark:text-gray-400">이번 달 사용량</div>
                                             <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
