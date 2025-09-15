@@ -18,7 +18,7 @@
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.1",
     "recharts": "^3.1.0",
-    "scratcha-sdk": "^2.0.9",
+    "scratcha-sdk": "^2.0.20",
     "tailwindcss": "^4.1.11",
     "zustand": "^5.0.7"
   },

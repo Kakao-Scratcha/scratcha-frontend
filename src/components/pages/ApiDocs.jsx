@@ -60,7 +60,7 @@ export default function ApiDocs() {
 
 <ScratchaWidget
   apiKey="your-api-key"
-  endpoint="https://api.your-domain.com"
+  endpoint="https://api.scratcha.cloud"
   mode="normal"
   onSuccess={(result) => {
     // 성공 처리
@@ -130,7 +130,7 @@ function App() {
   return (
     <ScratchaWidget
       apiKey="your-api-key"
-      endpoint="https://api.your-domain.com"
+      endpoint="https://api.scratcha.cloud"
       mode="normal"
       onSuccess={handleSuccess}
       onError={handleError}
