@@ -947,7 +947,10 @@ export default function DashboardApp() {
             {/* APP 수정 모달 */}
             <Modal
                 isOpen={isEditAppModalOpen}
-                onClose={() => setIsEditAppModalOpen(false)}
+                onClose={() => {
+                    setEditAppForm({ name: '', description: '' });
+                    setIsEditAppModalOpen(false);
+                }}
                 title="APP 수정"
             >
                 <form onSubmit={handleUpdateApp} className="space-y-4">
@@ -1018,7 +1021,10 @@ export default function DashboardApp() {
                     <div className="flex gap-3 pt-4">
                         <button
                             type="button"
-                            onClick={() => setIsEditAppModalOpen(false)}
+                            onClick={() => {
+                                setEditAppForm({ name: '', description: '' });
+                                setIsEditAppModalOpen(false);
+                            }}
                             disabled={loading}
                             className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-transparent transition disabled:opacity-50"
                         >
@@ -1094,7 +1100,11 @@ export default function DashboardApp() {
             {/* API 키 추가 모달 */}
             <Modal
                 isOpen={isAddApiKeyModalOpen}
-                onClose={() => setIsAddApiKeyModalOpen(false)}
+                onClose={() => {
+                    setNewApiKeyForm({ difficulty: 'middle' });
+                    setSelectedAppId('');
+                    setIsAddApiKeyModalOpen(false);
+                }}
                 title="새 API 키 추가"
             >
                 <form onSubmit={handleAddApiKey} className="space-y-4">
@@ -1125,7 +1135,11 @@ export default function DashboardApp() {
                     <div className="flex gap-3 pt-4">
                         <button
                             type="button"
-                            onClick={() => setIsAddApiKeyModalOpen(false)}
+                            onClick={() => {
+                                setNewApiKeyForm({ difficulty: 'middle' });
+                                setSelectedAppId('');
+                                setIsAddApiKeyModalOpen(false);
+                            }}
                             className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-transparent transition"
                         >
                             취소
