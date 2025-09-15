@@ -85,30 +85,49 @@ export default function DashboardApp() {
 
         let errorMessage = `${operation} 중 오류가 발생했습니다.`;
 
-        if (error.response?.status === 401) {
-            errorMessage = '인증이 필요합니다. 다시 로그인해주세요.';
-        } else if (error.response?.status === 403) {
-            errorMessage = '권한이 없습니다.';
-        } else if (error.response?.status === 404) {
-            if (operation === '애플리케이션 목록 로드') {
-                return; // 앱이 없는 것은 정상적인 상황
-            } else {
-                errorMessage = '요청한 리소스를 찾을 수 없습니다.';
-            }
-        } else if (error.response?.status === 422) {
-            if (error.response?.data?.detail) {
-                if (Array.isArray(error.response.data.detail)) {
-                    errorMessage = error.response.data.detail
+        // 서버 응답이 있는 경우 상세 정보 표시
+        if (error.response) {
+            const status = error.response.status;
+            const statusText = error.response.statusText;
+            const responseData = error.response.data;
+
+            devError(`📡 서버 응답 상세:`, {
+                status,
+                statusText,
+                data: responseData,
+                headers: error.response.headers
+            });
+
+            // 서버에서 보낸 메시지를 우선적으로 확인
+            if (responseData?.detail) {
+                if (Array.isArray(responseData.detail)) {
+                    errorMessage = responseData.detail
                         .map(item => item.msg || item.message || JSON.stringify(item))
                         .join(', ');
                 } else {
-                    errorMessage = error.response.data.detail;
+                    errorMessage = responseData.detail;
                 }
+            } else if (responseData?.message) {
+                errorMessage = responseData.message;
             } else {
-                errorMessage = '앱을 삭제할 수 없습니다. API 키가 연결되어 있거나 다른 제약 조건이 있을 수 있습니다.';
+                // 서버 메시지가 없는 경우에만 기본 메시지 사용
+                if (status === 401) {
+                    errorMessage = '인증이 필요합니다. 다시 로그인해주세요.';
+                } else if (status === 403) {
+                    errorMessage = '권한이 없습니다.';
+                } else if (status === 404) {
+                    if (operation === '애플리케이션 목록 로드') {
+                        return; // 앱이 없는 것은 정상적인 상황
+                    } else {
+                        errorMessage = '요청한 리소스를 찾을 수 없습니다.';
+                    }
+                } else if (status === 422) {
+                    errorMessage = '앱을 삭제할 수 없습니다. API 키가 연결되어 있거나 다른 제약 조건이 있을 수 있습니다.';
+                } else {
+                    // 서버 응답이 있지만 구체적인 오류 메시지가 없는 경우
+                    errorMessage = `서버 오류 (${status} ${statusText})\n\n응답 내용:\n${JSON.stringify(responseData, null, 2)}`;
+                }
             }
-        } else if (error.response?.data?.detail) {
-            errorMessage = error.response.data.detail;
         } else if (error.message) {
             errorMessage = error.message;
         }
@@ -499,7 +518,7 @@ export default function DashboardApp() {
                                                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-sm flex-shrink-0">
                                                         {index + 1}
                                                     </div>
-                                                    <div className="min-w-0 flex-1">
+                                                    <div className="min-w-0 flex-1 max-w-md">
                                                         <h3
                                                             className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate cursor-help"
                                                             title={app.name}
@@ -528,8 +547,7 @@ export default function DashboardApp() {
                                                                     : 'bg-red-500'
                                                                 }`}></div>
                                                             <span className="text-gray-700 dark:text-gray-300">
-                                                                {(app.settings.difficulty || 'low') === 'low' ? '쉬움' :
-                                                                    (app.settings.difficulty || 'low') === 'middle' ? '보통' : '어려움'}
+                                                                난이도 설정
                                                             </span>
                                                         </button>
                                                     )}
@@ -662,7 +680,7 @@ export default function DashboardApp() {
                                                                     {/* API 키 헤더 */}
                                                                     <div className="flex items-center justify-between mb-4">
                                                                         <div className="flex items-center gap-3">
-                                                                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                                                            <div className={`w-3 h-3 rounded-full ${apiKey.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                                                                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">API 키</span>
                                                                         </div>
                                                                         <div className="flex items-center gap-2">
@@ -784,7 +802,10 @@ export default function DashboardApp() {
             {/* APP 추가 모달 */}
             <Modal
                 isOpen={isAddAppModalOpen}
-                onClose={() => setIsAddAppModalOpen(false)}
+                onClose={() => {
+                    setNewAppForm({ name: '', description: '', difficulty: 'middle' });
+                    setIsAddAppModalOpen(false);
+                }}
                 title="새 APP 추가"
             >
                 <form onSubmit={handleAddApp} className="space-y-3">
@@ -798,9 +819,18 @@ export default function DashboardApp() {
                             onChange={(e) => setNewAppForm(prev => ({ ...prev, name: e.target.value }))}
                             className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="APP 이름을 입력하세요"
+                            maxLength={100}
                             required
                             disabled={loading}
                         />
+                        <div className="flex justify-between items-center mt-1">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                최대 100자까지 입력 가능
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {newAppForm.name.length}/100
+                            </span>
+                        </div>
                     </div>
 
                     <div>
@@ -813,9 +843,18 @@ export default function DashboardApp() {
                             className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="APP에 대한 설명을 입력하세요"
                             rows={3}
+                            maxLength={500}
                             required
                             disabled={loading}
                         />
+                        <div className="flex justify-between items-center mt-1">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                최대 500자까지 입력 가능
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {newAppForm.description.length}/500
+                            </span>
+                        </div>
                     </div>
 
                     <div>
@@ -885,7 +924,10 @@ export default function DashboardApp() {
                     <div className="flex gap-3 pt-2">
                         <button
                             type="button"
-                            onClick={() => setIsAddAppModalOpen(false)}
+                            onClick={() => {
+                                setNewAppForm({ name: '', description: '', difficulty: 'middle' });
+                                setIsAddAppModalOpen(false);
+                            }}
                             disabled={loading}
                             className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-transparent transition disabled:opacity-50"
                         >
@@ -936,9 +978,18 @@ export default function DashboardApp() {
                             onChange={(e) => setEditAppForm(prev => ({ ...prev, name: e.target.value }))}
                             className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="APP 이름을 입력하세요"
+                            maxLength={100}
                             required
                             disabled={loading}
                         />
+                        <div className="flex justify-between items-center mt-1">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                최대 100자까지 입력 가능
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {editAppForm.name.length}/100
+                            </span>
+                        </div>
                     </div>
 
                     <div>
@@ -951,8 +1002,17 @@ export default function DashboardApp() {
                             className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="APP에 대한 설명을 입력하세요"
                             rows={3}
+                            maxLength={500}
                             disabled={loading}
                         />
+                        <div className="flex justify-between items-center mt-1">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                최대 500자까지 입력 가능
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {editAppForm.description.length}/500
+                            </span>
+                        </div>
                     </div>
 
                     <div className="flex gap-3 pt-4">
@@ -1057,7 +1117,7 @@ export default function DashboardApp() {
                     {selectedApp && (
                         <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                             <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">선택된 APP:</p>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">{selectedApp.name}</p>
+                            <p className="font-medium text-gray-900 dark:text-gray-100 truncate" title={selectedApp.name}>{selectedApp.name}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">ID: {selectedApp.id}</p>
                         </div>
                     )}
@@ -1150,7 +1210,7 @@ export default function DashboardApp() {
                             </svg>
                             <span className="font-medium text-red-800">오류</span>
                         </div>
-                        <p className="text-red-700 mt-2">{_errorModal.message}</p>
+                        <p className="text-red-700 mt-2 whitespace-pre-wrap break-words">{_errorModal.message}</p>
                     </div>
 
                     <div className="flex justify-end pt-4">
