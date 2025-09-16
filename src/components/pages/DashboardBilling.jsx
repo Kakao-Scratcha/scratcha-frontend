@@ -157,11 +157,16 @@ export default function DashboardBilling() {
     // PaymentHistoryTable 참조
     const paymentHistoryTableRef = useRef(null);
 
+    // 구매내역 데이터 상태
+    const [paymentHistoryData, setPaymentHistoryData] = useState(null);
+
     // 구매내역 확인 함수
     const checkPaymentHistory = useCallback(async () => {
         try {
             const response = await paymentAPI.getPaymentHistory(1, 1);
             console.log('✅ 구매내역 확인 완료:', response.data);
+            // 구매내역 데이터를 상태에 저장
+            setPaymentHistoryData(response.data);
             return { success: true, data: response.data }; // 성공 시 결과 반환
         } catch (error) {
             console.error('❌ 구매내역 확인 실패:', error);
@@ -422,7 +427,11 @@ export default function DashboardBilling() {
 
                     {/* 최근 구매내역 */}
                     <div className="theme-card p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <PaymentHistoryTable ref={paymentHistoryTableRef} skipInitialLoad={true} />
+                        <PaymentHistoryTable
+                            ref={paymentHistoryTableRef}
+                            skipInitialLoad={true}
+                            initialData={paymentHistoryData}
+                        />
                     </div>
                 </div>
             )}

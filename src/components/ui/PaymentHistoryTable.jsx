@@ -2,7 +2,7 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle, useCallbac
 import { paymentAPI } from '../../services/api';
 import DataTable from './DataTable';
 
-const PaymentHistoryTable = forwardRef(({ onLoadingChange, skipInitialLoad = false }, ref) => {
+const PaymentHistoryTable = forwardRef(({ onLoadingChange, skipInitialLoad = false, initialData = null }, ref) => {
     const [paymentHistory, setPaymentHistory] = useState({
         data: [],
         total: 0,
@@ -61,10 +61,21 @@ const PaymentHistoryTable = forwardRef(({ onLoadingChange, skipInitialLoad = fal
 
     // 초기 데이터 로드
     useEffect(() => {
-        if (!skipInitialLoad) {
+        if (initialData) {
+            // 외부에서 전달받은 데이터 사용
+            console.log('💳 외부에서 전달받은 구매내역 데이터 사용:', initialData);
+            setPaymentHistory({
+                data: initialData.data || [],
+                total: initialData.total || 0,
+                page: 1,
+                size: initialData.size || 20,
+                loading: false,
+                error: null
+            });
+        } else if (!skipInitialLoad) {
             loadPaymentHistory(1, 20);
         }
-    }, [skipInitialLoad, loadPaymentHistory]);
+    }, [skipInitialLoad, loadPaymentHistory, initialData]);
 
     // 날짜 포맷팅 함수
     const formatDate = (dateString) => {
