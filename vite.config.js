@@ -200,10 +200,10 @@ export default defineConfig(({ mode }) => ({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: mode === 'production',   // 프로덕션에서만 console.log 제거
+        // drop_console: mode === 'production',   // 프로덕션에서만 console.log 제거
         drop_debugger: true,  // debugger 제거
         // 추가 압축 옵션 (Lighthouse 개선)
-        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.warn', 'console.error'] : [], // 프로덕션에서만 콘솔 함수들 제거
+        // pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.warn', 'console.error'] : [], // 프로덕션에서만 콘솔 함수들 제거
         passes: 3, // 압축 패스 증가 (더 강력한 압축)
         unsafe: false, // 안전한 압축만 사용
         unsafe_comps: false, // 안전한 비교 연산자만 사용
