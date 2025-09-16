@@ -5,16 +5,24 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from '../../uti
 // 커스텀 툴팁 컴포넌트
 const CustomTooltip = ({ active, payload, label, appName }) => {
     if (active && payload && payload.length) {
+        const value = payload[0]?.value || 0;
+        const formattedValue = value.toLocaleString();
+
         return (
             <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg">
                 <p className="text-gray-200 font-medium mb-2">
                     {label && label.length > 15 ? `${label.substring(0, 15)}...` : label}
                 </p>
-                {appName && (
-                    <p className="text-sm" style={{ color: payload[0]?.color || 'rgb(96 165 250)' }}>
-                        {appName.length > 15 ? `${appName.substring(0, 15)}...` : appName}: {payload[0]?.value}
+                <div className="space-y-1">
+                    {appName && (
+                        <p className="text-sm" style={{ color: payload[0]?.color || 'rgb(96 165 250)' }}>
+                            {appName.length > 15 ? `${appName.substring(0, 15)}...` : appName}
+                        </p>
+                    )}
+                    <p className="text-lg font-bold text-blue-400">
+                        {formattedValue}회
                     </p>
-                )}
+                </div>
             </div>
         );
     }

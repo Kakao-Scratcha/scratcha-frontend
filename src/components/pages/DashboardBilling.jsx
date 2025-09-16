@@ -163,7 +163,7 @@ export default function DashboardBilling() {
     // 구매내역 확인 함수
     const checkPaymentHistory = useCallback(async () => {
         try {
-            const response = await paymentAPI.getPaymentHistory(1, 1);
+            const response = await paymentAPI.getPaymentHistory(1);
             console.log('✅ 구매내역 확인 완료:', response.data);
             // 구매내역 데이터를 상태에 저장
             setPaymentHistoryData(response.data);
@@ -215,10 +215,7 @@ export default function DashboardBilling() {
                         isDataLoading: isLoading || !user || false
                     });
 
-                    // 초기 데이터 로드가 성공한 후 PaymentHistoryTable에 데이터 로드 요청
-                    if (paymentHistoryTableRef.current) {
-                        paymentHistoryTableRef.current.loadPaymentHistory(1, 20);
-                    }
+                    // PaymentHistoryTable은 initialData prop으로 데이터를 받으므로 별도 로딩 불필요
                 } else {
                     console.log('❌ 일부 API 호출이 실패했습니다. 에러 모달이 표시됩니다.');
                     // 실패한 경우에는 로딩 상태 유지 (isInitialLoad = true)
