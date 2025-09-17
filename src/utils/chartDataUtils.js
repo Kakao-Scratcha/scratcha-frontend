@@ -33,9 +33,9 @@ const formatDateForChart = (dateString, periodType) => {
 
     switch (periodType) {
         case 'daily': {
-            // 시간 형식: "HH:00" → "H시"
+            // 시간 형식: "HH:00" (0 패딩)
             const hours = date.getHours();
-            return `${hours}:00`;
+            return `${hours.toString().padStart(2, '0')}:00`;
         }
         case 'weekly':
         case 'monthly': {
